@@ -1,11 +1,16 @@
 package com.lifeops.app.presentation.today.components
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import com.lifeops.app.ui.theme.LifeOpsTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -13,12 +18,12 @@ import java.time.format.DateTimeFormatter
 /**
  * Header component for Today Screen
  * 
- * Displays:
- * - All Tasks button (left)
- * - Show Completed toggle (left)
- * - Date selector (center)
- * - Inventory button (right)
- * - Settings button (right)
+ * Displays (in order):
+ * 1. All Tasks button (left)
+ * 2. Show Completed toggle (left, in actions)
+ * 3. Date display (center title)
+ * 4. Inventory button (right)
+ * 5. Settings button (right)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +32,7 @@ fun TodayScreenHeader(
     showCompleted: Boolean,
     onNavigateToAllTasks: () -> Unit,
     onToggleCompleted: () -> Unit,
-    onDateClick: () -> Unit,
+    onDateClick: () -> Unit, // Kept for future functionality
     onNavigateToInventory: () -> Unit,
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier
@@ -35,51 +40,52 @@ fun TodayScreenHeader(
     TopAppBar(
         title = {
             // Center-aligned date
-            Text(
-                text = formatDate(selectedDate),
-                style = MaterialTheme.typography.titleLarge
-            )
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = formatDate(selectedDate),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
         },
         navigationIcon = {
-            // All Tasks button
-            IconButton(onClick = onNavigateToAllTasks) {
-                Icon(
-                    imageVector = Icons.Default.List,
-                    contentDescription = "All Tasks"
-                )
+            // Left side: All Tasks button (position 1) and Show Completed toggle (position 2)
+            Row {
+                // All Tasks button (position 1)
+                IconButton(onClick = onNavigateToAllTasks) {
+                    Icon(
+                        imageVector = Icons.Default.List,
+                        contentDescription = "All Tasks"
+                    )
+                }
+                
+                // Show Completed toggle (position 2)
+                IconButton(onClick = onToggleCompleted) {
+                    Icon(
+                        imageVector = if (showCompleted) {
+                            Icons.Default.CheckBox
+                        } else {
+                            Icons.Default.CheckBoxOutlineBlank
+                        },
+                        contentDescription = if (showCompleted) {
+                            "Hide completed tasks"
+                        } else {
+                            "Show completed tasks"
+                        },
+                        tint = if (showCompleted) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
+                    )
+                }
             }
         },
         actions = {
-            // Show Completed toggle
-            IconButton(onClick = onToggleCompleted) {
-                Icon(
-                    imageVector = if (showCompleted) {
-                        Icons.Default.CheckBox
-                    } else {
-                        Icons.Default.CheckBoxOutlineBlank
-                    },
-                    contentDescription = if (showCompleted) {
-                        "Hide completed tasks"
-                    } else {
-                        "Show completed tasks"
-                    },
-                    tint = if (showCompleted) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
-                )
-            }
-            
-            // Date selector button
-            IconButton(onClick = onDateClick) {
-                Icon(
-                    imageVector = Icons.Default.CalendarToday,
-                    contentDescription = "Select date"
-                )
-            }
-            
-            // Inventory button
+            // Inventory button (position 4)
             IconButton(onClick = onNavigateToInventory) {
                 Icon(
                     imageVector = Icons.Default.Inventory,
@@ -87,7 +93,7 @@ fun TodayScreenHeader(
                 )
             }
             
-            // Settings button
+            // Settings button (position 5)
             IconButton(onClick = onNavigateToSettings) {
                 Icon(
                     imageVector = Icons.Default.Settings,

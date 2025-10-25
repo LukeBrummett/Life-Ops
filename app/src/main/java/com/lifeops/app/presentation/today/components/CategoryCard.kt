@@ -80,11 +80,7 @@ fun CategoryCard(
                 )
             }
             
-            // Divider
-            androidx.compose.material3.Divider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
+            Spacer(modifier = Modifier.height(8.dp))
             
             // Task list
             tasks.forEach { task ->

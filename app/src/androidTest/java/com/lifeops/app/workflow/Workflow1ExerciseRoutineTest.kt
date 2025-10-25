@@ -57,7 +57,7 @@ class Workflow1ExerciseRoutineTest {
     }
     
     @Test
-    fun `workflow 1 - create workout routine with parent and children`() = runTest {
+    fun workflow_1_create_workout_routine_with_parent_and_children() = runTest {
         // Given - John creates a parent task for his workout routine
         val parentTask = Task(
             name = "Workout",
@@ -133,7 +133,7 @@ class Workflow1ExerciseRoutineTest {
     }
     
     @Test
-    fun `workflow 1 - parent appears on scheduled days`() = runTest {
+    fun workflow_1_parent_appears_on_scheduled_days() = runTest {
         // Given - Workout routine scheduled for Monday, Wednesday, Friday
         val monday = LocalDate.of(2025, 10, 27) // A Monday
         
@@ -161,7 +161,7 @@ class Workflow1ExerciseRoutineTest {
     }
     
     @Test
-    fun `workflow 1 - children inherit parent schedule`() = runTest {
+    fun workflow_1_children_inherit_parent_schedule() = runTest {
         // Given - Parent scheduled for specific days
         val monday = LocalDate.of(2025, 10, 27)
         
@@ -190,7 +190,7 @@ class Workflow1ExerciseRoutineTest {
     }
     
     @Test
-    fun `workflow 1 - task completion tracking`() = runTest {
+    fun workflow_1_task_completion_tracking() = runTest {
         // Given - A workout task
         val task = Task(
             name = "Lift Weights",
@@ -219,7 +219,7 @@ class Workflow1ExerciseRoutineTest {
     }
     
     @Test
-    fun `workflow 1 - multiple children with different difficulties`() = runTest {
+    fun workflow_1_multiple_children_with_different_difficulties() = runTest {
         // Given - Parent task
         val parentId = taskDao.insert(Task(name = "Workout", category = "Health"))
         
@@ -256,7 +256,7 @@ class Workflow1ExerciseRoutineTest {
     }
     
     @Test
-    fun `workflow 1 - reorder children within parent`() = runTest {
+    fun workflow_1_reorder_children_within_parent() = runTest {
         // Given - Parent with children
         val parentId = taskDao.insert(Task(name = "Workout", category = "Health"))
         
