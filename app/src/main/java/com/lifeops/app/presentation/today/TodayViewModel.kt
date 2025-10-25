@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lifeops.app.domain.usecase.CompleteTaskUseCase
 import com.lifeops.app.domain.usecase.GetTasksDueUseCase
+import com.lifeops.app.util.DateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
@@ -24,7 +24,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TodayViewModel @Inject constructor(
     private val getTasksDueUseCase: GetTasksDueUseCase,
-    private val completeTaskUseCase: CompleteTaskUseCase
+    private val completeTaskUseCase: CompleteTaskUseCase,
+    private val dateProvider: DateProvider
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(TodayUiState())
@@ -57,6 +58,8 @@ class TodayViewModel @Inject constructor(
                 // Navigation handled by TodayScreen
             }
             is TodayUiEvent.Refresh -> loadTasksDueToday()
+            is TodayUiEvent.DebugAdvanceDate -> advanceDebugDate(event.days)
+            is TodayUiEvent.DebugResetDate -> resetDebugDate()
         }
     }
     
@@ -68,7 +71,7 @@ class TodayViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             
-            val today = LocalDate.now()
+            val today = dateProvider.now()
             val formattedDate = today.format(
                 DateTimeFormatter.ofPattern("MMM dd, yyyy")
             )
@@ -91,6 +94,7 @@ class TodayViewModel @Inject constructor(
                     
                     _uiState.update {
                         it.copy(
+                            currentDateValue = today,
                             currentDate = formattedDate,
                             tasksByCategory = grouped,
                             allTasksComplete = allComplete,
@@ -153,7 +157,7 @@ class TodayViewModel @Inject constructor(
      */
     private fun completeTask(taskId: String) {
         viewModelScope.launch {
-            val today = LocalDate.now()
+            val today = dateProvider.now()
             completeTaskUseCase(taskId, today)
             // UI will update automatically via Flow from getTasksDueUseCase
         }
@@ -166,5 +170,21 @@ class TodayViewModel @Inject constructor(
         _uiState.update { 
             it.copy(showCompleted = !it.showCompleted) 
         }
+    }
+    
+    /**
+     * DEBUG: Advance the date by specified number of days
+     */
+    private fun advanceDebugDate(days: Int) {
+        dateProvider.advanceDebugDate(days)
+        loadTasksDueToday() // Reload tasks for the new date
+    }
+    
+    /**
+     * DEBUG: Reset date to real today
+     */
+    private fun resetDebugDate() {
+        dateProvider.resetDebugDate()
+        loadTasksDueToday() // Reload tasks for real today
     }
 }

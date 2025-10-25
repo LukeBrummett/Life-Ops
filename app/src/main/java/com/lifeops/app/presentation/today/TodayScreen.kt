@@ -3,10 +3,13 @@ package com.lifeops.app.presentation.today
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.lifeops.app.presentation.today.components.*
 import com.lifeops.app.ui.theme.LifeOpsTheme
@@ -61,11 +64,13 @@ private fun TodayScreenContent(
     uiState: TodayUiState,
     onEvent: (TodayUiEvent) -> Unit
 ) {
+    var showDebugMenu by remember { mutableStateOf(false) }
+    
     Scaffold(
         modifier = modifier,
         topBar = {
             TodayScreenHeader(
-                selectedDate = LocalDate.now(), // Always show today's date for now
+                selectedDate = uiState.currentDateValue,
                 showCompleted = uiState.showCompleted,
                 onNavigateToAllTasks = { onEvent(TodayUiEvent.NavigateToAllTasks) },
                 onToggleCompleted = { onEvent(TodayUiEvent.ToggleShowCompleted) },
@@ -75,12 +80,67 @@ private fun TodayScreenContent(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onEvent(TodayUiEvent.NavigateToTaskCreate) },
-                icon = { Icon(Icons.Default.Add, contentDescription = "Add task") },
-                text = { Text("New Task") }
-            )
-        }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Debug FAB - bottom left
+                Box {
+                    SmallFloatingActionButton(
+                        onClick = { showDebugMenu = !showDebugMenu },
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ) {
+                        Icon(
+                            Icons.Default.BugReport,
+                            contentDescription = "Debug date controls"
+                        )
+                    }
+                    
+                    DropdownMenu(
+                        expanded = showDebugMenu,
+                        onDismissRequest = { showDebugMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("+1 Day") },
+                            onClick = {
+                                onEvent(TodayUiEvent.DebugAdvanceDate(1))
+                                showDebugMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("+7 Days") },
+                            onClick = {
+                                onEvent(TodayUiEvent.DebugAdvanceDate(7))
+                                showDebugMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("+30 Days") },
+                            onClick = {
+                                onEvent(TodayUiEvent.DebugAdvanceDate(30))
+                                showDebugMenu = false
+                            }
+                        )
+                        Divider()
+                        DropdownMenuItem(
+                            text = { Text("Reset to Today") },
+                            onClick = {
+                                onEvent(TodayUiEvent.DebugResetDate)
+                                showDebugMenu = false
+                            }
+                        )
+                    }
+                }
+                
+                // New Task FAB
+                ExtendedFloatingActionButton(
+                    onClick = { onEvent(TodayUiEvent.NavigateToTaskCreate) },
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Add task") },
+                    text = { Text("New Task") }
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End
     ) { paddingValues ->
         Box(
             modifier = Modifier

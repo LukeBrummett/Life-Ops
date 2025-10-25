@@ -1,6 +1,7 @@
 package com.lifeops.app.presentation.today
 
 import com.lifeops.app.data.local.entity.Task
+import java.time.LocalDate
 
 /**
  * Represents a task in the UI, which may be a parent or standalone task
@@ -18,6 +19,11 @@ data class TaskItem(
  * error, and various data states (empty, has tasks, all complete).
  */
 data class TodayUiState(
+    /**
+     * Current date as LocalDate (for comparisons and calculations)
+     */
+    val currentDateValue: LocalDate = LocalDate.now(),
+    
     /**
      * Current date displayed in the header
      * Format: "MMM dd, yyyy" (e.g., "Oct 25, 2025")

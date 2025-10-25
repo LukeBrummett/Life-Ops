@@ -56,4 +56,15 @@ sealed interface TodayUiEvent {
      * Should reload tasks from the database
      */
     data object Refresh : TodayUiEvent
+    
+    /**
+     * DEBUG: Advance the debug date by specified number of days
+     * @param days Number of days to advance (can be negative to go backwards)
+     */
+    data class DebugAdvanceDate(val days: Int) : TodayUiEvent
+    
+    /**
+     * DEBUG: Reset the debug date to real today
+     */
+    data object DebugResetDate : TodayUiEvent
 }
