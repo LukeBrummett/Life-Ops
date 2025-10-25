@@ -48,10 +48,7 @@ private fun TodayScreenContent(
         modifier = modifier,
         topBar = {
             TodayScreenHeader(
-                selectedDate = LocalDate.parse(
-                    uiState.currentDate.ifEmpty { LocalDate.now().toString() },
-                    java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")
-                ),
+                selectedDate = LocalDate.now(), // Always show today's date for now
                 showCompleted = uiState.showCompleted,
                 onNavigateToAllTasks = { onEvent(TodayUiEvent.NavigateToAllTasks) },
                 onToggleCompleted = { onEvent(TodayUiEvent.ToggleShowCompleted) },
