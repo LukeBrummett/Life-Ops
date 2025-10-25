@@ -52,6 +52,9 @@ class ExportDataUseCase @Inject constructor(
             // Extract filename from URI
             val fileName = getFileNameFromUri(uri)
             
+            // Log the URI for debugging
+            android.util.Log.d("ExportDataUseCase", "Exported to URI: $uri")
+            
             ExportResult.Success(uri = uri.toString(), fileName = fileName)
         } catch (e: Exception) {
             ExportResult.Error("Export failed: ${e.message}")

@@ -70,15 +70,24 @@ class ImportDataUseCase @Inject constructor(
             var replaced = 0
             
             tasks.forEach { task ->
-                val resolution = conflictResolutions[task.id] ?: ConflictResolution.SKIP
+                val existingTask = taskRepository.getTaskById(task.id).getOrNull()
+                val resolution = conflictResolutions[task.id] ?: 
+                    if (existingTask != null) ConflictResolution.SKIP else ConflictResolution.REPLACE
                 
                 when (resolution) {
                     ConflictResolution.SKIP -> {
                         skipped++
                     }
                     ConflictResolution.REPLACE -> {
-                        taskRepository.updateTask(task)
-                        replaced++
+                        if (existingTask != null) {
+                            // Update existing task
+                            taskRepository.updateTask(task)
+                            replaced++
+                        } else {
+                            // Insert new task with original ID
+                            taskRepository.createTask(task)
+                            imported++
+                        }
                     }
                     ConflictResolution.KEEP_BOTH -> {
                         // Insert with new ID (Room will auto-generate)
@@ -166,8 +175,8 @@ class ImportDataUseCase @Inject constructor(
         }
         
         return if (conflicts.isEmpty()) {
-            // No conflicts - proceed with import
-            executeImport(tasks, tasks.associate { it.id to ConflictResolution.KEEP_BOTH })
+            // No conflicts - import with original IDs preserved
+            executeImport(tasks, emptyMap())
         } else {
             // Return conflicts for user resolution
             ImportResult.NeedsResolution(conflicts)
