@@ -36,11 +36,11 @@ class CompleteTaskUseCase @Inject constructor(
         val isAlreadyCompleted = task.lastCompleted == completionDate
         
         val updatedTask = if (isAlreadyCompleted) {
-            // Uncomplete the task - move nextDue back to today
+            // Uncomplete the task - move nextDue back to today and decrement streak
             task.copy(
                 lastCompleted = null,
-                nextDue = completionDate
-                // Keep completionStreak - don't reset it until day rolls over
+                nextDue = completionDate,
+                completionStreak = (task.completionStreak - 1).coerceAtLeast(0)
             )
         } else {
             // Complete the task
