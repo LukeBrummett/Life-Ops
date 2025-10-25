@@ -35,6 +35,17 @@ sealed class Screen(val route: String) {
     }
     
     /**
+     * Restock screen - update inventory quantities after shopping
+     * Route includes supplyIds as a comma-separated parameter: restock?supplyIds={supplyIds}
+     */
+    data object Restock : Screen("restock?supplyIds={supplyIds}") {
+        fun createRoute(supplyIds: List<String>): String {
+            return "restock?supplyIds=${supplyIds.joinToString(",")}"
+        }
+        const val ARG_SUPPLY_IDS = "supplyIds"
+    }
+    
+    /**
      * Settings screen - app settings and preferences
      */
     data object Settings : Screen("settings")

@@ -77,6 +77,9 @@ class InventoryViewModel @Inject constructor(
             InventoryUiEvent.ClearSuccess -> {
                 _uiState.update { it.copy(successMessage = null) }
             }
+            InventoryUiEvent.ClearNavigation -> {
+                _uiState.update { it.copy(navigateToRestock = null) }
+            }
         }
     }
     
@@ -120,26 +123,12 @@ class InventoryViewModel @Inject constructor(
                 return@launch
             }
             
-            // For each checked item, increment quantity to target
-            checkedSupplyIds.forEach { supplyId ->
-                val supply = currentState.supplies.find { it.supply.id == supplyId }
-                supply?.let {
-                    val currentQty = it.currentQuantity ?: 0
-                    val targetQty = it.supply.reorderTargetQuantity
-                    val amountToAdd = (targetQty - currentQty).coerceAtLeast(0)
-                    
-                    // Increment by the difference to reach target
-                    repeat(amountToAdd) {
-                        supplyRepository.incrementInventory(supplyId)
-                    }
-                }
-            }
-            
+            // Navigate to restock screen with checked items
             _uiState.update {
                 it.copy(
                     isShoppingMode = false,
                     shoppingCheckedItems = emptySet(),
-                    successMessage = "Shopping completed! ${checkedSupplyIds.size} items restocked."
+                    navigateToRestock = checkedSupplyIds.toList()
                 )
             }
         }

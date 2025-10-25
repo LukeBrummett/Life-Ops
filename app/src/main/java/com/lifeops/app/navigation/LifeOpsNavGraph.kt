@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.lifeops.app.presentation.alltasks.AllTasksScreen
 import com.lifeops.presentation.inventory.InventoryScreen
+import com.lifeops.presentation.inventory.restock.RestockScreen
 import com.lifeops.presentation.settings.SettingsScreen
 import com.lifeops.presentation.supplyedit.SupplyEditScreen
 import com.lifeops.app.presentation.taskcreate.TaskCreateScreen
@@ -62,6 +63,9 @@ fun LifeOpsNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSupplyEdit = { supplyId ->
                     navController.navigate(Screen.SupplyEdit.createRoute(supplyId))
+                },
+                onNavigateToRestock = { supplyIds ->
+                    navController.navigate(Screen.Restock.createRoute(supplyIds))
                 }
             )
         }
@@ -79,6 +83,26 @@ fun LifeOpsNavGraph(
         ) {
             SupplyEditScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        // Restock Screen
+        composable(
+            route = Screen.Restock.route,
+            arguments = listOf(
+                navArgument(Screen.Restock.ARG_SUPPLY_IDS) {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val supplyIdsString = backStackEntry.arguments?.getString(Screen.Restock.ARG_SUPPLY_IDS) ?: ""
+            val supplyIds = supplyIdsString.split(",").filter { it.isNotBlank() }
+            RestockScreen(
+                supplyIds = supplyIds,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToSupplyEdit = { supplyId ->
+                    navController.navigate(Screen.SupplyEdit.createRoute(supplyId))
+                }
             )
         }
         

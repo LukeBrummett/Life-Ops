@@ -18,13 +18,21 @@ import com.lifeops.presentation.inventory.components.SupplyList
 fun InventoryScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToSupplyEdit: (String?) -> Unit = {}, // null = create new
-    onNavigateToShopping: () -> Unit = {},
+    onNavigateToRestock: (List<String>) -> Unit = {}, // Navigate to restock with supply IDs
     viewModel: InventoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
     // Snackbar host state
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Handle navigation to restock
+    LaunchedEffect(uiState.navigateToRestock) {
+        uiState.navigateToRestock?.let { supplyIds ->
+            onNavigateToRestock(supplyIds)
+            viewModel.onEvent(InventoryUiEvent.ClearNavigation)
+        }
+    }
     
     // Show error messages
     LaunchedEffect(uiState.error) {

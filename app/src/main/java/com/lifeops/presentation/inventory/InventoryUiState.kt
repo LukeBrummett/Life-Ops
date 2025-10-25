@@ -15,7 +15,8 @@ data class InventoryUiState(
     val error: String? = null,
     val successMessage: String? = null,
     val isShoppingMode: Boolean = false,
-    val shoppingCheckedItems: Set<String> = emptySet() // Supply IDs that are checked in shopping list
+    val shoppingCheckedItems: Set<String> = emptySet(), // Supply IDs that are checked in shopping list
+    val navigateToRestock: List<String>? = null // Supply IDs to restock, triggers navigation when set
 )
 
 /**
@@ -67,5 +68,6 @@ sealed class InventoryUiEvent {
     data object CompleteShoppingSession : InventoryUiEvent()
     data object ClearError : InventoryUiEvent()
     data object ClearSuccess : InventoryUiEvent()
+    data object ClearNavigation : InventoryUiEvent()
 }
 
