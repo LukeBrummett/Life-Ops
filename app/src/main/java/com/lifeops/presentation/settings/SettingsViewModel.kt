@@ -3,9 +3,13 @@ package com.lifeops.presentation.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lifeops.app.data.local.entity.Task
 import com.lifeops.app.data.repository.TaskRepository
 import com.lifeops.presentation.settings.export.ExportDataUseCase
 import com.lifeops.presentation.settings.export.ExportResult
+import com.lifeops.presentation.settings.import_data.ConflictResolution
+import com.lifeops.presentation.settings.import_data.ImportDataUseCase
+import com.lifeops.presentation.settings.import_data.ImportResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
-    private val exportDataUseCase: ExportDataUseCase
+    private val exportDataUseCase: ExportDataUseCase,
+    private val importDataUseCase: ImportDataUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -46,7 +51,19 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(showExportFilePicker = false) }
                 exportToUri(event.uri)
             }
-            SettingsUiEvent.ImportData -> importData()
+            SettingsUiEvent.ImportData -> {
+                _uiState.update { it.copy(showImportFilePicker = true) }
+            }
+            is SettingsUiEvent.ImportFromUri -> {
+                _uiState.update { it.copy(showImportFilePicker = false) }
+                importFromUri(event.uri)
+            }
+            is SettingsUiEvent.ResolveConflictsAndImport -> {
+                resolveConflictsAndImport(event.tasks, event.resolutions)
+            }
+            SettingsUiEvent.DismissConflictDialog -> {
+                _uiState.update { it.copy(importConflicts = null) }
+            }
             SettingsUiEvent.CreateBackup -> createBackup()
             SettingsUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
             SettingsUiEvent.ClearSuccess -> _uiState.update { it.copy(successMessage = null) }
@@ -83,9 +100,83 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showExportFilePicker = true) }
     }
 
+    private fun importFromUri(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            when (val result = importDataUseCase.parseAndValidate(uri)) {
+                is ImportResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            successMessage = "Imported ${result.tasksImported} tasks" +
+                                (if (result.tasksSkipped > 0) ", skipped ${result.tasksSkipped}" else "") +
+                                (if (result.tasksReplaced > 0) ", replaced ${result.tasksReplaced}" else "")
+                        )
+                    }
+                }
+                is ImportResult.NeedsResolution -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            importConflicts = result.conflicts
+                        )
+                    }
+                }
+                is ImportResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resolveConflictsAndImport(
+        tasks: List<Task>,
+        resolutions: Map<Long, ConflictResolution>
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, importConflicts = null) }
+            
+            when (val result = importDataUseCase.executeImport(tasks, resolutions)) {
+                is ImportResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            successMessage = "Imported ${result.tasksImported} tasks" +
+                                (if (result.tasksSkipped > 0) ", skipped ${result.tasksSkipped}" else "") +
+                                (if (result.tasksReplaced > 0) ", replaced ${result.tasksReplaced}" else "")
+                        )
+                    }
+                }
+                is ImportResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = result.message
+                        )
+                    }
+                }
+                is ImportResult.NeedsResolution -> {
+                    // This shouldn't happen after resolution
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Unexpected conflict resolution error"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun importData() {
-        // TODO: Implement in Phase 4
-        _uiState.update { it.copy(successMessage = "Import functionality coming in Phase 4") }
+        // Trigger file picker in UI
+        _uiState.update { it.copy(showImportFilePicker = true) }
     }
 
     private fun createBackup() {

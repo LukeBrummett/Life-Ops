@@ -34,11 +34,27 @@ fun SettingsScreen(
         }
     }
     
+    // File picker for import
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            viewModel.onEvent(SettingsUiEvent.ImportFromUri(it))
+        }
+    }
+    
     // Trigger export file picker when state changes
     LaunchedEffect(uiState.showExportFilePicker) {
         if (uiState.showExportFilePicker) {
             val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"))
             exportLauncher.launch("lifeops_export_$timestamp.json")
+        }
+    }
+    
+    // Trigger import file picker when state changes
+    LaunchedEffect(uiState.showImportFilePicker) {
+        if (uiState.showImportFilePicker) {
+            importLauncher.launch(arrayOf("application/json"))
         }
     }
     
@@ -75,6 +91,20 @@ fun SettingsScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
+        // Show conflict resolution dialog if needed
+        uiState.importConflicts?.let { conflicts ->
+            ImportConflictDialog(
+                conflicts = conflicts,
+                onResolve = { resolutions ->
+                    val tasks = conflicts.map { it.importedTask }
+                    viewModel.onEvent(SettingsUiEvent.ResolveConflictsAndImport(tasks, resolutions))
+                },
+                onDismiss = {
+                    viewModel.onEvent(SettingsUiEvent.DismissConflictDialog)
+                }
+            )
+        }
+        
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -228,4 +258,49 @@ fun AboutInfoRow(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurface
         )
     }
+}
+
+@Composable
+fun ImportConflictDialog(
+    conflicts: List<com.lifeops.presentation.settings.import_data.ImportConflict>,
+    onResolve: (Map<Long, com.lifeops.presentation.settings.import_data.ConflictResolution>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Import Conflicts Detected") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Found ${conflicts.size} task(s) with duplicate IDs.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "All conflicting tasks will be imported with new IDs to avoid duplicates.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // Auto-resolve all conflicts with KEEP_BOTH
+                    val resolutions = conflicts.associate { 
+                        it.taskId to com.lifeops.presentation.settings.import_data.ConflictResolution.KEEP_BOTH
+                    }
+                    onResolve(resolutions)
+                }
+            ) {
+                Text("Import All")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

@@ -22,11 +22,16 @@ class DatabaseInitializer @Inject constructor(
     
     /**
      * Clear all data and prepopulate with sample tasks
+     * TEMPORARILY DISABLED: Only clears data, does not load sample tasks
      */
     suspend fun initializeWithSampleData() {
         // Clear all existing data
         database.clearAllTables()
         
+        // TODO: Re-enable sample data loading when needed
+        // Sample task creation temporarily disabled for import/export testing
+        
+        /* COMMENTED OUT - SAMPLE DATA LOADING
         val today = LocalDate.now()
         
         // Track task IDs for parent/child and trigger relationships
@@ -317,5 +322,6 @@ class DatabaseInitializer @Inject constructor(
         // - Task with FIXED consumption (e.g., "Brew Coffee" uses 2 filters)
         // - Task with PROMPTED consumption (e.g., "Cook Dinner" prompts for ingredients)
         // - Task with RECOUNT mode (e.g., "Deep Clean Bathroom" recounts cleaning supplies)
+        */
     }
 }
