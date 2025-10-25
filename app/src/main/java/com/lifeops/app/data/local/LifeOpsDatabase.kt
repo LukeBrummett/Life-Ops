@@ -4,7 +4,10 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.lifeops.app.data.local.converter.Converters
+import com.lifeops.app.data.local.dao.SupplyDao
 import com.lifeops.app.data.local.dao.TaskDao
+import com.lifeops.app.data.local.entity.Inventory
+import com.lifeops.app.data.local.entity.Supply
 import com.lifeops.app.data.local.entity.Task
 
 /**
@@ -16,6 +19,7 @@ import com.lifeops.app.data.local.entity.Task
  * Version History:
  * - v1: Initial schema with Long task IDs
  * - v2: Migrated to UUID (String) task IDs for conflict-free sharing
+ * - v3: Added Supply and Inventory entities for inventory management
  * 
  * As per Technical Architecture specification:
  * - SQLite via Room for local persistence
@@ -24,16 +28,19 @@ import com.lifeops.app.data.local.entity.Task
  */
 @Database(
     entities = [
-        Task::class
-        // Additional entities will be added: Supply, TaskSupply, Inventory, ChecklistItem, TaskLog, RestockTask
+        Task::class,
+        Supply::class,
+        Inventory::class
+        // Additional entities will be added: TaskSupply, ChecklistItem, TaskLog, RestockTask
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class LifeOpsDatabase : RoomDatabase() {
     
     abstract fun taskDao(): TaskDao
+    abstract fun supplyDao(): SupplyDao
     // Future DAOs will be added here
     
     companion object {

@@ -3,6 +3,7 @@ package com.lifeops.app.di
 import android.content.Context
 import androidx.room.Room
 import com.lifeops.app.data.local.LifeOpsDatabase
+import com.lifeops.app.data.local.dao.SupplyDao
 import com.lifeops.app.data.local.dao.TaskDao
 import dagger.Module
 import dagger.Provides
@@ -37,5 +38,11 @@ object DatabaseModule {
     @Singleton
     fun provideTaskDao(database: LifeOpsDatabase): TaskDao {
         return database.taskDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideSupplyDao(database: LifeOpsDatabase): SupplyDao {
+        return database.supplyDao()
     }
 }
