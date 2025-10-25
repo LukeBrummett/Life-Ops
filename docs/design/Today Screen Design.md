@@ -49,7 +49,7 @@ The Today Screen serves as the application's home screen and primary interface. 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                      HEADER                             │
-│  [All Tasks] [Date: Oct 24, 2025] [Completed] [⚙️]     │
+│  [All Tasks] [Completed] [Oct 24, 2025] [📦] [⚙️]      │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐   │
@@ -83,7 +83,7 @@ The Today Screen serves as the application's home screen and primary interface. 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                      HEADER                             │
-│  [All Tasks] [Date: Oct 24, 2025] [Completed] [⚙️]     │
+│  [All Tasks] [Completed] [Oct 24, 2025] [📦] [⚙️]      │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │                                                         │
@@ -107,25 +107,15 @@ The Today Screen serves as the application's home screen and primary interface. 
 ### Header Section
 
 #### 1. All Tasks Button
-- **Type**: Icon Button (leftmost)
+- **Type**: Icon Button (leftmost, position 1)
 - **Icon**: List icon or "All" text
 - **Purpose**: Navigate to All Tasks View screen
 - **State**: Normal (enabled)
 - **Click Action**: Navigate to All Tasks screen (future)
 - **Visual**: Material3 FilledTonalIconButton
 
-#### 2. Date Display
-- **Type**: Text (center)
-- **Format**: "MMM DD, YYYY" (e.g., "Oct 24, 2025")
-- **Purpose**: Show current date
-- **State**: Static (non-interactive)
-- **Style**: 
-  - Typography: Material3 titleLarge
-  - Color: onSurface
-  - Alignment: Center
-
-#### 3. Show Completed Toggle
-- **Type**: Toggle Icon Button
+#### 2. Show Completed Toggle
+- **Type**: Toggle Icon Button (position 2)
 - **Icons**: 
   - Unchecked: Eye icon / "Show" 
   - Checked: Eye-off icon / "Hide"
@@ -136,8 +126,26 @@ The Today Screen serves as the application's home screen and primary interface. 
 - **Click Action**: Toggle completed filter state
 - **Visual**: Material3 IconToggleButton
 
-#### 4. Settings Button
-- **Type**: Icon Button (rightmost)
+#### 3. Date Display
+- **Type**: Text (center, position 3)
+- **Format**: "MMM DD, YYYY" (e.g., "Oct 24, 2025")
+- **Purpose**: Show current date
+- **State**: Static (non-interactive)
+- **Style**: 
+  - Typography: Material3 titleLarge
+  - Color: onSurface
+  - Alignment: Center
+
+#### 4. Inventory Button
+- **Type**: Icon Button (position 4)
+- **Icon**: Package/Box icon or "📦"
+- **Purpose**: Navigate to Inventory Management screen
+- **State**: Normal (enabled)
+- **Click Action**: Navigate to Inventory screen (future)
+- **Visual**: Material3 IconButton
+
+#### 5. Settings Button
+- **Type**: Icon Button (rightmost, position 5)
 - **Icon**: Gear/Settings icon
 - **Purpose**: Navigate to Settings screen
 - **State**: Normal (enabled)
@@ -468,6 +476,9 @@ fun TodayScreen(
         onNavigateToAllTasks = {
             viewModel.onEvent(TodayUiEvent.NavigateToAllTasks)
         },
+        onNavigateToInventory = {
+            viewModel.onEvent(TodayUiEvent.NavigateToInventory)
+        },
         onNavigateToSettings = {
             viewModel.onEvent(TodayUiEvent.NavigateToSettings)
         },
@@ -484,6 +495,7 @@ private fun TodayScreenContent(
     onTaskComplete: (Long) -> Unit,
     onToggleCompleted: () -> Unit,
     onNavigateToAllTasks: () -> Unit,
+    onNavigateToInventory: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onTaskClick: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -495,6 +507,7 @@ private fun TodayScreenContent(
                 showCompleted = uiState.showCompleted,
                 onToggleCompleted = onToggleCompleted,
                 onNavigateToAllTasks = onNavigateToAllTasks,
+                onNavigateToInventory = onNavigateToInventory,
                 onNavigateToSettings = onNavigateToSettings
             )
         },
@@ -541,6 +554,7 @@ private fun TodayScreenHeader(
     showCompleted: Boolean,
     onToggleCompleted: () -> Unit,
     onNavigateToAllTasks: () -> Unit,
+    onNavigateToInventory: () -> Unit,
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -577,6 +591,13 @@ private fun TodayScreenHeader(
                     } else {
                         "Show completed tasks"
                     }
+                )
+            }
+            
+            IconButton(onClick = onNavigateToInventory) {
+                Icon(
+                    imageVector = Icons.Default.Inventory,
+                    contentDescription = "Inventory Management"
                 )
             }
             
@@ -937,6 +958,7 @@ sealed interface TodayUiEvent {
     data class CompleteTask(val taskId: Long) : TodayUiEvent
     object ToggleShowCompleted : TodayUiEvent
     object NavigateToAllTasks : TodayUiEvent
+    object NavigateToInventory : TodayUiEvent
     object NavigateToSettings : TodayUiEvent
     data class NavigateToTaskDetail(val taskId: Long) : TodayUiEvent
     object Refresh : TodayUiEvent
@@ -964,6 +986,9 @@ class TodayViewModel @Inject constructor(
             is TodayUiEvent.CompleteTask -> completeTask(event.taskId)
             is TodayUiEvent.ToggleShowCompleted -> toggleShowCompleted()
             is TodayUiEvent.NavigateToAllTasks -> {
+                // Navigation handled by MainActivity/NavHost
+            }
+            is TodayUiEvent.NavigateToInventory -> {
                 // Navigation handled by MainActivity/NavHost
             }
             is TodayUiEvent.NavigateToSettings -> {
