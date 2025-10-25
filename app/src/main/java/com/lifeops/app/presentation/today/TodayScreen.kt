@@ -96,7 +96,8 @@ private fun TodayScreenContent(
                         TasksList(
                             tasksByCategory = uiState.tasksByCategory,
                             showCompleted = uiState.showCompleted,
-                            onTaskChecked = { taskId -> onEvent(TodayUiEvent.CompleteTask(taskId)) }
+                            onTaskChecked = { taskId -> onEvent(TodayUiEvent.CompleteTask(taskId)) },
+                            onTaskClick = { taskId -> onEvent(TodayUiEvent.NavigateToTaskDetail(taskId)) }
                         )
                     }
                 }

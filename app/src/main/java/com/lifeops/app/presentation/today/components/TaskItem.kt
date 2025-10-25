@@ -1,5 +1,6 @@
 package com.lifeops.app.presentation.today.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ fun TaskItem(
     task: Task,
     isCompleted: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    onTaskClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -49,9 +51,11 @@ fun TaskItem(
             )
         )
         
-        // Task content
+        // Task content (clickable area)
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onTaskClick() },
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // Task name

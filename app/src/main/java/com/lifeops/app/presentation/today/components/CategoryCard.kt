@@ -26,6 +26,7 @@ fun CategoryCard(
     totalTasksInCategory: Int,
     completedTasksInCategory: Int,
     onTaskChecked: (Long) -> Unit,
+    onTaskClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val completedCount = completedTasksInCategory
@@ -89,8 +90,11 @@ fun CategoryCard(
                 TaskItem(
                     task = task,
                     isCompleted = isTaskCompleted(task),
-                    onCheckedChange = { checked ->
+                    onCheckedChange = { _ ->
                         onTaskChecked(task.id)
+                    },
+                    onTaskClick = {
+                        onTaskClick(task.id)
                     }
                 )
             }
@@ -121,7 +125,8 @@ private fun PreviewCategoryCardMixed() {
                 tasks = tasks,
                 totalTasksInCategory = tasks.size,
                 completedTasksInCategory = tasks.count { isTaskCompleted(it) },
-                onTaskChecked = {}
+                onTaskChecked = {},
+                onTaskClick = {}
             )
         }
     }
@@ -142,7 +147,8 @@ private fun PreviewCategoryCardAllIncomplete() {
                 tasks = tasks,
                 totalTasksInCategory = tasks.size,
                 completedTasksInCategory = 0,
-                onTaskChecked = {}
+                onTaskChecked = {},
+                onTaskClick = {}
             )
         }
     }
@@ -161,7 +167,8 @@ private fun PreviewCategoryCardAllComplete() {
                 tasks = tasks,
                 totalTasksInCategory = tasks.size,
                 completedTasksInCategory = tasks.size,
-                onTaskChecked = {}
+                onTaskChecked = {},
+                onTaskClick = {}
             )
         }
     }
@@ -178,7 +185,8 @@ private fun PreviewCategoryCardSingleTask() {
                 tasks = tasks,
                 totalTasksInCategory = 1,
                 completedTasksInCategory = 0,
-                onTaskChecked = {}
+                onTaskChecked = {},
+                onTaskClick = {}
             )
         }
     }

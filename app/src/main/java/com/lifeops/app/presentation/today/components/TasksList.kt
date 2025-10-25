@@ -25,6 +25,7 @@ fun TasksList(
     tasksByCategory: Map<String, List<Task>>,
     showCompleted: Boolean,
     onTaskChecked: (Long) -> Unit,
+    onTaskClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Filter tasks based on showCompleted setting
@@ -52,7 +53,8 @@ fun TasksList(
                     tasks = filteredTasks,
                     totalTasksInCategory = totalCount,
                     completedTasksInCategory = completedCount,
-                    onTaskChecked = onTaskChecked
+                    onTaskChecked = onTaskChecked,
+                    onTaskClick = onTaskClick
                 )
             }
         }
@@ -78,7 +80,8 @@ private fun PreviewTasksListAll() {
         TasksList(
             tasksByCategory = MockData.tasksByCategory,
             showCompleted = true,
-            onTaskChecked = {}
+            onTaskChecked = {},
+            onTaskClick = {}
         )
     }
 }
@@ -90,7 +93,8 @@ private fun PreviewTasksListHideCompleted() {
         TasksList(
             tasksByCategory = MockData.tasksByCategory,
             showCompleted = false,
-            onTaskChecked = {}
+            onTaskChecked = {},
+            onTaskClick = {}
         )
     }
 }
@@ -104,7 +108,8 @@ private fun PreviewTasksListSingleCategory() {
                 "Fitness" to (MockData.tasksByCategory["Fitness"] ?: emptyList())
             ),
             showCompleted = true,
-            onTaskChecked = {}
+            onTaskChecked = {},
+            onTaskClick = {}
         )
     }
 }
