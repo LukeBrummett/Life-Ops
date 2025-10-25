@@ -12,8 +12,7 @@ import com.lifeops.presentation.inventory.FilterOptions
 import com.lifeops.presentation.inventory.SortOption
 
 /**
- * Placeholder for Search and Filter Bar
- * Will be implemented in Phase 3
+ * Search and filter bar combining search, sort, and filter controls
  */
 @Composable
 fun SearchAndFilterBar(
@@ -24,19 +23,35 @@ fun SearchAndFilterBar(
     filterOptions: FilterOptions,
     onFilterOptionsChanged: (FilterOptions) -> Unit
 ) {
-    // Placeholder - will be implemented in Phase 3
-    Surface(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        shape = MaterialTheme.shapes.medium
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Search & Filter (Coming in Phase 3)",
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodySmall
+        // Search bar
+        SearchBar(
+            query = searchQuery,
+            onQueryChanged = onSearchQueryChanged
         )
+        
+        // Sort and Filter buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SortButton(
+                currentSortOption = sortOption,
+                onSortOptionSelected = onSortOptionSelected,
+                modifier = Modifier.weight(1f)
+            )
+            
+            FilterButton(
+                filterOptions = filterOptions,
+                onFilterOptionsChanged = onFilterOptionsChanged,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
