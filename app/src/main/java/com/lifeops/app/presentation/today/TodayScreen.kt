@@ -23,14 +23,27 @@ import java.time.LocalDate
 @Composable
 fun TodayScreen(
     modifier: Modifier = Modifier,
-    viewModel: TodayViewModel = hiltViewModel()
+    viewModel: TodayViewModel = hiltViewModel(),
+    onNavigateToAllTasks: () -> Unit = {},
+    onNavigateToInventory: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToTaskDetail: (Long) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
     TodayScreenContent(
         modifier = modifier,
         uiState = uiState,
-        onEvent = viewModel::onEvent
+        onEvent = { event ->
+            // Handle navigation events directly
+            when (event) {
+                is TodayUiEvent.NavigateToAllTasks -> onNavigateToAllTasks()
+                is TodayUiEvent.NavigateToInventory -> onNavigateToInventory()
+                is TodayUiEvent.NavigateToSettings -> onNavigateToSettings()
+                is TodayUiEvent.NavigateToTaskDetail -> onNavigateToTaskDetail(event.taskId)
+                else -> viewModel.onEvent(event) // Pass other events to ViewModel
+            }
+        }
     )
 }
 
