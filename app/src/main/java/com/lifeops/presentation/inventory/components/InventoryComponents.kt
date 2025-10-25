@@ -61,6 +61,7 @@ fun SearchAndFilterBar(
  * - Lazy scrolling for performance
  * - Category grouping with collapsible sections
  * - Supply cards with quick adjust buttons
+ * - Shopping mode with checkboxes
  */
 @Composable
 fun SupplyList(
@@ -70,7 +71,10 @@ fun SupplyList(
     onIncrementQuantity: (String) -> Unit,
     onDecrementQuantity: (String) -> Unit,
     onSupplyClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isShoppingMode: Boolean = false,
+    checkedItems: Set<String> = emptySet(),
+    onToggleShoppingItem: (String) -> Unit = {}
 ) {
     // Group supplies by category
     val suppliesByCategory = supplies.groupBy { it.supply.category }
@@ -89,7 +93,10 @@ fun SupplyList(
                     onToggleExpand = { onCategoryExpandToggle(category) },
                     onIncrementQuantity = onIncrementQuantity,
                     onDecrementQuantity = onDecrementQuantity,
-                    onSupplyClick = onSupplyClick
+                    onSupplyClick = onSupplyClick,
+                    isShoppingMode = isShoppingMode,
+                    checkedItems = checkedItems,
+                    onToggleShoppingItem = onToggleShoppingItem
                 )
             }
         }

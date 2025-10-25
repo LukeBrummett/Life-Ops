@@ -45,7 +45,9 @@ fun InventoryScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Inventory") },
+                title = { 
+                    Text(if (uiState.isShoppingMode) "Shopping List" else "Inventory") 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -55,24 +57,34 @@ fun InventoryScreen(
                     }
                 },
                 actions = {
-                    // Shopping button
-                    IconButton(onClick = { viewModel.onEvent(InventoryUiEvent.NavigateToShopping) }) {
+                    // Shopping mode toggle button
+                    IconButton(
+                        onClick = { viewModel.onEvent(InventoryUiEvent.ToggleShoppingMode) }
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = "Go Shopping"
+                            contentDescription = if (uiState.isShoppingMode) 
+                                "Exit Shopping Mode" else "Start Shopping",
+                            tint = if (uiState.isShoppingMode)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onNavigateToSupplyEdit(null) }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Add Supply"
-                )
+            // Only show FAB in normal mode, not shopping mode
+            if (!uiState.isShoppingMode) {
+                FloatingActionButton(
+                    onClick = { onNavigateToSupplyEdit(null) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add Supply"
+                    )
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -82,15 +94,40 @@ fun InventoryScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Search and filter bar
-            SearchAndFilterBar(
-                searchQuery = uiState.searchQuery,
-                onSearchQueryChanged = { viewModel.onEvent(InventoryUiEvent.SearchQueryChanged(it)) },
-                sortOption = uiState.sortOption,
-                onSortOptionSelected = { viewModel.onEvent(InventoryUiEvent.SortOptionSelected(it)) },
-                filterOptions = uiState.filterOptions,
-                onFilterOptionsChanged = { viewModel.onEvent(InventoryUiEvent.FilterOptionsChanged(it)) }
-            )
+            // Search and filter bar (hide in shopping mode)
+            if (!uiState.isShoppingMode) {
+                SearchAndFilterBar(
+                    searchQuery = uiState.searchQuery,
+                    onSearchQueryChanged = { viewModel.onEvent(InventoryUiEvent.SearchQueryChanged(it)) },
+                    sortOption = uiState.sortOption,
+                    onSortOptionSelected = { viewModel.onEvent(InventoryUiEvent.SortOptionSelected(it)) },
+                    filterOptions = uiState.filterOptions,
+                    onFilterOptionsChanged = { viewModel.onEvent(InventoryUiEvent.FilterOptionsChanged(it)) }
+                )
+            } else {
+                // Shopping mode header
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Check off items as you purchase them",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        if (uiState.shoppingCheckedItems.isNotEmpty()) {
+                            Text(
+                                text = "${uiState.shoppingCheckedItems.size} items checked",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
             
             // Supply list
             if (uiState.isLoading) {
@@ -104,14 +141,35 @@ fun InventoryScreen(
             } else if (uiState.supplies.isEmpty()) {
                 EmptyState()
             } else {
-                SupplyList(
-                    supplies = uiState.supplies,
-                    expandedCategories = uiState.expandedCategories,
-                    onCategoryExpandToggle = { viewModel.onEvent(InventoryUiEvent.CategoryExpandToggle(it)) },
-                    onIncrementQuantity = { viewModel.onEvent(InventoryUiEvent.IncrementQuantity(it)) },
-                    onDecrementQuantity = { viewModel.onEvent(InventoryUiEvent.DecrementQuantity(it)) },
-                    onSupplyClick = { onNavigateToSupplyEdit(it) }
-                )
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Supply list
+                    SupplyList(
+                        supplies = uiState.supplies,
+                        expandedCategories = uiState.expandedCategories,
+                        onCategoryExpandToggle = { viewModel.onEvent(InventoryUiEvent.CategoryExpandToggle(it)) },
+                        onIncrementQuantity = { viewModel.onEvent(InventoryUiEvent.IncrementQuantity(it)) },
+                        onDecrementQuantity = { viewModel.onEvent(InventoryUiEvent.DecrementQuantity(it)) },
+                        onSupplyClick = { onNavigateToSupplyEdit(it) },
+                        isShoppingMode = uiState.isShoppingMode,
+                        checkedItems = uiState.shoppingCheckedItems,
+                        onToggleShoppingItem = { viewModel.onEvent(InventoryUiEvent.ToggleShoppingItem(it)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    // Complete Shopping button (only in shopping mode)
+                    if (uiState.isShoppingMode && uiState.shoppingCheckedItems.isNotEmpty()) {
+                        Button(
+                            onClick = { viewModel.onEvent(InventoryUiEvent.CompleteShoppingSession) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Text("Complete Shopping (${uiState.shoppingCheckedItems.size} items)")
+                        }
+                    }
+                }
             }
         }
     }

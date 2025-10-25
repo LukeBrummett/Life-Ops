@@ -13,7 +13,9 @@ data class InventoryUiState(
     val expandedCategories: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val isShoppingMode: Boolean = false,
+    val shoppingCheckedItems: Set<String> = emptySet() // Supply IDs that are checked in shopping list
 )
 
 /**
@@ -60,7 +62,10 @@ sealed class InventoryUiEvent {
     data class DecrementQuantity(val supplyId: String) : InventoryUiEvent()
     data class NavigateToSupplyEdit(val supplyId: String) : InventoryUiEvent()
     data object NavigateToSupplyCreate : InventoryUiEvent()
-    data object NavigateToShopping : InventoryUiEvent()
+    data object ToggleShoppingMode : InventoryUiEvent()
+    data class ToggleShoppingItem(val supplyId: String) : InventoryUiEvent()
+    data object CompleteShoppingSession : InventoryUiEvent()
     data object ClearError : InventoryUiEvent()
     data object ClearSuccess : InventoryUiEvent()
 }
+

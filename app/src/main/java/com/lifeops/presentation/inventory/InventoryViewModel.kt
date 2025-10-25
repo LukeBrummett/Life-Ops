@@ -68,14 +68,79 @@ class InventoryViewModel @Inject constructor(
             InventoryUiEvent.NavigateToSupplyCreate -> {
                 // Navigation will be handled by the composable
             }
-            InventoryUiEvent.NavigateToShopping -> {
-                // Navigation will be handled by the composable
-            }
+            InventoryUiEvent.ToggleShoppingMode -> toggleShoppingMode()
+            is InventoryUiEvent.ToggleShoppingItem -> toggleShoppingItem(event.supplyId)
+            InventoryUiEvent.CompleteShoppingSession -> completeShoppingSession()
             InventoryUiEvent.ClearError -> {
                 _uiState.update { it.copy(error = null) }
             }
             InventoryUiEvent.ClearSuccess -> {
                 _uiState.update { it.copy(successMessage = null) }
+            }
+        }
+    }
+    
+    private fun toggleShoppingMode() {
+        _uiState.update { currentState ->
+            if (currentState.isShoppingMode) {
+                // Exiting shopping mode - clear checked items
+                currentState.copy(
+                    isShoppingMode = false,
+                    shoppingCheckedItems = emptySet()
+                )
+            } else {
+                // Entering shopping mode - auto-filter to items needing reorder
+                currentState.copy(
+                    isShoppingMode = true,
+                    shoppingCheckedItems = emptySet()
+                )
+            }
+        }
+    }
+    
+    private fun toggleShoppingItem(supplyId: String) {
+        _uiState.update { currentState ->
+            val checkedItems = currentState.shoppingCheckedItems.toMutableSet()
+            if (checkedItems.contains(supplyId)) {
+                checkedItems.remove(supplyId)
+            } else {
+                checkedItems.add(supplyId)
+            }
+            currentState.copy(shoppingCheckedItems = checkedItems)
+        }
+    }
+    
+    private fun completeShoppingSession() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            val checkedSupplyIds = currentState.shoppingCheckedItems
+            
+            if (checkedSupplyIds.isEmpty()) {
+                _uiState.update { it.copy(isShoppingMode = false) }
+                return@launch
+            }
+            
+            // For each checked item, increment quantity to target
+            checkedSupplyIds.forEach { supplyId ->
+                val supply = currentState.supplies.find { it.supply.id == supplyId }
+                supply?.let {
+                    val currentQty = it.currentQuantity ?: 0
+                    val targetQty = it.supply.reorderTargetQuantity
+                    val amountToAdd = (targetQty - currentQty).coerceAtLeast(0)
+                    
+                    // Increment by the difference to reach target
+                    repeat(amountToAdd) {
+                        supplyRepository.incrementInventory(supplyId)
+                    }
+                }
+            }
+            
+            _uiState.update {
+                it.copy(
+                    isShoppingMode = false,
+                    shoppingCheckedItems = emptySet(),
+                    successMessage = "Shopping completed! ${checkedSupplyIds.size} items restocked."
+                )
             }
         }
     }
@@ -107,6 +172,11 @@ class InventoryViewModel @Inject constructor(
         state: InventoryUiState
     ): List<SupplyWithInventory> {
         var filtered = supplies
+        
+        // In shopping mode, automatically filter to items needing reorder
+        if (state.isShoppingMode) {
+            filtered = filtered.filter { it.needsReorder }
+        }
 
         // Apply search filter
         if (state.searchQuery.isNotBlank()) {
@@ -118,15 +188,17 @@ class InventoryViewModel @Inject constructor(
             }
         }
 
-        // Apply filter options
-        if (state.filterOptions.needsReorder) {
-            filtered = filtered.filter { it.needsReorder }
-        }
-        if (state.filterOptions.wellStocked) {
-            filtered = filtered.filter { it.isWellStocked }
-        }
-        if (state.filterOptions.categories.isNotEmpty()) {
-            filtered = filtered.filter { it.supply.category in state.filterOptions.categories }
+        // Apply filter options (only if not in shopping mode - shopping mode overrides)
+        if (!state.isShoppingMode) {
+            if (state.filterOptions.needsReorder) {
+                filtered = filtered.filter { it.needsReorder }
+            }
+            if (state.filterOptions.wellStocked) {
+                filtered = filtered.filter { it.isWellStocked }
+            }
+            if (state.filterOptions.categories.isNotEmpty()) {
+                filtered = filtered.filter { it.supply.category in state.filterOptions.categories }
+            }
         }
 
         // Apply sort

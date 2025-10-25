@@ -23,6 +23,7 @@ import com.lifeops.app.data.local.dao.SupplyWithInventory
  * - Item count badge
  * - Animated expand/collapse
  * - List of supplies when expanded
+ * - Shopping mode support with checkboxes
  */
 @Composable
 fun CategorySection(
@@ -33,7 +34,10 @@ fun CategorySection(
     onIncrementQuantity: (String) -> Unit,
     onDecrementQuantity: (String) -> Unit,
     onSupplyClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isShoppingMode: Boolean = false,
+    checkedItems: Set<String> = emptySet(),
+    onToggleShoppingItem: (String) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         // Category Header
@@ -57,12 +61,21 @@ fun CategorySection(
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 supplies.forEach { supply ->
-                    SupplyItemCard(
-                        supply = supply,
-                        onIncrementQuantity = { onIncrementQuantity(supply.supply.id) },
-                        onDecrementQuantity = { onDecrementQuantity(supply.supply.id) },
-                        onClick = { onSupplyClick(supply.supply.id) }
-                    )
+                    if (isShoppingMode) {
+                        ShoppingListItemCard(
+                            supply = supply,
+                            isChecked = checkedItems.contains(supply.supply.id),
+                            onToggleChecked = { onToggleShoppingItem(supply.supply.id) },
+                            onClick = { onSupplyClick(supply.supply.id) }
+                        )
+                    } else {
+                        SupplyItemCard(
+                            supply = supply,
+                            onIncrementQuantity = { onIncrementQuantity(supply.supply.id) },
+                            onDecrementQuantity = { onDecrementQuantity(supply.supply.id) },
+                            onClick = { onSupplyClick(supply.supply.id) }
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.height(4.dp))
