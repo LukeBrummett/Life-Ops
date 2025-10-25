@@ -9,6 +9,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lifeops.app.data.local.entity.Task
 import com.lifeops.app.presentation.today.MockData
+import com.lifeops.app.presentation.today.TaskItem
 import com.lifeops.app.ui.theme.LifeOpsTheme
 import java.time.LocalDate
 
@@ -18,22 +19,44 @@ import java.time.LocalDate
  * Displays:
  * - LazyColumn of CategoryCards
  * - Filtered based on showCompleted state
- * - Groups tasks by category
+ * - Groups tasks by category with parent-child hierarchy
  */
 @Composable
 fun TasksList(
-    tasksByCategory: Map<String, List<Task>>,
+    tasksByCategory: Map<String, List<TaskItem>>,
     showCompleted: Boolean,
     onTaskChecked: (Long) -> Unit,
     onTaskClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Filter tasks based on showCompleted setting
+    // Filter task items based on showCompleted setting
     val filteredTasksByCategory = if (showCompleted) {
         tasksByCategory
     } else {
-        tasksByCategory.mapValues { (_, tasks) ->
-            tasks.filter { !isTaskCompleted(it) }
+        tasksByCategory.mapValues { (_, taskItems) ->
+            taskItems.mapNotNull { taskItem ->
+                if (taskItem.isParent) {
+                    // For parent tasks, filter children
+                    val incompleteChildren = taskItem.children.filter { !isTaskCompleted(it) }
+                    val parentCompleted = isTaskCompleted(taskItem.task)
+                    
+                    // Show parent if parent incomplete OR has incomplete children
+                    if (!parentCompleted || incompleteChildren.isNotEmpty()) {
+                        if (incompleteChildren.isNotEmpty()) {
+                            // Show parent with only incomplete children
+                            taskItem.copy(children = incompleteChildren)
+                        } else {
+                            // Show parent with all children (for manual completion)
+                            taskItem
+                        }
+                    } else {
+                        null
+                    }
+                } else {
+                    // For standalone tasks, only show if incomplete
+                    if (!isTaskCompleted(taskItem.task)) taskItem else null
+                }
+            }
         }.filterValues { it.isNotEmpty() }
     }
     
@@ -41,16 +64,24 @@ fun TasksList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        filteredTasksByCategory.forEach { (category, filteredTasks) ->
-            // Get the original (unfiltered) task list for this category to calculate progress
-            val allTasksInCategory = tasksByCategory[category] ?: emptyList()
-            val completedCount = allTasksInCategory.count { isTaskCompleted(it) }
-            val totalCount = allTasksInCategory.size
+        filteredTasksByCategory.forEach { (category, filteredTaskItems) ->
+            // Calculate total tasks and completed count (including all children)
+            val allTaskItemsInCategory = tasksByCategory[category] ?: emptyList()
+            val totalCount = allTaskItemsInCategory.sumOf { 
+                if (it.isParent) it.children.size else 1 
+            }
+            val completedCount = allTaskItemsInCategory.sumOf { taskItem ->
+                if (taskItem.isParent) {
+                    taskItem.children.count { isTaskCompleted(it) }
+                } else {
+                    if (isTaskCompleted(taskItem.task)) 1 else 0
+                }
+            }
             
             item(key = category) {
                 CategoryCard(
                     categoryName = category,
-                    tasks = filteredTasks,
+                    taskItems = filteredTaskItems,
                     totalTasksInCategory = totalCount,
                     completedTasksInCategory = completedCount,
                     onTaskChecked = onTaskChecked,
@@ -64,7 +95,7 @@ fun TasksList(
 /**
  * Determine if a task is completed based on lastCompleted date
  */
-private fun isTaskCompleted(task: Task): Boolean {
+fun isTaskCompleted(task: Task): Boolean {
     val today = LocalDate.now()
     return task.lastCompleted == today
 }

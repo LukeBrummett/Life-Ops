@@ -25,6 +25,11 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
     
     /**
+     * Task Create screen - create a new task
+     */
+    data object TaskCreate : Screen("task_create")
+    
+    /**
      * Task Detail screen - view/edit a specific task
      * Route includes taskId as a parameter: task_detail/{taskId}
      */

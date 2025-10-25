@@ -9,6 +9,7 @@ import androidx.navigation.navArgument
 import com.lifeops.app.presentation.alltasks.AllTasksScreen
 import com.lifeops.app.presentation.inventory.InventoryScreen
 import com.lifeops.app.presentation.settings.SettingsScreen
+import com.lifeops.app.presentation.taskcreate.TaskCreateScreen
 import com.lifeops.app.presentation.taskdetail.TaskDetailScreen
 import com.lifeops.app.presentation.today.TodayScreen
 
@@ -34,6 +35,9 @@ fun LifeOpsNavGraph(
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToTaskDetail = { taskId -> 
                     navController.navigate(Screen.TaskDetail.createRoute(taskId))
+                },
+                onNavigateToTaskCreate = {
+                    navController.navigate(Screen.TaskCreate.route)
                 }
             )
         }
@@ -41,7 +45,13 @@ fun LifeOpsNavGraph(
         // All Tasks Screen
         composable(Screen.AllTasks.route) {
             AllTasksScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTaskDetail = { taskId ->
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
+                },
+                onNavigateToTaskCreate = {
+                    navController.navigate(Screen.TaskCreate.route)
+                }
             )
         }
         
@@ -55,6 +65,13 @@ fun LifeOpsNavGraph(
         // Settings Screen
         composable(Screen.Settings.route) {
             SettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        // Task Create Screen
+        composable(Screen.TaskCreate.route) {
+            TaskCreateScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

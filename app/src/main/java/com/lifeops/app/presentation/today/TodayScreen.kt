@@ -1,6 +1,8 @@
 package com.lifeops.app.presentation.today
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -27,7 +29,8 @@ fun TodayScreen(
     onNavigateToAllTasks: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToTaskDetail: (Long) -> Unit = {}
+    onNavigateToTaskDetail: (Long) -> Unit = {},
+    onNavigateToTaskCreate: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -41,6 +44,7 @@ fun TodayScreen(
                 is TodayUiEvent.NavigateToInventory -> onNavigateToInventory()
                 is TodayUiEvent.NavigateToSettings -> onNavigateToSettings()
                 is TodayUiEvent.NavigateToTaskDetail -> onNavigateToTaskDetail(event.taskId)
+                is TodayUiEvent.NavigateToTaskCreate -> onNavigateToTaskCreate()
                 else -> viewModel.onEvent(event) // Pass other events to ViewModel
             }
         }
@@ -68,6 +72,13 @@ private fun TodayScreenContent(
                 onDateClick = { /* Future: date picker */ },
                 onNavigateToInventory = { onEvent(TodayUiEvent.NavigateToInventory) },
                 onNavigateToSettings = { onEvent(TodayUiEvent.NavigateToSettings) }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { onEvent(TodayUiEvent.NavigateToTaskCreate) },
+                icon = { Icon(Icons.Default.Add, contentDescription = "Add task") },
+                text = { Text("New Task") }
             )
         }
     ) { paddingValues ->

@@ -115,6 +115,14 @@ class TaskRepository @Inject constructor(
     }
     
     /**
+     * Observe all active tasks ordered by next due date (reactive)
+     * Used for All Tasks screen
+     */
+    fun observeAllOrderedByNextDue(): Flow<List<Task>> {
+        return taskDao.observeAllOrderedByNextDue()
+    }
+    
+    /**
      * Get tasks by category
      */
     suspend fun getTasksByCategory(category: String): Result<List<Task>> {

@@ -45,6 +45,7 @@ fun TaskItem(
     onCheckedChange: (Boolean) -> Unit,
     onTaskClick: () -> Unit = {},
     onTaskLongPress: () -> Unit = {},
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var showContextMenu by remember { mutableStateOf(false) }
@@ -60,9 +61,12 @@ fun TaskItem(
         Checkbox(
             checked = isCompleted,
             onCheckedChange = onCheckedChange,
+            enabled = enabled,
             colors = CheckboxDefaults.colors(
                 checkedColor = MaterialTheme.colorScheme.primary,
-                uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                disabledCheckedColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                disabledUncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
             )
         )
         

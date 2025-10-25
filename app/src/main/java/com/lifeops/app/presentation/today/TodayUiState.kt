@@ -3,6 +3,15 @@ package com.lifeops.app.presentation.today
 import com.lifeops.app.data.local.entity.Task
 
 /**
+ * Represents a task in the UI, which may be a parent or standalone task
+ */
+data class TaskItem(
+    val task: Task,
+    val children: List<Task> = emptyList(),
+    val isParent: Boolean = children.isNotEmpty()
+)
+
+/**
  * UI State for the Today Screen
  * 
  * Represents all possible states the Today Screen can be in, including loading,
@@ -16,11 +25,11 @@ data class TodayUiState(
     val currentDate: String = "",
     
     /**
-     * Tasks grouped by category
+     * Tasks grouped by category, with parent-child relationships preserved
      * Key: Category name (e.g., "Fitness", "Home")
-     * Value: List of tasks in that category scheduled for today
+     * Value: List of task items (parents with children, or standalone tasks)
      */
-    val tasksByCategory: Map<String, List<Task>> = emptyMap(),
+    val tasksByCategory: Map<String, List<TaskItem>> = emptyMap(),
     
     /**
      * Whether completed tasks should be shown in the UI

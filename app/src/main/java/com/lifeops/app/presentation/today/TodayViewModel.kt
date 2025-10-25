@@ -53,6 +53,9 @@ class TodayViewModel @Inject constructor(
             is TodayUiEvent.NavigateToTaskDetail -> {
                 // Navigation handled by MainActivity/NavHost in Phase 4
             }
+            is TodayUiEvent.NavigateToTaskCreate -> {
+                // Navigation handled by TodayScreen
+            }
             is TodayUiEvent.Refresh -> loadTasksDueToday()
         }
     }
@@ -80,8 +83,8 @@ class TodayViewModel @Inject constructor(
                     }
                 }
                 .collect { tasks ->
-                    val grouped = tasks.groupBy { it.category }
-                        .toSortedMap()
+                    // Group tasks by category with parent-child relationships
+                    val grouped = groupTasksWithHierarchy(tasks)
                     
                     val allComplete = tasks.isNotEmpty() && 
                         tasks.all { it.lastCompleted == today }
@@ -97,6 +100,51 @@ class TodayViewModel @Inject constructor(
                     }
                 }
         }
+    }
+    
+    /**
+     * Group tasks by category, organizing parent-child relationships
+     * - Parents appear with their children nested
+     * - Children are shown under their parents
+     * - Standalone tasks appear normally
+     */
+    private fun groupTasksWithHierarchy(tasks: List<com.lifeops.app.data.local.entity.Task>): Map<String, List<TaskItem>> {
+        // Create a map of task ID to task for quick lookup
+        val taskMap = tasks.associateBy { it.id }
+        
+        // Track which tasks are children (so we don't show them as standalone)
+        val childTaskIds = mutableSetOf<Long>()
+        
+        // Find all child tasks
+        tasks.forEach { task ->
+            if (!task.parentTaskIds.isNullOrEmpty()) {
+                childTaskIds.add(task.id)
+            }
+        }
+        
+        // Build task items with hierarchy
+        val taskItems = tasks.mapNotNull { task ->
+            // Skip tasks that are children (they'll be included under their parent)
+            if (task.id in childTaskIds) {
+                return@mapNotNull null
+            }
+            
+            // Find children for this task
+            val children = tasks.filter { potentialChild ->
+                !potentialChild.parentTaskIds.isNullOrEmpty() && 
+                task.id in potentialChild.parentTaskIds
+            }.sortedBy { it.childOrder ?: 0 }
+            
+            TaskItem(
+                task = task,
+                children = children,
+                isParent = children.isNotEmpty()
+            )
+        }
+        
+        // Group by category and sort
+        return taskItems.groupBy { it.task.category }
+            .toSortedMap()
     }
     
     /**

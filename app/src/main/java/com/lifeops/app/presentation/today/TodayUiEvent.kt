@@ -46,6 +46,12 @@ sealed interface TodayUiEvent {
     data class NavigateToTaskDetail(val taskId: Long) : TodayUiEvent
     
     /**
+     * User tapped the New Task floating action button
+     * Should navigate to the Task Create screen
+     */
+    data object NavigateToTaskCreate : TodayUiEvent
+    
+    /**
      * User performed pull-to-refresh or tapped retry button
      * Should reload tasks from the database
      */

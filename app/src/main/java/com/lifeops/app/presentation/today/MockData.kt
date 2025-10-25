@@ -160,12 +160,91 @@ object MockData {
         completionStreak = 7
     )
     
+    // Parent/Child example
+    val parentTask = Task(
+        id = 11,
+        name = "Complete Workout Routine",
+        category = "Fitness",
+        description = "Full workout with warm-up, exercise, and cool-down",
+        intervalUnit = IntervalUnit.DAY,
+        intervalQty = 1,
+        nextDue = today,
+        lastCompleted = null,
+        timeEstimate = 60,
+        difficulty = Difficulty.MEDIUM,
+        active = true,
+        requiresManualCompletion = false
+    )
+    
+    val childTasks = listOf(
+        Task(
+            id = 12,
+            name = "Warm-up Stretch",
+            category = "Fitness",
+            description = "5 minute stretching",
+            intervalUnit = IntervalUnit.DAY,
+            intervalQty = 1,
+            nextDue = today,
+            lastCompleted = null,
+            timeEstimate = 5,
+            difficulty = Difficulty.LOW,
+            active = true,
+            parentTaskIds = listOf(11),
+            childOrder = 1
+        ),
+        Task(
+            id = 13,
+            name = "Strength Training",
+            category = "Fitness",
+            description = "Weight lifting",
+            intervalUnit = IntervalUnit.DAY,
+            intervalQty = 1,
+            nextDue = today,
+            lastCompleted = null,
+            timeEstimate = 30,
+            difficulty = Difficulty.MEDIUM,
+            active = true,
+            parentTaskIds = listOf(11),
+            childOrder = 2
+        ),
+        Task(
+            id = 14,
+            name = "Cool-down Stretch",
+            category = "Fitness",
+            description = "Post-workout stretching",
+            intervalUnit = IntervalUnit.DAY,
+            intervalQty = 1,
+            nextDue = today,
+            lastCompleted = null,
+            timeEstimate = 5,
+            difficulty = Difficulty.LOW,
+            active = true,
+            parentTaskIds = listOf(11),
+            childOrder = 3
+        )
+    )
+    
     // All tasks by category
-    val tasksByCategory: Map<String, List<Task>> = mapOf(
-        "Fitness" to listOf(morningWorkout, stretch, walk),
-        "Home" to listOf(waterPlants, checkMail, laundry),
-        "Work" to listOf(dailyStandup, reviewPRs),
-        "Personal" to listOf(readBook, meditation)
+    val tasksByCategory: Map<String, List<TaskItem>> = mapOf(
+        "Fitness" to listOf(
+            TaskItem(morningWorkout),
+            TaskItem(stretch),
+            TaskItem(walk),
+            TaskItem(parentTask, childTasks, true)
+        ),
+        "Home" to listOf(
+            TaskItem(waterPlants),
+            TaskItem(checkMail),
+            TaskItem(laundry)
+        ),
+        "Work" to listOf(
+            TaskItem(dailyStandup),
+            TaskItem(reviewPRs)
+        ),
+        "Personal" to listOf(
+            TaskItem(readBook),
+            TaskItem(meditation)
+        )
     )
     
     // Tasks with all incomplete (for testing)

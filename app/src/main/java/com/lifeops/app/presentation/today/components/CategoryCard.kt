@@ -8,6 +8,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lifeops.app.data.local.entity.Task
 import com.lifeops.app.presentation.today.MockData
+import com.lifeops.app.presentation.today.TaskItem
 import com.lifeops.app.ui.theme.LifeOpsTheme
 import java.time.LocalDate
 
@@ -17,12 +18,12 @@ import java.time.LocalDate
  * Displays:
  * - Category name
  * - Progress indicator (X/Y tasks complete)
- * - List of tasks in this category
+ * - List of tasks in this category (with parent-child hierarchy)
  */
 @Composable
 fun CategoryCard(
     categoryName: String,
-    tasks: List<Task>,
+    taskItems: List<TaskItem>,
     totalTasksInCategory: Int,
     completedTasksInCategory: Int,
     onTaskChecked: (Long) -> Unit,
@@ -85,29 +86,32 @@ fun CategoryCard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Task list
-            tasks.forEach { task ->
-                TaskItem(
-                    task = task,
-                    isCompleted = isTaskCompleted(task),
-                    onCheckedChange = { _ ->
-                        onTaskChecked(task.id)
-                    },
-                    onTaskClick = {
-                        onTaskClick(task.id)
-                    }
-                )
+            // Task list with parent-child hierarchy
+            taskItems.forEach { taskItem ->
+                if (taskItem.isParent) {
+                    // Parent task with children
+                    ParentTaskItem(
+                        parentTask = taskItem.task,
+                        childTasks = taskItem.children,
+                        onTaskChecked = onTaskChecked,
+                        onTaskClick = onTaskClick
+                    )
+                } else {
+                    // Standalone task
+                    com.lifeops.app.presentation.today.components.TaskItem(
+                        task = taskItem.task,
+                        isCompleted = com.lifeops.app.presentation.today.components.isTaskCompleted(taskItem.task),
+                        onCheckedChange = { _ ->
+                            onTaskChecked(taskItem.task.id)
+                        },
+                        onTaskClick = {
+                            onTaskClick(taskItem.task.id)
+                        }
+                    )
+                }
             }
         }
     }
-}
-
-/**
- * Determine if a task is completed based on lastCompleted date
- */
-private fun isTaskCompleted(task: Task): Boolean {
-    val today = LocalDate.now()
-    return task.lastCompleted == today
 }
 
 // ================================
@@ -119,12 +123,20 @@ private fun isTaskCompleted(task: Task): Boolean {
 private fun PreviewCategoryCardMixed() {
     LifeOpsTheme {
         Surface {
-            val tasks = MockData.tasksByCategory["Fitness"] ?: emptyList()
+            val taskItems = MockData.tasksByCategory["Fitness"] ?: emptyList()
+            val totalTasks = taskItems.sumOf { if (it.isParent) it.children.size else 1 }
+            val completedTasks = taskItems.sumOf { item ->
+                if (item.isParent) {
+                    item.children.count { com.lifeops.app.presentation.today.components.isTaskCompleted(it) }
+                } else {
+                    if (com.lifeops.app.presentation.today.components.isTaskCompleted(item.task)) 1 else 0
+                }
+            }
             CategoryCard(
                 categoryName = "Fitness",
-                tasks = tasks,
-                totalTasksInCategory = tasks.size,
-                completedTasksInCategory = tasks.count { isTaskCompleted(it) },
+                taskItems = taskItems,
+                totalTasksInCategory = totalTasks,
+                completedTasksInCategory = completedTasks,
                 onTaskChecked = {},
                 onTaskClick = {}
             )
@@ -137,15 +149,15 @@ private fun PreviewCategoryCardMixed() {
 private fun PreviewCategoryCardAllIncomplete() {
     LifeOpsTheme {
         Surface {
-            val tasks = listOf(
-                MockData.waterPlants,
-                MockData.checkMail,
-                MockData.laundry
+            val taskItems = listOf(
+                TaskItem(MockData.waterPlants),
+                TaskItem(MockData.checkMail),
+                TaskItem(MockData.laundry)
             )
             CategoryCard(
                 categoryName = "Home",
-                tasks = tasks,
-                totalTasksInCategory = tasks.size,
+                taskItems = taskItems,
+                totalTasksInCategory = taskItems.size,
                 completedTasksInCategory = 0,
                 onTaskChecked = {},
                 onTaskClick = {}
@@ -159,14 +171,23 @@ private fun PreviewCategoryCardAllIncomplete() {
 private fun PreviewCategoryCardAllComplete() {
     LifeOpsTheme {
         Surface {
-            val tasks = MockData.tasksByCategory["Work"]?.map { 
-                it.copy(lastCompleted = LocalDate.now())
+            val today = LocalDate.now()
+            val taskItems = MockData.tasksByCategory["Work"]?.map { item ->
+                if (item.isParent) {
+                    item.copy(
+                        task = item.task.copy(lastCompleted = today),
+                        children = item.children.map { it.copy(lastCompleted = today) }
+                    )
+                } else {
+                    item.copy(task = item.task.copy(lastCompleted = today))
+                }
             } ?: emptyList()
+            val totalTasks = taskItems.size
             CategoryCard(
                 categoryName = "Work",
-                tasks = tasks,
-                totalTasksInCategory = tasks.size,
-                completedTasksInCategory = tasks.size,
+                taskItems = taskItems,
+                totalTasksInCategory = totalTasks,
+                completedTasksInCategory = totalTasks,
                 onTaskChecked = {},
                 onTaskClick = {}
             )
@@ -179,10 +200,10 @@ private fun PreviewCategoryCardAllComplete() {
 private fun PreviewCategoryCardSingleTask() {
     LifeOpsTheme {
         Surface {
-            val tasks = listOf(MockData.readBook)
+            val taskItems = listOf(TaskItem(MockData.readBook))
             CategoryCard(
                 categoryName = "Reading",
-                tasks = tasks,
+                taskItems = taskItems,
                 totalTasksInCategory = 1,
                 completedTasksInCategory = 0,
                 onTaskChecked = {},
