@@ -31,18 +31,18 @@ class Converters {
     }
     
     // ============================================
-    // List<Long> Converters (for task IDs)
+    // List<String> Converters (for task IDs - UUIDs)
     // ============================================
     
     @TypeConverter
-    fun fromLongList(list: List<Long>?): String? {
+    fun fromStringList(list: List<String>?): String? {
         return list?.let { gson.toJson(it) }
     }
     
     @TypeConverter
-    fun toLongList(json: String?): List<Long>? {
+    fun toStringList(json: String?): List<String>? {
         if (json == null) return null
-        val type = object : TypeToken<List<Long>>() {}.type
+        val type = object : TypeToken<List<String>>() {}.type
         return gson.fromJson(json, type)
     }
     

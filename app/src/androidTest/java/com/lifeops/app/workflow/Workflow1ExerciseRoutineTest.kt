@@ -66,14 +66,14 @@ class Workflow1ExerciseRoutineTest {
             specificDaysOfWeek = listOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
             requiresManualCompletion = false // Auto-complete when all children done
         )
-        val parentId = taskDao.insert(parentTask)
+        taskDao.insert(parentTask)
         
         // When - John adds child tasks in specific order
         val childTasks = listOf(
             Task(
                 name = "Stretch",
                 category = "Health",
-                parentTaskIds = listOf(parentId),
+                parentTaskIds = listOf(parentTask.id),
                 childOrder = 1,
                 timeEstimate = 5,
                 difficulty = Difficulty.LOW
@@ -81,7 +81,7 @@ class Workflow1ExerciseRoutineTest {
             Task(
                 name = "Lift Weights",
                 category = "Health",
-                parentTaskIds = listOf(parentId),
+                parentTaskIds = listOf(parentTask.id),
                 childOrder = 2,
                 timeEstimate = 30,
                 difficulty = Difficulty.MEDIUM
@@ -89,7 +89,7 @@ class Workflow1ExerciseRoutineTest {
             Task(
                 name = "Cardio",
                 category = "Health",
-                parentTaskIds = listOf(parentId),
+                parentTaskIds = listOf(parentTask.id),
                 childOrder = 3,
                 timeEstimate = 20,
                 difficulty = Difficulty.MEDIUM
@@ -97,7 +97,7 @@ class Workflow1ExerciseRoutineTest {
             Task(
                 name = "Stretch",
                 category = "Health",
-                parentTaskIds = listOf(parentId),
+                parentTaskIds = listOf(parentTask.id),
                 childOrder = 4,
                 timeEstimate = 5,
                 difficulty = Difficulty.LOW
@@ -107,7 +107,7 @@ class Workflow1ExerciseRoutineTest {
         childTasks.forEach { taskDao.insert(it) }
         
         // Then - verify parent task exists
-        val retrievedParent = taskDao.getById(parentId)
+        val retrievedParent = taskDao.getById(parentTask.id)
         assertThat(retrievedParent).isNotNull()
         assertThat(retrievedParent?.name).isEqualTo("Workout")
         assertThat(retrievedParent?.specificDaysOfWeek).containsExactly(
@@ -118,7 +118,7 @@ class Workflow1ExerciseRoutineTest {
         assertThat(retrievedParent?.requiresManualCompletion).isFalse()
         
         // Then - verify children are ordered correctly
-        val children = taskDao.getChildrenOfParent(parentId)
+        val children = taskDao.getChildrenOfParent(parentTask.id)
         assertThat(children).hasSize(4)
         assertThat(children.map { it.name }).containsExactly(
             "Stretch", "Lift Weights", "Cardio", "Stretch"
@@ -144,7 +144,7 @@ class Workflow1ExerciseRoutineTest {
             specificDaysOfWeek = listOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
             nextDue = monday
         )
-        val parentId = taskDao.insert(parentTask)
+        taskDao.insert(parentTask)
         
         // When - checking tasks due on Monday
         val mondayTasks = taskDao.getTasksDueByDate(monday)
@@ -172,13 +172,13 @@ class Workflow1ExerciseRoutineTest {
             specificDaysOfWeek = listOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
             nextDue = monday
         )
-        val parentId = taskDao.insert(parentTask)
+        taskDao.insert(parentTask)
         
         // When - Creating child tasks
         val childTask = Task(
             name = "Stretch",
             category = "Health",
-            parentTaskIds = listOf(parentId),
+            parentTaskIds = listOf(parentTask.id),
             childOrder = 1,
             nextDue = monday // Child appears with parent
         )
@@ -199,20 +199,20 @@ class Workflow1ExerciseRoutineTest {
             nextDue = LocalDate.of(2025, 10, 24),
             lastCompleted = null
         )
-        val taskId = taskDao.insert(task)
+        taskDao.insert(task)
         
         // When - John completes the task
         val completionDate = LocalDate.of(2025, 10, 24)
         val nextOccurrence = LocalDate.of(2025, 10, 27) // Next Monday
         taskDao.updateSchedule(
-            taskId = taskId,
+            taskId = task.id,
             nextDue = nextOccurrence,
             lastCompleted = completionDate,
             streak = 1
         )
         
         // Then - Task schedule is updated
-        val updated = taskDao.getById(taskId)
+        val updated = taskDao.getById(task.id)
         assertThat(updated?.lastCompleted).isEqualTo(completionDate)
         assertThat(updated?.nextDue).isEqualTo(nextOccurrence)
         assertThat(updated?.completionStreak).isEqualTo(1)
@@ -221,13 +221,14 @@ class Workflow1ExerciseRoutineTest {
     @Test
     fun workflow_1_multiple_children_with_different_difficulties() = runTest {
         // Given - Parent task
-        val parentId = taskDao.insert(Task(name = "Workout", category = "Health"))
+        val parent = Task(name = "Workout", category = "Health")
+        taskDao.insert(parent)
         
         // When - Adding children with different difficulties
         taskDao.insert(Task(
             name = "Warm Up",
             category = "Health",
-            parentTaskIds = listOf(parentId),
+            parentTaskIds = listOf(parent.id),
             childOrder = 1,
             difficulty = Difficulty.LOW
         ))
@@ -235,7 +236,7 @@ class Workflow1ExerciseRoutineTest {
         taskDao.insert(Task(
             name = "Heavy Lifting",
             category = "Health",
-            parentTaskIds = listOf(parentId),
+            parentTaskIds = listOf(parent.id),
             childOrder = 2,
             difficulty = Difficulty.HIGH
         ))
@@ -243,13 +244,13 @@ class Workflow1ExerciseRoutineTest {
         taskDao.insert(Task(
             name = "Cool Down",
             category = "Health",
-            parentTaskIds = listOf(parentId),
+            parentTaskIds = listOf(parent.id),
             childOrder = 3,
             difficulty = Difficulty.LOW
         ))
         
         // Then - Children have correct difficulties
-        val children = taskDao.getChildrenOfParent(parentId)
+        val children = taskDao.getChildrenOfParent(parent.id)
         assertThat(children[0].difficulty).isEqualTo(Difficulty.LOW)
         assertThat(children[1].difficulty).isEqualTo(Difficulty.HIGH)
         assertThat(children[2].difficulty).isEqualTo(Difficulty.LOW)
@@ -258,31 +259,31 @@ class Workflow1ExerciseRoutineTest {
     @Test
     fun workflow_1_reorder_children_within_parent() = runTest {
         // Given - Parent with children
-        val parentId = taskDao.insert(Task(name = "Workout", category = "Health"))
+        val parent = Task(name = "Workout", category = "Health")
+        taskDao.insert(parent)
         
-        val child1Id = taskDao.insert(Task(
+        val child1 = Task(
             name = "Cardio",
             category = "Health",
-            parentTaskIds = listOf(parentId),
+            parentTaskIds = listOf(parent.id),
             childOrder = 1
-        ))
+        )
+        taskDao.insert(child1)
         
-        val child2Id = taskDao.insert(Task(
+        val child2 = Task(
             name = "Weights",
             category = "Health",
-            parentTaskIds = listOf(parentId),
+            parentTaskIds = listOf(parent.id),
             childOrder = 2
-        ))
+        )
+        taskDao.insert(child2)
         
         // When - Reordering (swap the order)
-        val child1 = taskDao.getById(child1Id)!!
-        val child2 = taskDao.getById(child2Id)!!
-        
         taskDao.update(child1.copy(childOrder = 2))
         taskDao.update(child2.copy(childOrder = 1))
         
         // Then - Children appear in new order
-        val reordered = taskDao.getChildrenOfParent(parentId)
+        val reordered = taskDao.getChildrenOfParent(parent.id)
         assertThat(reordered.map { it.name }).containsExactly("Weights", "Cardio").inOrder()
     }
 }

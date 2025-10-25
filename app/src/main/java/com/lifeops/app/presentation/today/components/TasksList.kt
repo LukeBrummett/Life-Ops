@@ -25,8 +25,8 @@ import java.time.LocalDate
 fun TasksList(
     tasksByCategory: Map<String, List<TaskItem>>,
     showCompleted: Boolean,
-    onTaskChecked: (Long) -> Unit,
-    onTaskClick: (Long) -> Unit,
+    onTaskChecked: (String) -> Unit,
+    onTaskClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Filter task items based on showCompleted setting

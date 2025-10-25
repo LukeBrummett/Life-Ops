@@ -113,7 +113,7 @@ class TodayViewModel @Inject constructor(
         val taskMap = tasks.associateBy { it.id }
         
         // Track which tasks are children (so we don't show them as standalone)
-        val childTaskIds = mutableSetOf<Long>()
+        val childTaskIds = mutableSetOf<String>()
         
         // Find all child tasks
         tasks.forEach { task ->
@@ -151,7 +151,7 @@ class TodayViewModel @Inject constructor(
      * Toggle task completion status
      * Uses CompleteTaskUseCase to handle all business logic
      */
-    private fun completeTask(taskId: Long) {
+    private fun completeTask(taskId: String) {
         viewModelScope.launch {
             val today = LocalDate.now()
             completeTaskUseCase(taskId, today)

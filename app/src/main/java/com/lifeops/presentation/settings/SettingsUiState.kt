@@ -4,7 +4,7 @@ import com.lifeops.presentation.settings.import_data.ImportConflict
 
 data class SettingsUiState(
     val appVersion: String = "1.0.0",
-    val databaseVersion: Int = 1,
+    val databaseVersion: Int = 2,  // Updated to v2 for UUID migration
     val totalTasks: Int = 0,
     val totalSupplies: Int = 0,
     val lastManualBackup: String? = null,

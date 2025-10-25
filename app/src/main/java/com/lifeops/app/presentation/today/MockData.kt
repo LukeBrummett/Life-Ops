@@ -15,7 +15,7 @@ object MockData {
     
     // Fitness Tasks
     val morningWorkout = Task(
-        id = 1,
+        id = "1",
         name = "Morning Workout",
         category = "Fitness",
         description = "Complete full body workout routine",
@@ -29,7 +29,7 @@ object MockData {
     )
     
     val stretch = Task(
-        id = 2,
+        id = "2",
         name = "Stretch",
         category = "Fitness",
         description = "Morning stretching routine",
@@ -44,7 +44,7 @@ object MockData {
     )
     
     val walk = Task(
-        id = 3,
+        id = "3",
         name = "Walk",
         category = "Fitness",
         description = "30 minute walk around the neighborhood",
@@ -60,7 +60,7 @@ object MockData {
     
     // Home Tasks
     val waterPlants = Task(
-        id = 4,
+        id = "4",
         name = "Water Plants",
         category = "Home",
         description = "Water all indoor plants",
@@ -74,7 +74,7 @@ object MockData {
     )
     
     val checkMail = Task(
-        id = 5,
+        id = "5",
         name = "Check Mail",
         category = "Home",
         description = "Check and sort mail",
@@ -88,7 +88,7 @@ object MockData {
     )
     
     val laundry = Task(
-        id = 6,
+        id = "6",
         name = "Do Laundry",
         category = "Home",
         description = "Wash, dry, and fold clothes",
@@ -103,7 +103,7 @@ object MockData {
     
     // Work Tasks
     val dailyStandup = Task(
-        id = 7,
+        id = "7",
         name = "Daily Standup",
         category = "Work",
         description = "Team standup meeting",
@@ -118,7 +118,7 @@ object MockData {
     )
     
     val reviewPRs = Task(
-        id = 8,
+        id = "8",
         name = "Review Pull Requests",
         category = "Work",
         description = "Review and approve pending PRs",
@@ -132,7 +132,7 @@ object MockData {
     
     // Personal Tasks
     val readBook = Task(
-        id = 9,
+        id = "9",
         name = "Read Book",
         category = "Personal",
         description = "Read for 30 minutes",
@@ -146,7 +146,7 @@ object MockData {
     )
     
     val meditation = Task(
-        id = 10,
+        id = "10",
         name = "Meditation",
         category = "Personal",
         description = "Morning meditation",
@@ -162,7 +162,7 @@ object MockData {
     
     // Parent/Child example
     val parentTask = Task(
-        id = 11,
+        id = "11",
         name = "Complete Workout Routine",
         category = "Fitness",
         description = "Full workout with warm-up, exercise, and cool-down",
@@ -178,7 +178,7 @@ object MockData {
     
     val childTasks = listOf(
         Task(
-            id = 12,
+            id = "12",
             name = "Warm-up Stretch",
             category = "Fitness",
             description = "5 minute stretching",
@@ -189,11 +189,11 @@ object MockData {
             timeEstimate = 5,
             difficulty = Difficulty.LOW,
             active = true,
-            parentTaskIds = listOf(11),
+            parentTaskIds = listOf("11"),
             childOrder = 1
         ),
         Task(
-            id = 13,
+            id = "13",
             name = "Strength Training",
             category = "Fitness",
             description = "Weight lifting",
@@ -204,11 +204,11 @@ object MockData {
             timeEstimate = 30,
             difficulty = Difficulty.MEDIUM,
             active = true,
-            parentTaskIds = listOf(11),
+            parentTaskIds = listOf("11"),
             childOrder = 2
         ),
         Task(
-            id = 14,
+            id = "14",
             name = "Cool-down Stretch",
             category = "Fitness",
             description = "Post-workout stretching",
@@ -219,7 +219,7 @@ object MockData {
             timeEstimate = 5,
             difficulty = Difficulty.LOW,
             active = true,
-            parentTaskIds = listOf(11),
+            parentTaskIds = listOf("11"),
             childOrder = 3
         )
     )

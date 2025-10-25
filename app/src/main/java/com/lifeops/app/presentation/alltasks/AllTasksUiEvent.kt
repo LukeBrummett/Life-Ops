@@ -37,7 +37,7 @@ sealed interface AllTasksUiEvent {
     /**
      * User tapped on a task to view details
      */
-    data class NavigateToTaskDetail(val taskId: Long) : AllTasksUiEvent
+    data class NavigateToTaskDetail(val taskId: String) : AllTasksUiEvent
     
     /**
      * User tapped FAB to create new task

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lifeops.app.data.local.entity.Task
 import com.lifeops.app.data.repository.TaskRepository
+import com.lifeops.app.domain.usecase.CreateBackupUseCase
 import com.lifeops.presentation.settings.export.ExportDataUseCase
 import com.lifeops.presentation.settings.export.ExportResult
 import com.lifeops.presentation.settings.import_data.ConflictResolution
@@ -19,7 +20,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val exportDataUseCase: ExportDataUseCase,
-    private val importDataUseCase: ImportDataUseCase
+    private val importDataUseCase: ImportDataUseCase,
+    private val createBackupUseCase: CreateBackupUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -27,6 +29,7 @@ class SettingsViewModel @Inject constructor(
 
     init {
         loadStatistics()
+        loadBackupTimestamps()
     }
 
     private fun loadStatistics() {
@@ -40,6 +43,25 @@ class SettingsViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private fun loadBackupTimestamps() {
+        viewModelScope.launch {
+            val lastManual = createBackupUseCase.getLastManualBackupTime()
+            val lastAuto = createBackupUseCase.getLastAutoBackupTime()
+            
+            _uiState.update { currentState ->
+                currentState.copy(
+                    lastManualBackup = lastManual?.let { formatBackupTime(it) },
+                    lastAutoBackup = lastAuto?.let { formatBackupTime(it) }
+                )
+            }
+        }
+    }
+
+    private fun formatBackupTime(dateTime: java.time.LocalDateTime): String {
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' h:mm a")
+        return dateTime.format(formatter)
     }
 
     fun onEvent(event: SettingsUiEvent) {
@@ -137,13 +159,17 @@ class SettingsViewModel @Inject constructor(
 
     private fun resolveConflictsAndImport(
         tasks: List<Task>,
-        resolutions: Map<Long, ConflictResolution>
+        resolutions: Map<String, ConflictResolution>
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, importConflicts = null) }
             
             when (val result = importDataUseCase.executeImport(tasks, resolutions)) {
                 is ImportResult.Success -> {
+                    // Create automatic backup after successful import
+                    createBackupUseCase.execute(isAutomatic = true)
+                    loadBackupTimestamps()
+                    
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -180,7 +206,29 @@ class SettingsViewModel @Inject constructor(
     }
 
     private fun createBackup() {
-        // TODO: Implement in Phase 5
-        _uiState.update { it.copy(successMessage = "Backup functionality coming in Phase 5") }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            val result = createBackupUseCase.execute(isAutomatic = false)
+            
+            if (result.isSuccess) {
+                // Reload backup timestamps to show the new backup
+                loadBackupTimestamps()
+                
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false,
+                        successMessage = "Backup created: ${result.getOrNull()}"
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to create backup: ${result.exceptionOrNull()?.message}"
+                    )
+                }
+            }
+        }
     }
 }

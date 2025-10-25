@@ -28,19 +28,26 @@ class DatabaseInitializer @Inject constructor(
         // Clear all existing data
         database.clearAllTables()
         
-        // TODO: Re-enable sample data loading when needed
-        // Sample task creation temporarily disabled for import/export testing
+        // Sample data loading disabled - only clearing database
+        // Uncomment below to re-enable sample data
         
-        /* COMMENTED OUT - SAMPLE DATA LOADING
+        /*
         val today = LocalDate.now()
         
-        // Track task IDs for parent/child and trigger relationships
-        val taskIds = mutableMapOf<String, Long>()
+        // Pre-generate UUIDs for tasks that need relationships
+        val morningWorkoutId = java.util.UUID.randomUUID().toString()
+        val warmupStretchId = java.util.UUID.randomUUID().toString()
+        val strengthTrainingId = java.util.UUID.randomUUID().toString()
+        val cardioId = java.util.UUID.randomUUID().toString()
+        val cooldownStretchId = java.util.UUID.randomUUID().toString()
+        val cookDinnerId = java.util.UUID.randomUUID().toString()
+        val cleanUpDinnerId = java.util.UUID.randomUUID().toString()
         
-        // Create sample tasks
+        // Create sample tasks with pre-assigned UUIDs
         val sampleTasks = listOf(
             // Fitness tasks - Parent/Child example
             Task(
+                id = morningWorkoutId,
                 name = "Morning Workout",
                 category = "Fitness",
                 description = "Complete workout routine with stretching",
@@ -52,8 +59,9 @@ class DatabaseInitializer @Inject constructor(
                 active = true,
                 requiresManualCompletion = false // Auto-completes when all children done
             ),
-            // Child tasks for Morning Workout (will be linked after insertion)
+            // Child tasks for Morning Workout
             Task(
+                id = warmupStretchId,
                 name = "Warm-up Stretch",
                 category = "Fitness",
                 description = "5 minute stretching routine",
@@ -63,9 +71,11 @@ class DatabaseInitializer @Inject constructor(
                 timeEstimate = 5,
                 nextDue = today,
                 active = true,
-                childOrder = 1
+                childOrder = 1,
+                parentTaskIds = listOf(morningWorkoutId)
             ),
             Task(
+                id = strengthTrainingId,
                 name = "Strength Training",
                 category = "Fitness",
                 description = "Weight lifting routine",
@@ -75,9 +85,11 @@ class DatabaseInitializer @Inject constructor(
                 timeEstimate = 30,
                 nextDue = today,
                 active = true,
-                childOrder = 2
+                childOrder = 2,
+                parentTaskIds = listOf(morningWorkoutId)
             ),
             Task(
+                id = cardioId,
                 name = "Cardio",
                 category = "Fitness",
                 description = "Running or cycling",
@@ -87,9 +99,11 @@ class DatabaseInitializer @Inject constructor(
                 timeEstimate = 20,
                 nextDue = today,
                 active = true,
-                childOrder = 3
+                childOrder = 3,
+                parentTaskIds = listOf(morningWorkoutId)
             ),
             Task(
+                id = cooldownStretchId,
                 name = "Cool-down Stretch",
                 category = "Fitness",
                 description = "Post-workout stretching",
@@ -99,7 +113,8 @@ class DatabaseInitializer @Inject constructor(
                 timeEstimate = 5,
                 nextDue = today,
                 active = true,
-                childOrder = 4
+                childOrder = 4,
+                parentTaskIds = listOf(morningWorkoutId)
             ),
             Task(
                 name = "Evening Walk",
@@ -115,6 +130,7 @@ class DatabaseInitializer @Inject constructor(
             
             // Home tasks - Trigger example (Cook Dinner -> Clean Up)
             Task(
+                id = cookDinnerId,
                 name = "Cook Dinner",
                 category = "Home",
                 description = "Prepare evening meal",
@@ -123,9 +139,11 @@ class DatabaseInitializer @Inject constructor(
                 difficulty = Difficulty.MEDIUM,
                 timeEstimate = 45,
                 nextDue = today,
-                active = true
+                active = true,
+                triggersTaskIds = listOf(cleanUpDinnerId)
             ),
             Task(
+                id = cleanUpDinnerId,
                 name = "Clean Up After Dinner",
                 category = "Home",
                 description = "Wash dishes and clean kitchen",
@@ -134,7 +152,8 @@ class DatabaseInitializer @Inject constructor(
                 difficulty = Difficulty.LOW,
                 timeEstimate = 20,
                 nextDue = null, // ADHOC - only appears when triggered
-                active = true
+                active = true,
+                triggeredByTaskIds = listOf(cookDinnerId)
             ),
             Task(
                 name = "Water Plants",
@@ -261,61 +280,10 @@ class DatabaseInitializer @Inject constructor(
             )
         )
         
-        // Insert all tasks and store their IDs
+        // Insert all tasks (relationships are already set in the task objects)
         sampleTasks.forEach { task ->
-            val taskId = taskRepository.createTask(task).getOrThrow()
-            
-            // Map task names to IDs for relationship setup
-            when (task.name) {
-                "Morning Workout" -> taskIds["morningWorkout"] = taskId
-                "Warm-up Stretch" -> taskIds["warmupStretch"] = taskId
-                "Strength Training" -> taskIds["strengthTraining"] = taskId
-                "Cardio" -> taskIds["cardio"] = taskId
-                "Cool-down Stretch" -> taskIds["cooldownStretch"] = taskId
-                "Cook Dinner" -> taskIds["cookDinner"] = taskId
-                "Clean Up After Dinner" -> taskIds["cleanUpDinner"] = taskId
-            }
+            taskRepository.createTask(task)
         }
-        
-        // Set up parent-child relationships
-        // Morning Workout (parent) -> Warm-up, Strength, Cardio, Cool-down (children)
-        val morningWorkoutId = taskIds["morningWorkout"]!!
-        taskRepository.updateTask(
-            taskRepository.getTaskById(taskIds["warmupStretch"]!!).getOrThrow()!!.copy(
-                parentTaskIds = listOf(morningWorkoutId)
-            )
-        )
-        taskRepository.updateTask(
-            taskRepository.getTaskById(taskIds["strengthTraining"]!!).getOrThrow()!!.copy(
-                parentTaskIds = listOf(morningWorkoutId)
-            )
-        )
-        taskRepository.updateTask(
-            taskRepository.getTaskById(taskIds["cardio"]!!).getOrThrow()!!.copy(
-                parentTaskIds = listOf(morningWorkoutId)
-            )
-        )
-        taskRepository.updateTask(
-            taskRepository.getTaskById(taskIds["cooldownStretch"]!!).getOrThrow()!!.copy(
-                parentTaskIds = listOf(morningWorkoutId)
-            )
-        )
-        
-        // Set up trigger relationship
-        // Cook Dinner (trigger) -> Clean Up After Dinner (triggered)
-        val cookDinnerId = taskIds["cookDinner"]!!
-        val cleanUpDinnerId = taskIds["cleanUpDinner"]!!
-        
-        taskRepository.updateTask(
-            taskRepository.getTaskById(cookDinnerId).getOrThrow()!!.copy(
-                triggersTaskIds = listOf(cleanUpDinnerId)
-            )
-        )
-        taskRepository.updateTask(
-            taskRepository.getTaskById(cleanUpDinnerId).getOrThrow()!!.copy(
-                triggeredByTaskIds = listOf(cookDinnerId)
-            )
-        )
         
         // TODO: Add inventory-based task examples once Supply/Inventory entities are implemented
         // Examples to add:

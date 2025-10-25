@@ -81,11 +81,11 @@ fun LifeOpsNavGraph(
             route = Screen.TaskDetail.route,
             arguments = listOf(
                 navArgument(Screen.TaskDetail.ARG_TASK_ID) {
-                    type = NavType.LongType
+                    type = NavType.StringType
                 }
             )
         ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getLong(Screen.TaskDetail.ARG_TASK_ID) ?: 0L
+            val taskId = backStackEntry.arguments?.getString(Screen.TaskDetail.ARG_TASK_ID) ?: ""
             TaskDetailScreen(
                 taskId = taskId,
                 onNavigateBack = { navController.popBackStack() }

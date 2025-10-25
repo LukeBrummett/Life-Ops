@@ -62,7 +62,7 @@ class ImportDataUseCase @Inject constructor(
      */
     suspend fun executeImport(
         tasks: List<Task>,
-        conflictResolutions: Map<Long, ConflictResolution> = emptyMap()
+        conflictResolutions: Map<String, ConflictResolution> = emptyMap()
     ): ImportResult = withContext(Dispatchers.IO) {
         try {
             var imported = 0
@@ -90,8 +90,8 @@ class ImportDataUseCase @Inject constructor(
                         }
                     }
                     ConflictResolution.KEEP_BOTH -> {
-                        // Insert with new ID (Room will auto-generate)
-                        taskRepository.createTask(task.copy(id = 0))
+                        // Insert with new UUID (since we use UUIDs, generate a new one)
+                        taskRepository.createTask(task.copy(id = java.util.UUID.randomUUID().toString()))
                         imported++
                     }
                 }

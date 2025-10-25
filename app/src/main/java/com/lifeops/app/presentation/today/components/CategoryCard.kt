@@ -26,8 +26,8 @@ fun CategoryCard(
     taskItems: List<TaskItem>,
     totalTasksInCategory: Int,
     completedTasksInCategory: Int,
-    onTaskChecked: (Long) -> Unit,
-    onTaskClick: (Long) -> Unit,
+    onTaskChecked: (String) -> Unit,
+    onTaskClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val completedCount = completedTasksInCategory

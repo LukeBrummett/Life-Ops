@@ -449,61 +449,54 @@ Back button returns to Today Screen
 
 ## Implementation Checklist
 
-### Phase 1: Basic Screen Structure
-- [ ] Create `SettingsScreen.kt` composable
-- [ ] Create `SettingsViewModel.kt` with state management
-- [ ] Add navigation route in `Screen.kt`
-- [ ] Wire up navigation from Today Screen header
-- [ ] Implement header bar with back navigation
+### Phase 1: Basic Screen Structure ✅
+- [x] Create `SettingsScreen.kt` composable
+- [x] Create `SettingsViewModel.kt` with state management
+- [x] Add navigation route in `Screen.kt`
+- [x] Wire up navigation from Today Screen header
+- [x] Implement header bar with back navigation
 
-### Phase 2: About Section (Read-Only)
-- [ ] Create `AboutCard` composable
-- [ ] Get app version from BuildConfig
-- [ ] Query database for task/supply counts
-- [ ] Display database version
-- [ ] Show last backup date (if available from preferences)
+### Phase 2: About Section (Read-Only) ✅
+- [x] Create `AboutCard` composable
+- [x] Get app version from BuildConfig
+- [x] Query database for task/supply counts
+- [x] Display database version
+- [x] Show last backup date (if available from preferences)
 
-### Phase 3: Export Functionality
-- [ ] Create `ExportUseCase` for data serialization
-- [ ] Implement JSON serialization for all entities
-- [ ] Add file picker integration (Android Storage Access Framework)
-- [ ] Handle export success/failure states
-- [ ] Show success confirmation
-- [ ] Add error handling with user-friendly messages
+### Phase 3: Export Functionality ✅
+- [x] Create `ExportDataUseCase` for data serialization
+- [x] Implement JSON serialization for all entities
+- [x] Add file picker integration (Android Storage Access Framework)
+- [x] Handle export success/failure states
+- [x] Show success confirmation
+- [x] Add error handling with user-friendly messages
 
-### Phase 4: Backup Functionality
-- [ ] Create `CreateBackupUseCase`
-- [ ] Implement auto-naming with timestamp
-- [ ] Save to Downloads/LifeOps/Backups folder
-- [ ] Store last backup timestamp in preferences
-- [ ] Show success toast with filename
-- [ ] Handle permission requests
+### Phase 4: Import Functionality ✅
+- [x] Create `ImportDataUseCase` for data parsing
+- [x] Implement JSON deserialization
+- [x] Add schema version validation
+- [x] Implement field validation
+- [x] Create relationship validation
+- [x] Build conflict resolution dialog
+- [x] Handle import with user choices (Skip/Replace/Keep Both)
+- [x] Show import summary with statistics
 
-### Phase 5: Import Functionality
-- [ ] Create `ImportUseCase` for data parsing
-- [ ] Implement JSON deserialization
-- [ ] Add schema version validation
-- [ ] Implement field validation
-- [ ] Create relationship validation
-- [ ] Build conflict resolution dialog
-- [ ] Handle import with user choices (Skip/Replace/Keep Both)
-- [ ] Show import summary with statistics
+### Phase 5: Backup Functionality ✅
+- [x] Create `CreateBackupUseCase`
+- [x] Implement auto-naming with timestamp
+- [x] Save to app-private storage directory
+- [x] Implement 2-backup retention (delete oldest)
+- [x] Store last backup timestamp in preferences
+- [x] Show success toast with filename
+- [x] Add automatic backup on app launch (once per day)
+- [x] Add automatic backup on major operations (import complete)
 
-### Phase 6: Polish
-- [ ] Add loading states during operations
-- [ ] Implement proper error messages
-- [ ] Add confirmation dialogs for destructive actions
-- [ ] Test with large data sets (200+ tasks)
-- [ ] Test edge cases (empty database, corrupted files)
-- [ ] Add haptic feedback for success/error
-
-### Phase 7: Future Enhancements (Post-V1)
-- [ ] Automatic backup scheduling
-- [ ] Backup rotation/cleanup
+### Phase 6: Future Enhancements (Post-V1)
 - [ ] Selective export (tasks only, inventory only)
 - [ ] Theme settings (dark mode)
 - [ ] Notification preferences (when notifications added)
 - [ ] Data statistics dashboard
+- [ ] Manual backup restore UI (currently via Import)
 
 ---
 

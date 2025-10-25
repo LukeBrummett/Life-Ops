@@ -29,7 +29,7 @@ fun TodayScreen(
     onNavigateToAllTasks: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToTaskDetail: (Long) -> Unit = {},
+    onNavigateToTaskDetail: (String) -> Unit = {},
     onNavigateToTaskCreate: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()

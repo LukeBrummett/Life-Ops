@@ -28,7 +28,7 @@ interface TaskDao {
      * @return List of inserted task IDs
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(tasks: List<Task>): List<Long>
+    suspend fun insertAll(tasks: List<Task>)
     
     // ============================================
     // Read
@@ -38,13 +38,13 @@ interface TaskDao {
      * Get a task by ID
      */
     @Query("SELECT * FROM tasks WHERE id = :taskId")
-    suspend fun getById(taskId: Long): Task?
+    suspend fun getById(taskId: String): Task?
     
     /**
      * Observe a task by ID (reactive)
      */
     @Query("SELECT * FROM tasks WHERE id = :taskId")
-    fun observeById(taskId: Long): Flow<Task?>
+    fun observeById(taskId: String): Flow<Task?>
     
     /**
      * Get all tasks (including archived) for export/backup
@@ -89,7 +89,7 @@ interface TaskDao {
      * Get tasks with specific parent
      */
     @Query("SELECT * FROM tasks WHERE active = 1 AND parentTaskIds LIKE '%' || :parentId || '%' ORDER BY childOrder")
-    suspend fun getChildrenOfParent(parentId: Long): List<Task>
+    suspend fun getChildrenOfParent(parentId: String): List<Task>
     
     /**
      * Get all parent tasks (tasks that have children)
@@ -102,7 +102,7 @@ interface TaskDao {
      * Get tasks triggered by a specific task
      */
     @Query("SELECT * FROM tasks WHERE active = 1 AND triggeredByTaskIds LIKE '%' || :taskId || '%'")
-    suspend fun getTasksTriggeredBy(taskId: Long): List<Task>
+    suspend fun getTasksTriggeredBy(taskId: String): List<Task>
     
     /**
      * Get ADHOC tasks (no automatic scheduling)
@@ -173,19 +173,19 @@ interface TaskDao {
      * Used after task completion
      */
     @Query("UPDATE tasks SET nextDue = :nextDue, lastCompleted = :lastCompleted, completionStreak = :streak WHERE id = :taskId")
-    suspend fun updateSchedule(taskId: Long, nextDue: LocalDate?, lastCompleted: LocalDate, streak: Int)
+    suspend fun updateSchedule(taskId: String, nextDue: LocalDate?, lastCompleted: LocalDate, streak: Int)
     
     /**
      * Archive a task (soft delete)
      */
     @Query("UPDATE tasks SET active = 0 WHERE id = :taskId")
-    suspend fun archive(taskId: Long)
+    suspend fun archive(taskId: String)
     
     /**
      * Restore an archived task
      */
     @Query("UPDATE tasks SET active = 1 WHERE id = :taskId")
-    suspend fun restore(taskId: Long)
+    suspend fun restore(taskId: String)
     
     // ============================================
     // Delete
@@ -202,7 +202,7 @@ interface TaskDao {
      * Delete task by ID
      */
     @Query("DELETE FROM tasks WHERE id = :taskId")
-    suspend fun deleteById(taskId: Long)
+    suspend fun deleteById(taskId: String)
     
     /**
      * Delete all archived tasks

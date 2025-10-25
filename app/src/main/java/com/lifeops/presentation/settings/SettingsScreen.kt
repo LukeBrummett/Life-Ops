@@ -263,7 +263,7 @@ fun AboutInfoRow(label: String, value: String) {
 @Composable
 fun ImportConflictDialog(
     conflicts: List<com.lifeops.presentation.settings.import_data.ImportConflict>,
-    onResolve: (Map<Long, com.lifeops.presentation.settings.import_data.ConflictResolution>) -> Unit,
+    onResolve: (Map<String, com.lifeops.presentation.settings.import_data.ConflictResolution>) -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(

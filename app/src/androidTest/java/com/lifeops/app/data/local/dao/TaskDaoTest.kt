@@ -79,11 +79,11 @@ class TaskDaoTest {
         )
         
         // When
-        val ids = taskDao.insertAll(tasks)
+        taskDao.insertAll(tasks)
+        val allTasks = taskDao.getAll()
         
         // Then
-        assertThat(ids).hasSize(3)
-        assertThat(ids).doesNotContain(0L)
+        assertThat(allTasks).hasSize(3)
     }
     
     // ============================================
@@ -94,10 +94,10 @@ class TaskDaoTest {
     fun getById_returnsCorrectTask() = runTest {
         // Given
         val task = Task(name = "Test Task", category = "Work")
-        val id = taskDao.insert(task)
+        taskDao.insert(task)
         
         // When
-        val retrieved = taskDao.getById(id)
+        val retrieved = taskDao.getById(task.id)
         
         // Then
         assertThat(retrieved).isNotNull()
@@ -108,7 +108,7 @@ class TaskDaoTest {
     @Test
     fun getById_nonExistentTask_returnsNull() = runTest {
         // When
-        val retrieved = taskDao.getById(999L)
+        val retrieved = taskDao.getById("non-existent-uuid")
         
         // Then
         assertThat(retrieved).isNull()
@@ -187,15 +187,16 @@ class TaskDaoTest {
     @Test
     fun getChildrenOfParent_returnsChildrenOrderedByChildOrder() = runTest {
         // Given
-        val parentId = taskDao.insert(Task(name = "Parent", category = "Work"))
+        val parent = Task(name = "Parent", category = "Work")
+        taskDao.insert(parent)
         
-        taskDao.insert(Task(name = "Child 3", category = "Work", parentTaskIds = listOf(parentId), childOrder = 3))
-        taskDao.insert(Task(name = "Child 1", category = "Work", parentTaskIds = listOf(parentId), childOrder = 1))
-        taskDao.insert(Task(name = "Child 2", category = "Work", parentTaskIds = listOf(parentId), childOrder = 2))
+        taskDao.insert(Task(name = "Child 3", category = "Work", parentTaskIds = listOf(parent.id), childOrder = 3))
+        taskDao.insert(Task(name = "Child 1", category = "Work", parentTaskIds = listOf(parent.id), childOrder = 1))
+        taskDao.insert(Task(name = "Child 2", category = "Work", parentTaskIds = listOf(parent.id), childOrder = 2))
         taskDao.insert(Task(name = "Other", category = "Work")) // Not a child
         
         // When
-        val children = taskDao.getChildrenOfParent(parentId)
+        val children = taskDao.getChildrenOfParent(parent.id)
         
         // Then
         assertThat(children).hasSize(3)
@@ -289,14 +290,14 @@ class TaskDaoTest {
     fun updateTask_modifiesExistingTask() = runTest {
         // Given
         val task = Task(name = "Original", category = "Work")
-        val id = taskDao.insert(task)
+        taskDao.insert(task)
         
         // When
-        val updated = task.copy(id = id, name = "Updated")
+        val updated = task.copy(name = "Updated")
         taskDao.update(updated)
         
         // Then
-        val retrieved = taskDao.getById(id)
+        val retrieved = taskDao.getById(task.id)
         assertThat(retrieved?.name).isEqualTo("Updated")
     }
     
@@ -304,16 +305,16 @@ class TaskDaoTest {
     fun updateSchedule_updatesDateFields() = runTest {
         // Given
         val task = Task(name = "Task", category = "Work")
-        val id = taskDao.insert(task)
+        taskDao.insert(task)
         
         val newNextDue = LocalDate.of(2025, 10, 27)
         val newLastCompleted = LocalDate.of(2025, 10, 24)
         
         // When
-        taskDao.updateSchedule(id, newNextDue, newLastCompleted, 5)
+        taskDao.updateSchedule(task.id, newNextDue, newLastCompleted, 5)
         
         // Then
-        val retrieved = taskDao.getById(id)
+        val retrieved = taskDao.getById(task.id)
         assertThat(retrieved?.nextDue).isEqualTo(newNextDue)
         assertThat(retrieved?.lastCompleted).isEqualTo(newLastCompleted)
         assertThat(retrieved?.completionStreak).isEqualTo(5)
@@ -323,13 +324,13 @@ class TaskDaoTest {
     fun archiveTask_setsActiveToFalse() = runTest {
         // Given
         val task = Task(name = "Task", category = "Work", active = true)
-        val id = taskDao.insert(task)
+        taskDao.insert(task)
         
         // When
-        taskDao.archive(id)
+        taskDao.archive(task.id)
         
         // Then
-        val retrieved = taskDao.getById(id)
+        val retrieved = taskDao.getById(task.id)
         assertThat(retrieved?.active).isFalse()
         
         // And archived tasks don't appear in active list
@@ -341,13 +342,13 @@ class TaskDaoTest {
     fun restoreTask_setsActiveToTrue() = runTest {
         // Given
         val task = Task(name = "Task", category = "Work", active = false)
-        val id = taskDao.insert(task)
+        taskDao.insert(task)
         
         // When
-        taskDao.restore(id)
+        taskDao.restore(task.id)
         
         // Then
-        val retrieved = taskDao.getById(id)
+        val retrieved = taskDao.getById(task.id)
         assertThat(retrieved?.active).isTrue()
         
         // And restored tasks appear in active list
@@ -363,13 +364,13 @@ class TaskDaoTest {
     fun deleteById_removesTask() = runTest {
         // Given
         val task = Task(name = "Task", category = "Work")
-        val id = taskDao.insert(task)
+        taskDao.insert(task)
         
         // When
-        taskDao.deleteById(id)
+        taskDao.deleteById(task.id)
         
         // Then
-        val retrieved = taskDao.getById(id)
+        val retrieved = taskDao.getById(task.id)
         assertThat(retrieved).isNull()
     }
     

@@ -32,7 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun AllTasksScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToTaskDetail: (Long) -> Unit,
+    onNavigateToTaskDetail: (String) -> Unit,
     onNavigateToTaskCreate: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AllTasksViewModel = hiltViewModel()
@@ -567,7 +567,7 @@ private fun SortDropdown(
 private fun TaskList(
     tasks: List<com.lifeops.app.data.local.entity.Task>,
     groupByOption: com.lifeops.app.presentation.alltasks.GroupByOption,
-    onTaskClick: (Long) -> Unit,
+    onTaskClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(

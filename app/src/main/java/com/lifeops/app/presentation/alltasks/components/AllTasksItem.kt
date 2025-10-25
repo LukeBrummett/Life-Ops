@@ -197,7 +197,7 @@ fun AllTasksItem(
 fun ParentAllTasksItem(
     parentTask: Task,
     childTasks: List<Task>,
-    onTaskClick: (Long) -> Unit,
+    onTaskClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -292,7 +292,7 @@ private fun AllTasksItemPreview() {
         ) {
             AllTasksItem(
                 task = Task(
-                    id = 1,
+                    id = "1",
                     name = "Morning Workout",
                     category = "Health",
                     nextDue = LocalDate.now(),
@@ -323,7 +323,7 @@ private fun AllTasksItemWithIndicatorsPreview() {
         ) {
             AllTasksItem(
                 task = Task(
-                    id = 2,
+                    id = "2",
                     name = "Weekly Planning Session with all team members",
                     category = "Work",
                     nextDue = LocalDate.now().plusDays(3),
@@ -333,8 +333,8 @@ private fun AllTasksItemWithIndicatorsPreview() {
                     difficulty = Difficulty.HIGH,
                     completionStreak = 0,
                     childOrder = 1,
-                    parentTaskIds = listOf(10),
-                    triggeredByTaskIds = listOf(1),
+                    parentTaskIds = listOf("10"),
+                    triggeredByTaskIds = listOf("1"),
                     requiresInventory = true,
                     tags = "meeting, planning, team, collaboration"
                 ),
@@ -354,7 +354,7 @@ private fun AllTasksItemOverduePreview() {
         ) {
             AllTasksItem(
                 task = Task(
-                    id = 3,
+                    id = "3",
                     name = "Submit Report",
                     category = "Work",
                     nextDue = LocalDate.now().minusDays(2),
@@ -385,7 +385,7 @@ private fun AllTasksItemCompletedPreview() {
         ) {
             AllTasksItem(
                 task = Task(
-                    id = 4,
+                    id = "4",
                     name = "Read for 30 minutes",
                     category = "Personal",
                     nextDue = LocalDate.now(),
@@ -416,7 +416,7 @@ private fun AllTasksItemNoSchedulePreview() {
         ) {
             AllTasksItem(
                 task = Task(
-                    id = 5,
+                    id = "5",
                     name = "Adhoc task - call plumber",
                     category = "Home",
                     nextDue = null,
@@ -447,7 +447,7 @@ private fun ParentAllTasksItemPreview() {
         ) {
             ParentAllTasksItem(
                 parentTask = Task(
-                    id = 100,
+                    id = "100",
                     name = "Complete Morning Routine",
                     category = "Health",
                     nextDue = LocalDate.now(),
@@ -458,20 +458,20 @@ private fun ParentAllTasksItemPreview() {
                 ),
                 childTasks = listOf(
                     Task(
-                        id = 101,
+                        id = "101",
                         name = "Exercise",
                         category = "Health",
                         nextDue = LocalDate.now(),
-                        parentTaskIds = listOf(100),
+                        parentTaskIds = listOf("100"),
                         childOrder = 1,
                         tags = "cardio"
                     ),
                     Task(
-                        id = 102,
+                        id = "102",
                         name = "Meditation",
                         category = "Health",
                         nextDue = LocalDate.now(),
-                        parentTaskIds = listOf(100),
+                        parentTaskIds = listOf("100"),
                         childOrder = 2,
                         tags = "mindfulness"
                     )

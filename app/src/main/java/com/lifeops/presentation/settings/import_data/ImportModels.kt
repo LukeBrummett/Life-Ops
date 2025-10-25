@@ -41,7 +41,7 @@ enum class ConflictResolution {
  */
 data class ImportConflict(
     val type: ConflictType,
-    val taskId: Long,
+    val taskId: String,
     val taskName: String,
     val existingTask: Task?,
     val importedTask: Task

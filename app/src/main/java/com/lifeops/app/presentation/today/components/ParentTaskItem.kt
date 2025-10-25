@@ -22,8 +22,8 @@ import java.time.LocalDate
 fun ParentTaskItem(
     parentTask: Task,
     childTasks: List<Task>,
-    onTaskChecked: (Long) -> Unit,
-    onTaskClick: (Long) -> Unit,
+    onTaskChecked: (String) -> Unit,
+    onTaskClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val today = LocalDate.now()

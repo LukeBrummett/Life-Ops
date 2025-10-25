@@ -12,7 +12,7 @@ sealed interface TodayUiEvent {
      * User tapped checkbox to complete/uncomplete a task
      * @param taskId The ID of the task to toggle completion for
      */
-    data class CompleteTask(val taskId: Long) : TodayUiEvent
+    data class CompleteTask(val taskId: String) : TodayUiEvent
     
     /**
      * User tapped the show/hide completed toggle button
@@ -43,7 +43,7 @@ sealed interface TodayUiEvent {
      * Should navigate to the Task Detail screen
      * @param taskId The ID of the task to view details for
      */
-    data class NavigateToTaskDetail(val taskId: Long) : TodayUiEvent
+    data class NavigateToTaskDetail(val taskId: String) : TodayUiEvent
     
     /**
      * User tapped the New Task floating action button

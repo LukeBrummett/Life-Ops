@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
-    taskId: Long,
+    taskId: String,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit
 ) {

@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.lifeops.app.data.local.converter.Converters
 import java.time.LocalDate
+import java.util.UUID
 
 /**
  * Task entity representing a unit of work with scheduling, relationships, and inventory configuration.
@@ -14,6 +15,11 @@ import java.time.LocalDate
  * - Tasks can be triggered by multiple tasks and trigger multiple tasks
  * - Tasks can have their own schedule OR be ADHOC (trigger-only)
  * - Tasks can consume inventory items with different modes (FIXED, PROMPTED, RECOUNT)
+ * 
+ * Uses UUID for globally unique task identification to support:
+ * - Import/export between different databases
+ * - Sharing task lists between users
+ * - Conflict-free merging of task collections
  */
 @Entity(tableName = "tasks")
 @TypeConverters(Converters::class)
@@ -22,8 +28,8 @@ data class Task(
     // Identity & Basic Info
     // ============================================
     
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
+    val id: String = UUID.randomUUID().toString(),
     
     val name: String,
     
@@ -104,7 +110,7 @@ data class Task(
      * Tasks can have multiple parents
      * Multiple parents means task appears when ANY parent is due
      */
-    val parentTaskIds: List<Long>? = null,
+    val parentTaskIds: List<String>? = null,
     
     /**
      * Whether parent needs manual check-off after all children complete
@@ -128,12 +134,12 @@ data class Task(
      * JSON array of task IDs that trigger this task
      * This task appears when any of these tasks complete
      */
-    val triggeredByTaskIds: List<Long>? = null,
+    val triggeredByTaskIds: List<String>? = null,
     
     /**
      * JSON array of task IDs that this task triggers on completion
      */
-    val triggersTaskIds: List<Long>? = null,
+    val triggersTaskIds: List<String>? = null,
     
     // ============================================
     // Inventory

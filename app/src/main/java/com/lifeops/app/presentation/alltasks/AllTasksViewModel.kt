@@ -367,7 +367,7 @@ fun groupTasksByCategory(tasks: List<Task>): Map<String, List<TaskItem>> {
  */
 private fun groupTasksWithHierarchy(tasks: List<Task>): List<TaskItem> {
     // Track which tasks are children (so we don't show them as standalone)
-    val childTaskIds = mutableSetOf<Long>()
+    val childTaskIds = mutableSetOf<String>()
     
     // Find all child tasks
     tasks.forEach { task ->

@@ -28,7 +28,7 @@ class CompleteTaskUseCase @Inject constructor(
      * @param taskId The ID of the task to complete
      * @param completionDate The date the task was completed (usually today)
      */
-    suspend operator fun invoke(taskId: Long, completionDate: LocalDate) {
+    suspend operator fun invoke(taskId: String, completionDate: LocalDate) {
         val taskResult = repository.getTaskById(taskId)
         val task = taskResult.getOrNull() ?: return
         
@@ -80,7 +80,7 @@ class CompleteTaskUseCase @Inject constructor(
      * Check if parent tasks should auto-uncomplete when a child is uncompleted
      * Only auto-uncompletes if requiresManualCompletion is false
      */
-    private suspend fun checkAndUncompleteParentTasks(parentTaskIds: List<Long>, completionDate: LocalDate) {
+    private suspend fun checkAndUncompleteParentTasks(parentTaskIds: List<String>, completionDate: LocalDate) {
         parentTaskIds.forEach { parentId ->
             val parentTaskResult = repository.getTaskById(parentId)
             val parentTask = parentTaskResult.getOrNull() ?: return@forEach
@@ -112,7 +112,7 @@ class CompleteTaskUseCase @Inject constructor(
      * Check if parent tasks should auto-complete when a child is completed
      * Only auto-completes if requiresManualCompletion is false and all children are done
      */
-    private suspend fun checkAndCompleteParentTasks(parentTaskIds: List<Long>, completionDate: LocalDate) {
+    private suspend fun checkAndCompleteParentTasks(parentTaskIds: List<String>, completionDate: LocalDate) {
         parentTaskIds.forEach { parentId ->
             val parentTaskResult = repository.getTaskById(parentId)
             val parentTask = parentTaskResult.getOrNull() ?: return@forEach
@@ -157,7 +157,7 @@ class CompleteTaskUseCase @Inject constructor(
      * Trigger tasks when a task is completed
      * Sets the nextDue date for triggered tasks to the completion date
      */
-    private suspend fun triggerTasks(triggeredTaskIds: List<Long>, triggerDate: LocalDate) {
+    private suspend fun triggerTasks(triggeredTaskIds: List<String>, triggerDate: LocalDate) {
         triggeredTaskIds.forEach { triggeredTaskId ->
             val triggeredTaskResult = repository.getTaskById(triggeredTaskId)
             val triggeredTask = triggeredTaskResult.getOrNull() ?: return@forEach

@@ -11,7 +11,7 @@ sealed interface SettingsUiEvent {
     data class ImportFromUri(val uri: Uri) : SettingsUiEvent
     data class ResolveConflictsAndImport(
         val tasks: List<Task>,
-        val resolutions: Map<Long, ConflictResolution>
+        val resolutions: Map<String, ConflictResolution>
     ) : SettingsUiEvent
     data object DismissConflictDialog : SettingsUiEvent
     data object CreateBackup : SettingsUiEvent

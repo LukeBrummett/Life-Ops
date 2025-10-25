@@ -29,10 +29,10 @@ class TaskRepository @Inject constructor(
      * Create a new task
      * @return The ID of the created task
      */
-    suspend fun createTask(task: Task): Result<Long> {
+    suspend fun createTask(task: Task): Result<String> {
         return try {
-            val id = taskDao.insert(task)
-            Result.success(id)
+            taskDao.insert(task)
+            Result.success(task.id)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -42,10 +42,10 @@ class TaskRepository @Inject constructor(
      * Create multiple tasks
      * @return List of created task IDs
      */
-    suspend fun createTasks(tasks: List<Task>): Result<List<Long>> {
+    suspend fun createTasks(tasks: List<Task>): Result<List<String>> {
         return try {
-            val ids = taskDao.insertAll(tasks)
-            Result.success(ids)
+            taskDao.insertAll(tasks)
+            Result.success(tasks.map { it.id })
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -58,7 +58,7 @@ class TaskRepository @Inject constructor(
     /**
      * Get a task by ID
      */
-    suspend fun getTaskById(taskId: Long): Result<Task?> {
+    suspend fun getTaskById(taskId: String): Result<Task?> {
         return try {
             val task = taskDao.getById(taskId)
             Result.success(task)
@@ -70,7 +70,7 @@ class TaskRepository @Inject constructor(
     /**
      * Observe a task by ID (reactive)
      */
-    fun observeTask(taskId: Long): Flow<Task?> {
+    fun observeTask(taskId: String): Flow<Task?> {
         return taskDao.observeById(taskId)
     }
     
@@ -144,7 +144,7 @@ class TaskRepository @Inject constructor(
     /**
      * Get child tasks of a parent
      */
-    suspend fun getChildTasks(parentId: Long): Result<List<Task>> {
+    suspend fun getChildTasks(parentId: String): Result<List<Task>> {
         return try {
             val tasks = taskDao.getChildrenOfParent(parentId)
             Result.success(tasks)
@@ -156,7 +156,7 @@ class TaskRepository @Inject constructor(
     /**
      * Get tasks triggered by a specific task
      */
-    suspend fun getTriggeredTasks(taskId: Long): Result<List<Task>> {
+    suspend fun getTriggeredTasks(taskId: String): Result<List<Task>> {
         return try {
             val tasks = taskDao.getTasksTriggeredBy(taskId)
             Result.success(tasks)
@@ -229,7 +229,7 @@ class TaskRepository @Inject constructor(
      * Update task schedule after completion
      */
     suspend fun updateTaskSchedule(
-        taskId: Long,
+        taskId: String,
         nextDue: LocalDate?,
         lastCompleted: LocalDate,
         streak: Int
@@ -245,7 +245,7 @@ class TaskRepository @Inject constructor(
     /**
      * Archive a task (soft delete)
      */
-    suspend fun archiveTask(taskId: Long): Result<Unit> {
+    suspend fun archiveTask(taskId: String): Result<Unit> {
         return try {
             taskDao.archive(taskId)
             Result.success(Unit)
@@ -257,7 +257,7 @@ class TaskRepository @Inject constructor(
     /**
      * Restore an archived task
      */
-    suspend fun restoreTask(taskId: Long): Result<Unit> {
+    suspend fun restoreTask(taskId: String): Result<Unit> {
         return try {
             taskDao.restore(taskId)
             Result.success(Unit)
@@ -273,7 +273,7 @@ class TaskRepository @Inject constructor(
     /**
      * Delete a task permanently
      */
-    suspend fun deleteTask(taskId: Long): Result<Unit> {
+    suspend fun deleteTask(taskId: String): Result<Unit> {
         return try {
             taskDao.deleteById(taskId)
             Result.success(Unit)

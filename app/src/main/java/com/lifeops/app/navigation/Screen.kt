@@ -34,7 +34,7 @@ sealed class Screen(val route: String) {
      * Route includes taskId as a parameter: task_detail/{taskId}
      */
     data object TaskDetail : Screen("task_detail/{taskId}") {
-        fun createRoute(taskId: Long): String = "task_detail/$taskId"
+        fun createRoute(taskId: String): String = "task_detail/$taskId"
         const val ARG_TASK_ID = "taskId"
     }
 }
