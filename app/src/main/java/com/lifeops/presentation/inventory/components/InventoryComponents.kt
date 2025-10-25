@@ -1,6 +1,8 @@
 package com.lifeops.presentation.inventory.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -39,8 +41,11 @@ fun SearchAndFilterBar(
 }
 
 /**
- * Placeholder for Supply List
- * Will be implemented in Phase 2
+ * List of supplies grouped by category
+ * Features:
+ * - Lazy scrolling for performance
+ * - Category grouping with collapsible sections
+ * - Supply cards with quick adjust buttons
  */
 @Composable
 fun SupplyList(
@@ -49,23 +54,29 @@ fun SupplyList(
     onCategoryExpandToggle: (String) -> Unit,
     onIncrementQuantity: (String) -> Unit,
     onDecrementQuantity: (String) -> Unit,
-    onSupplyClick: (String) -> Unit
+    onSupplyClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    // Placeholder - will be implemented in Phase 2
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    // Group supplies by category
+    val suppliesByCategory = supplies.groupBy { it.supply.category }
+    
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Supply List (${supplies.size} items)",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Coming in Phase 2",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        suppliesByCategory.forEach { (category, categorySupplies) ->
+            item(key = "category_$category") {
+                CategorySection(
+                    categoryName = category,
+                    supplies = categorySupplies,
+                    isExpanded = expandedCategories.contains(category),
+                    onToggleExpand = { onCategoryExpandToggle(category) },
+                    onIncrementQuantity = onIncrementQuantity,
+                    onDecrementQuantity = onDecrementQuantity,
+                    onSupplyClick = onSupplyClick
+                )
+            }
+        }
     }
 }
