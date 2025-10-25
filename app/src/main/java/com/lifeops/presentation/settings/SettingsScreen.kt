@@ -1,0 +1,210 @@
+package com.lifeops.presentation.settings
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(
+    onNavigateBack: () -> Unit = {},
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Show snackbar for success/error messages
+    val snackbarHostState = androidx.compose.material3.SnackbarHostState()
+    
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.onEvent(SettingsUiEvent.ClearSuccess)
+        }
+    }
+    
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.onEvent(SettingsUiEvent.ClearError)
+        }
+    }
+    
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Settings") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Data Management Section
+            SectionHeader(title = "DATA MANAGEMENT")
+            
+            SettingsCard(
+                icon = "📤",
+                title = "Export All Data",
+                description = "Export entire database to JSON file",
+                buttonText = "Export",
+                onButtonClick = { viewModel.onEvent(SettingsUiEvent.ExportData) }
+            )
+            
+            SettingsCard(
+                icon = "📥",
+                title = "Import Data",
+                description = "Import tasks and inventory from JSON file",
+                buttonText = "Import",
+                onButtonClick = { viewModel.onEvent(SettingsUiEvent.ImportData) }
+            )
+            
+            SettingsCard(
+                icon = "💾",
+                title = "Create Backup",
+                description = "Save current state as backup file",
+                buttonText = "Backup",
+                onButtonClick = { viewModel.onEvent(SettingsUiEvent.CreateBackup) }
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // About Section
+            SectionHeader(title = "ABOUT")
+            
+            AboutCard(uiState = uiState)
+        }
+    }
+}
+
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+fun SettingsCard(
+    icon: String,
+    title: String,
+    description: String,
+    buttonText: String,
+    onButtonClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = icon,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(onClick = onButtonClick) {
+                    Text(buttonText)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutCard(uiState: SettingsUiState) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            AboutInfoRow(label = "Version", value = uiState.appVersion)
+            AboutInfoRow(label = "Database Version", value = uiState.databaseVersion.toString())
+            AboutInfoRow(label = "Total Tasks", value = uiState.totalTasks.toString())
+            AboutInfoRow(label = "Total Inventory Items", value = uiState.totalSupplies.toString())
+            
+            if (uiState.lastManualBackup != null) {
+                AboutInfoRow(label = "Last Manual Backup", value = uiState.lastManualBackup)
+            }
+            
+            if (uiState.lastAutoBackup != null) {
+                AboutInfoRow(label = "Last Auto Backup", value = uiState.lastAutoBackup)
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}

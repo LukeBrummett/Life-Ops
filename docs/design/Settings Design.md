@@ -239,22 +239,34 @@ Import Complete
 
 #### Create Backup
 
-**Purpose**: Quick backup creation with timestamp
+**Purpose**: Manual backup creation with automatic retention management
 
 **Button**: "Backup"
 
 **Behavior**:
 1. User taps Backup button
 2. System generates export JSON (same format as Export)
-3. Automatically saves to:
-   - `Downloads/LifeOps/Backups/backup_2025-10-25_14-30.json`
-4. Show success toast: "Backup created: backup_2025-10-25_14-30.json"
-5. Failure → show error with details
+3. Automatically saves to internal app storage:
+   - `[AppDataDir]/backups/backup_2025-10-25_14-30.json`
+4. System manages retention:
+   - Keeps only 2 most recent backups
+   - Deletes older backups automatically
+5. Show success toast: "Backup created: backup_2025-10-25_14-30.json"
+6. Failure → show error with details
 
 **Auto-naming Convention**:
 - Format: `backup_YYYY-MM-DD_HH-mm.json`
-- Saves to Downloads folder (user-accessible)
-- No backup rotation/cleanup (user manages manually)
+- Saves to app-private storage (not user-accessible via file browser)
+- Automatic cleanup retains only 2 newest backups
+- Backups can be restored via Import functionality
+
+**Automatic Backup System** (Separate from manual):
+- Triggers: App launch (once per day max), major data operations
+- Retention: 2 most recent backups
+- Location: Same directory as manual backups
+- Filename: `auto_backup_YYYY-MM-DD_HH-mm.json`
+- Silent operation (no user notification)
+- Provides safety net for accidental data loss
 
 ---
 
@@ -267,7 +279,8 @@ Import Complete
 - Database version (schema version)
 - Total active tasks count
 - Total supplies count
-- Last backup date (if available)
+- Last manual backup date (if available)
+- Last automatic backup date (if available)
 
 **Visual Design**:
 - Card with subtle background
@@ -281,7 +294,8 @@ Version: 1.0.0
 Database Version: 1
 Total Tasks: 47
 Total Inventory Items: 23
-Last Backup: Oct 24, 2025 at 3:15 PM
+Last Manual Backup: Oct 24, 2025 at 3:15 PM
+Last Auto Backup: Oct 25, 2025 at 8:42 AM
 ```
 
 ---

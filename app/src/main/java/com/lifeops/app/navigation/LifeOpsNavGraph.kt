@@ -8,7 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.lifeops.app.presentation.alltasks.AllTasksScreen
 import com.lifeops.app.presentation.inventory.InventoryScreen
-import com.lifeops.app.presentation.settings.SettingsScreen
+import com.lifeops.presentation.settings.SettingsScreen
 import com.lifeops.app.presentation.taskcreate.TaskCreateScreen
 import com.lifeops.app.presentation.taskdetail.TaskDetailScreen
 import com.lifeops.app.presentation.today.TodayScreen
