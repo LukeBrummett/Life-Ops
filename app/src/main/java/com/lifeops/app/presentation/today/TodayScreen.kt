@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.lifeops.app.presentation.today.components.*
 import com.lifeops.app.ui.theme.LifeOpsTheme
 import java.time.LocalDate
@@ -22,37 +23,14 @@ import java.time.LocalDate
 @Composable
 fun TodayScreen(
     modifier: Modifier = Modifier,
-    onNavigateToAllTasks: () -> Unit = {},
-    onNavigateToInventory: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {},
-    onDateClick: () -> Unit = {},
-    onTaskChecked: (Long) -> Unit = {},
-    onRetry: () -> Unit = {}
+    viewModel: TodayViewModel = hiltViewModel()
 ) {
-    // TODO: Connect to ViewModel when implemented
-    // For now, using static mock data for UI development
-    val isLoading = false
-    val hasError = false
-    val errorMessage = ""
-    val showCompleted = false
-    val selectedDate = LocalDate.now()
-    val tasksByCategory = MockData.tasksByCategory
+    val uiState by viewModel.uiState.collectAsState()
     
     TodayScreenContent(
         modifier = modifier,
-        isLoading = isLoading,
-        hasError = hasError,
-        errorMessage = errorMessage,
-        showCompleted = showCompleted,
-        selectedDate = selectedDate,
-        tasksByCategory = tasksByCategory,
-        onNavigateToAllTasks = onNavigateToAllTasks,
-        onNavigateToInventory = onNavigateToInventory,
-        onNavigateToSettings = onNavigateToSettings,
-        onToggleCompleted = { /* TODO: Toggle show completed */ },
-        onDateClick = onDateClick,
-        onTaskChecked = onTaskChecked,
-        onRetry = onRetry
+        uiState = uiState,
+        onEvent = viewModel::onEvent
     )
 }
 
@@ -63,31 +41,23 @@ fun TodayScreen(
 @Composable
 private fun TodayScreenContent(
     modifier: Modifier = Modifier,
-    isLoading: Boolean,
-    hasError: Boolean,
-    errorMessage: String,
-    showCompleted: Boolean,
-    selectedDate: LocalDate,
-    tasksByCategory: Map<String, List<com.lifeops.app.data.local.entity.Task>>,
-    onNavigateToAllTasks: () -> Unit,
-    onNavigateToInventory: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onToggleCompleted: () -> Unit,
-    onDateClick: () -> Unit,
-    onTaskChecked: (Long) -> Unit,
-    onRetry: () -> Unit
+    uiState: TodayUiState,
+    onEvent: (TodayUiEvent) -> Unit
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
             TodayScreenHeader(
-                selectedDate = selectedDate,
-                showCompleted = showCompleted,
-                onNavigateToAllTasks = onNavigateToAllTasks,
-                onToggleCompleted = onToggleCompleted,
-                onDateClick = onDateClick,
-                onNavigateToInventory = onNavigateToInventory,
-                onNavigateToSettings = onNavigateToSettings
+                selectedDate = LocalDate.parse(
+                    uiState.currentDate.ifEmpty { LocalDate.now().toString() },
+                    java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")
+                ),
+                showCompleted = uiState.showCompleted,
+                onNavigateToAllTasks = { onEvent(TodayUiEvent.NavigateToAllTasks) },
+                onToggleCompleted = { onEvent(TodayUiEvent.ToggleShowCompleted) },
+                onDateClick = { /* Future: date picker */ },
+                onNavigateToInventory = { onEvent(TodayUiEvent.NavigateToInventory) },
+                onNavigateToSettings = { onEvent(TodayUiEvent.NavigateToSettings) }
             )
         }
     ) { paddingValues ->
@@ -97,31 +67,26 @@ private fun TodayScreenContent(
                 .padding(paddingValues)
         ) {
             when {
-                isLoading -> {
+                uiState.isLoading -> {
                     LoadingState()
                 }
-                hasError -> {
+                uiState.error != null -> {
                     ErrorState(
-                        errorMessage = errorMessage,
-                        onRetry = onRetry
+                        errorMessage = uiState.error,
+                        onRetry = { onEvent(TodayUiEvent.Refresh) }
                     )
                 }
-                tasksByCategory.isEmpty() -> {
+                uiState.tasksByCategory.isEmpty() -> {
                     EmptyState(isAllComplete = false)
                 }
                 else -> {
-                    // Check if all tasks are complete
-                    val allTasksComplete = tasksByCategory.values.flatten().all { task ->
-                        task.lastCompleted == selectedDate
-                    }
-                    
-                    if (allTasksComplete) {
+                    if (uiState.allTasksComplete && !uiState.showCompleted) {
                         EmptyState(isAllComplete = true)
                     } else {
                         TasksList(
-                            tasksByCategory = tasksByCategory,
-                            showCompleted = showCompleted,
-                            onTaskChecked = onTaskChecked
+                            tasksByCategory = uiState.tasksByCategory,
+                            showCompleted = uiState.showCompleted,
+                            onTaskChecked = { taskId -> onEvent(TodayUiEvent.CompleteTask(taskId)) }
                         )
                     }
                 }
@@ -150,19 +115,11 @@ private fun PreviewTodayScreenLoading() {
     LifeOpsTheme {
         Surface {
             TodayScreenContent(
-                isLoading = true,
-                hasError = false,
-                errorMessage = "",
-                showCompleted = false,
-                selectedDate = LocalDate.now(),
-                tasksByCategory = emptyMap(),
-                onNavigateToAllTasks = {},
-                onNavigateToInventory = {},
-                onNavigateToSettings = {},
-                onToggleCompleted = {},
-                onDateClick = {},
-                onTaskChecked = {},
-                onRetry = {}
+                uiState = TodayUiState(
+                    isLoading = true,
+                    currentDate = "Oct 25, 2025"
+                ),
+                onEvent = {}
             )
         }
     }
@@ -174,19 +131,11 @@ private fun PreviewTodayScreenEmpty() {
     LifeOpsTheme {
         Surface {
             TodayScreenContent(
-                isLoading = false,
-                hasError = false,
-                errorMessage = "",
-                showCompleted = false,
-                selectedDate = LocalDate.now(),
-                tasksByCategory = emptyMap(),
-                onNavigateToAllTasks = {},
-                onNavigateToInventory = {},
-                onNavigateToSettings = {},
-                onToggleCompleted = {},
-                onDateClick = {},
-                onTaskChecked = {},
-                onRetry = {}
+                uiState = TodayUiState(
+                    currentDate = "Oct 25, 2025",
+                    tasksByCategory = emptyMap()
+                ),
+                onEvent = {}
             )
         }
     }
@@ -198,19 +147,11 @@ private fun PreviewTodayScreenError() {
     LifeOpsTheme {
         Surface {
             TodayScreenContent(
-                isLoading = false,
-                hasError = true,
-                errorMessage = "Failed to load tasks",
-                showCompleted = false,
-                selectedDate = LocalDate.now(),
-                tasksByCategory = emptyMap(),
-                onNavigateToAllTasks = {},
-                onNavigateToInventory = {},
-                onNavigateToSettings = {},
-                onToggleCompleted = {},
-                onDateClick = {},
-                onTaskChecked = {},
-                onRetry = {}
+                uiState = TodayUiState(
+                    currentDate = "Oct 25, 2025",
+                    error = "Failed to load tasks"
+                ),
+                onEvent = {}
             )
         }
     }
