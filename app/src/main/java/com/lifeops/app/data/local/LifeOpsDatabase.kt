@@ -9,6 +9,7 @@ import com.lifeops.app.data.local.dao.TaskDao
 import com.lifeops.app.data.local.entity.Inventory
 import com.lifeops.app.data.local.entity.Supply
 import com.lifeops.app.data.local.entity.Task
+import com.lifeops.app.data.local.entity.TaskSupply
 
 /**
  * Life-Ops Room Database
@@ -20,6 +21,7 @@ import com.lifeops.app.data.local.entity.Task
  * - v1: Initial schema with Long task IDs
  * - v2: Migrated to UUID (String) task IDs for conflict-free sharing
  * - v3: Added Supply and Inventory entities for inventory management
+ * - v4: Added TaskSupply junction table for task-inventory integration
  * 
  * As per Technical Architecture specification:
  * - SQLite via Room for local persistence
@@ -30,10 +32,11 @@ import com.lifeops.app.data.local.entity.Task
     entities = [
         Task::class,
         Supply::class,
-        Inventory::class
-        // Additional entities will be added: TaskSupply, ChecklistItem, TaskLog, RestockTask
+        Inventory::class,
+        TaskSupply::class
+        // Additional entities will be added: ChecklistItem, TaskLog, RestockTask
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

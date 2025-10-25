@@ -31,6 +31,7 @@ fun SupplyItemCard(
     onIncrementQuantity: () -> Unit,
     onDecrementQuantity: () -> Unit,
     onClick: () -> Unit,
+    taskCount: Int = 0, // Number of tasks using this supply
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -100,6 +101,21 @@ fun SupplyItemCard(
                                 text = "Stocked",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    
+                    // Task count badge
+                    if (taskCount > 0) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Text(
+                                text = "$taskCount task${if (taskCount > 1) "s" else ""}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }

@@ -3,6 +3,7 @@ package com.lifeops.app.data.local.dao
 import androidx.room.*
 import com.lifeops.app.data.local.entity.Inventory
 import com.lifeops.app.data.local.entity.Supply
+import com.lifeops.app.data.local.entity.TaskSupply
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -156,6 +157,56 @@ interface SupplyDao {
         ORDER BY s.category ASC, s.name ASC
     """)
     fun observeSuppliesWithInventory(): Flow<List<SupplyWithInventory>>
+    
+    // ==================== TaskSupply Operations ====================
+    
+    /**
+     * Get all task-supply associations for a supply
+     */
+    @Query("SELECT * FROM task_supplies WHERE supplyId = :supplyId")
+    suspend fun getTaskSuppliesForSupply(supplyId: String): List<TaskSupply>
+    
+    /**
+     * Get all task-supply associations for a task
+     */
+    @Query("SELECT * FROM task_supplies WHERE taskId = :taskId")
+    suspend fun getTaskSuppliesForTask(taskId: String): List<TaskSupply>
+    
+    /**
+     * Get count of tasks using a supply
+     */
+    @Query("SELECT COUNT(*) FROM task_supplies WHERE supplyId = :supplyId")
+    suspend fun getTaskCountForSupply(supplyId: String): Int
+    
+    /**
+     * Check if a supply is used by any tasks
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM task_supplies WHERE supplyId = :supplyId LIMIT 1)")
+    suspend fun isSupplyUsedByTasks(supplyId: String): Boolean
+    
+    /**
+     * Insert task-supply association
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTaskSupply(taskSupply: TaskSupply)
+    
+    /**
+     * Delete task-supply association
+     */
+    @Delete
+    suspend fun deleteTaskSupply(taskSupply: TaskSupply)
+    
+    /**
+     * Delete all task-supply associations for a task
+     */
+    @Query("DELETE FROM task_supplies WHERE taskId = :taskId")
+    suspend fun deleteTaskSuppliesForTask(taskId: String)
+    
+    /**
+     * Delete all task-supply associations for a supply
+     */
+    @Query("DELETE FROM task_supplies WHERE supplyId = :supplyId")
+    suspend fun deleteTaskSuppliesForSupply(supplyId: String)
 }
 
 /**
@@ -172,3 +223,11 @@ data class SupplyWithInventory(
     val isWellStocked: Boolean
         get() = (currentQuantity ?: 0) >= supply.reorderTargetQuantity
 }
+
+/**
+ * Data class representing a supply with its task association count
+ */
+data class SupplyWithTaskCount(
+    @Embedded val supply: Supply,
+    val taskCount: Int
+)

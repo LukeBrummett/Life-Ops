@@ -4,6 +4,7 @@ import com.lifeops.app.data.local.dao.SupplyDao
 import com.lifeops.app.data.local.dao.SupplyWithInventory
 import com.lifeops.app.data.local.entity.Inventory
 import com.lifeops.app.data.local.entity.Supply
+import com.lifeops.app.data.local.entity.TaskSupply
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -174,6 +175,72 @@ class SupplyRepository @Inject constructor(
     suspend fun decrementInventory(supplyId: String, amount: Int = 1): Result<Unit> {
         return try {
             supplyDao.decrementInventory(supplyId, amount)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // ==================== Task-Supply Association Operations ====================
+    
+    /**
+     * Get all task-supply associations for a supply
+     */
+    suspend fun getTaskSuppliesForSupply(supplyId: String): List<TaskSupply> {
+        return supplyDao.getTaskSuppliesForSupply(supplyId)
+    }
+    
+    /**
+     * Get all task-supply associations for a task
+     */
+    suspend fun getTaskSuppliesForTask(taskId: String): List<TaskSupply> {
+        return supplyDao.getTaskSuppliesForTask(taskId)
+    }
+    
+    /**
+     * Get count of tasks using a supply
+     */
+    suspend fun getTaskCountForSupply(supplyId: String): Int {
+        return supplyDao.getTaskCountForSupply(supplyId)
+    }
+    
+    /**
+     * Check if a supply is used by any tasks
+     */
+    suspend fun isSupplyUsedByTasks(supplyId: String): Boolean {
+        return supplyDao.isSupplyUsedByTasks(supplyId)
+    }
+    
+    /**
+     * Add task-supply association
+     */
+    suspend fun addTaskSupply(taskSupply: TaskSupply): Result<Unit> {
+        return try {
+            supplyDao.insertTaskSupply(taskSupply)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Remove task-supply association
+     */
+    suspend fun removeTaskSupply(taskSupply: TaskSupply): Result<Unit> {
+        return try {
+            supplyDao.deleteTaskSupply(taskSupply)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Remove all task-supply associations for a task
+     */
+    suspend fun removeAllTaskSuppliesForTask(taskId: String): Result<Unit> {
+        return try {
+            supplyDao.deleteTaskSuppliesForTask(taskId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
