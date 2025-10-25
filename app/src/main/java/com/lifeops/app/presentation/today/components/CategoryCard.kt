@@ -23,11 +23,13 @@ import java.time.LocalDate
 fun CategoryCard(
     categoryName: String,
     tasks: List<Task>,
+    totalTasksInCategory: Int,
+    completedTasksInCategory: Int,
     onTaskChecked: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val completedCount = tasks.count { isTaskCompleted(it) }
-    val totalCount = tasks.size
+    val completedCount = completedTasksInCategory
+    val totalCount = totalTasksInCategory
     
     ElevatedCard(
         modifier = modifier
@@ -113,9 +115,12 @@ private fun isTaskCompleted(task: Task): Boolean {
 private fun PreviewCategoryCardMixed() {
     LifeOpsTheme {
         Surface {
+            val tasks = MockData.tasksByCategory["Fitness"] ?: emptyList()
             CategoryCard(
                 categoryName = "Fitness",
-                tasks = MockData.tasksByCategory["Fitness"] ?: emptyList(),
+                tasks = tasks,
+                totalTasksInCategory = tasks.size,
+                completedTasksInCategory = tasks.count { isTaskCompleted(it) },
                 onTaskChecked = {}
             )
         }
@@ -127,13 +132,16 @@ private fun PreviewCategoryCardMixed() {
 private fun PreviewCategoryCardAllIncomplete() {
     LifeOpsTheme {
         Surface {
+            val tasks = listOf(
+                MockData.waterPlants,
+                MockData.checkMail,
+                MockData.laundry
+            )
             CategoryCard(
                 categoryName = "Home",
-                tasks = listOf(
-                    MockData.waterPlants,
-                    MockData.checkMail,
-                    MockData.laundry
-                ),
+                tasks = tasks,
+                totalTasksInCategory = tasks.size,
+                completedTasksInCategory = 0,
                 onTaskChecked = {}
             )
         }
@@ -145,11 +153,14 @@ private fun PreviewCategoryCardAllIncomplete() {
 private fun PreviewCategoryCardAllComplete() {
     LifeOpsTheme {
         Surface {
+            val tasks = MockData.tasksByCategory["Work"]?.map { 
+                it.copy(lastCompleted = LocalDate.now())
+            } ?: emptyList()
             CategoryCard(
                 categoryName = "Work",
-                tasks = MockData.tasksByCategory["Work"]?.map { 
-                    it.copy(lastCompleted = LocalDate.now())
-                } ?: emptyList(),
+                tasks = tasks,
+                totalTasksInCategory = tasks.size,
+                completedTasksInCategory = tasks.size,
                 onTaskChecked = {}
             )
         }
@@ -161,9 +172,12 @@ private fun PreviewCategoryCardAllComplete() {
 private fun PreviewCategoryCardSingleTask() {
     LifeOpsTheme {
         Surface {
+            val tasks = listOf(MockData.readBook)
             CategoryCard(
                 categoryName = "Reading",
-                tasks = listOf(MockData.readBook),
+                tasks = tasks,
+                totalTasksInCategory = 1,
+                completedTasksInCategory = 0,
                 onTaskChecked = {}
             )
         }

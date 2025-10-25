@@ -40,11 +40,18 @@ fun TasksList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        filteredTasksByCategory.forEach { (category, tasks) ->
+        filteredTasksByCategory.forEach { (category, filteredTasks) ->
+            // Get the original (unfiltered) task list for this category to calculate progress
+            val allTasksInCategory = tasksByCategory[category] ?: emptyList()
+            val completedCount = allTasksInCategory.count { isTaskCompleted(it) }
+            val totalCount = allTasksInCategory.size
+            
             item(key = category) {
                 CategoryCard(
                     categoryName = category,
-                    tasks = tasks,
+                    tasks = filteredTasks,
+                    totalTasksInCategory = totalCount,
+                    completedTasksInCategory = completedCount,
                     onTaskChecked = onTaskChecked
                 )
             }
