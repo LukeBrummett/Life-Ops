@@ -1,9 +1,19 @@
 package com.lifeops.app.presentation.today.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
@@ -25,15 +35,20 @@ import java.time.LocalDate
  * - Task name (with strike-through when completed)
  * - Metadata: time estimate and difficulty
  * - Completion streak if applicable
+ * - Long press context menu for additional actions
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TaskItem(
     task: Task,
     isCompleted: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     onTaskClick: () -> Unit = {},
+    onTaskLongPress: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showContextMenu by remember { mutableStateOf(false) }
+    
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -51,13 +66,22 @@ fun TaskItem(
             )
         )
         
-        // Task content (clickable area)
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .clickable { onTaskClick() },
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        // Task content (clickable and long-pressable area)
+        Box(
+            modifier = Modifier.weight(1f)
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = onTaskClick,
+                        onLongClick = {
+                            showContextMenu = true
+                            onTaskLongPress()
+                        }
+                    ),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
             // Task name
             Text(
                 text = task.name,
@@ -109,6 +133,62 @@ fun TaskItem(
                 }
             }
         }
+        
+        // Context menu (long press)
+        DropdownMenu(
+            expanded = showContextMenu,
+            onDismissRequest = { showContextMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Edit Task") },
+                onClick = {
+                    showContextMenu = false
+                    // TODO: Navigate to edit screen
+                },
+                leadingIcon = {
+                    Icon(Icons.Filled.Edit, contentDescription = "Edit")
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Postpone") },
+                onClick = {
+                    showContextMenu = false
+                    // TODO: Show postpone dialog
+                },
+                leadingIcon = {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Postpone")
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Skip Today") },
+                onClick = {
+                    showContextMenu = false
+                    // TODO: Skip task for today
+                },
+                leadingIcon = {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Skip")
+                }
+            )
+            Divider()
+            DropdownMenuItem(
+                text = { Text("Delete Task") },
+                onClick = {
+                    showContextMenu = false
+                    // TODO: Show delete confirmation
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = MaterialTheme.colorScheme.error
+                )
+            )
+        }
+    }
     }
 }
 
