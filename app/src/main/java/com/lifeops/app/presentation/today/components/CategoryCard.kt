@@ -71,7 +71,7 @@ fun CategoryCard(
             // Progress bar
             if (totalCount > 0) {
                 LinearProgressIndicator(
-                    progress = { completedCount.toFloat() / totalCount.toFloat() },
+                    progress = completedCount.toFloat() / totalCount.toFloat(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(4.dp),
@@ -81,7 +81,7 @@ fun CategoryCard(
             }
             
             // Divider
-            HorizontalDivider(
+            androidx.compose.material3.Divider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 color = MaterialTheme.colorScheme.outlineVariant
             )

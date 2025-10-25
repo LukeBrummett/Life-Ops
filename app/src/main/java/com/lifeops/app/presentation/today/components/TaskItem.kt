@@ -87,11 +87,13 @@ fun TaskItem(
                 }
                 
                 // Difficulty
-                Text(
-                    text = formatDifficulty(task.difficulty),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = getDifficultyColor(task.difficulty)
-                )
+                task.difficulty?.let { difficulty ->
+                    Text(
+                        text = formatDifficulty(difficulty),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = getDifficultyColor(difficulty)
+                    )
+                }
                 
                 // Streak indicator
                 if (task.completionStreak > 0) {
