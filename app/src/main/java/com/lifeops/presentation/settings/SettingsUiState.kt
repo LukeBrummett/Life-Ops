@@ -9,5 +9,7 @@ data class SettingsUiState(
     val lastAutoBackup: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val showExportFilePicker: Boolean = false,
+    val showImportFilePicker: Boolean = false
 )

@@ -1,5 +1,7 @@
 package com.lifeops.presentation.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -12,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,6 +24,23 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // File picker for export
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            viewModel.onEvent(SettingsUiEvent.ExportToUri(it))
+        }
+    }
+    
+    // Trigger export file picker when state changes
+    LaunchedEffect(uiState.showExportFilePicker) {
+        if (uiState.showExportFilePicker) {
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"))
+            exportLauncher.launch("lifeops_export_$timestamp.json")
+        }
+    }
     
     // Show snackbar for success/error messages
     val snackbarHostState = androidx.compose.material3.SnackbarHostState()

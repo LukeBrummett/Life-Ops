@@ -47,6 +47,12 @@ interface TaskDao {
     fun observeById(taskId: Long): Flow<Task?>
     
     /**
+     * Get all tasks (including archived) for export/backup
+     */
+    @Query("SELECT * FROM tasks ORDER BY id")
+    suspend fun getAll(): List<Task>
+    
+    /**
      * Get all active tasks
      */
     @Query("SELECT * FROM tasks WHERE active = 1 ORDER BY category, name")

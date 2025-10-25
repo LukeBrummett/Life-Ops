@@ -75,6 +75,13 @@ class TaskRepository @Inject constructor(
     }
     
     /**
+     * Get all tasks (including archived) for export/backup
+     */
+    suspend fun getAllTasks(): List<Task> {
+        return taskDao.getAll()
+    }
+    
+    /**
      * Get all active tasks
      */
     suspend fun getAllActiveTasks(): Result<List<Task>> {
