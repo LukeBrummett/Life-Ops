@@ -67,9 +67,10 @@ interface TaskDao {
     
     /**
      * Observe tasks due today or overdue (reactive)
+     * Includes tasks completed today even if nextDue has moved forward
      * Used for Today screen with reactive updates
      */
-    @Query("SELECT * FROM tasks WHERE active = 1 AND nextDue <= :date ORDER BY nextDue, category, name")
+    @Query("SELECT * FROM tasks WHERE active = 1 AND (nextDue <= :date OR lastCompleted = :date) ORDER BY nextDue, category, name")
     fun observeTasksDueByDate(date: LocalDate): Flow<List<Task>>
     
     /**
