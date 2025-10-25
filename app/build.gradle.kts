@@ -93,6 +93,7 @@ dependencies {
     androidTestImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     androidTestImplementation("com.google.truth:truth:1.1.5")
+    androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
     androidTestImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
     kspAndroidTest("com.google.dagger:hilt-compiler:$hiltVersion")
     

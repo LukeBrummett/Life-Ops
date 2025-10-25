@@ -66,7 +66,7 @@ class TaskDaoTest {
         val id = taskDao.insert(task)
         
         // Then
-        assertThat(id).isGreaterThan(0)
+        assertThat(id).isGreaterThan(0L)
     }
     
     @Test
