@@ -80,67 +80,12 @@ private fun TodayScreenContent(
             )
         },
         floatingActionButton = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Debug FAB - bottom left
-                Box {
-                    SmallFloatingActionButton(
-                        onClick = { showDebugMenu = !showDebugMenu },
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                    ) {
-                        Icon(
-                            Icons.Default.BugReport,
-                            contentDescription = "Debug date controls"
-                        )
-                    }
-                    
-                    DropdownMenu(
-                        expanded = showDebugMenu,
-                        onDismissRequest = { showDebugMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("+1 Day") },
-                            onClick = {
-                                onEvent(TodayUiEvent.DebugAdvanceDate(1))
-                                showDebugMenu = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("+7 Days") },
-                            onClick = {
-                                onEvent(TodayUiEvent.DebugAdvanceDate(7))
-                                showDebugMenu = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("+30 Days") },
-                            onClick = {
-                                onEvent(TodayUiEvent.DebugAdvanceDate(30))
-                                showDebugMenu = false
-                            }
-                        )
-                        Divider()
-                        DropdownMenuItem(
-                            text = { Text("Reset to Today") },
-                            onClick = {
-                                onEvent(TodayUiEvent.DebugResetDate)
-                                showDebugMenu = false
-                            }
-                        )
-                    }
-                }
-                
-                // New Task FAB
-                ExtendedFloatingActionButton(
-                    onClick = { onEvent(TodayUiEvent.NavigateToTaskCreate) },
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Add task") },
-                    text = { Text("New Task") }
-                )
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End
+            ExtendedFloatingActionButton(
+                onClick = { onEvent(TodayUiEvent.NavigateToTaskCreate) },
+                icon = { Icon(Icons.Default.Add, contentDescription = "Add task") },
+                text = { Text("New Task") }
+            )
+        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -171,6 +116,59 @@ private fun TodayScreenContent(
                             onTaskClick = { taskId -> onEvent(TodayUiEvent.NavigateToTaskDetail(taskId)) }
                         )
                     }
+                }
+            }
+            
+            // Debug FAB - positioned in bottom-start
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+            ) {
+                SmallFloatingActionButton(
+                    onClick = { showDebugMenu = !showDebugMenu },
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ) {
+                    Icon(
+                        Icons.Default.BugReport,
+                        contentDescription = "Debug date controls"
+                    )
+                }
+                
+                DropdownMenu(
+                    expanded = showDebugMenu,
+                    onDismissRequest = { showDebugMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("+1 Day") },
+                        onClick = {
+                            onEvent(TodayUiEvent.DebugAdvanceDate(1))
+                            showDebugMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("+7 Days") },
+                        onClick = {
+                            onEvent(TodayUiEvent.DebugAdvanceDate(7))
+                            showDebugMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("+30 Days") },
+                        onClick = {
+                            onEvent(TodayUiEvent.DebugAdvanceDate(30))
+                            showDebugMenu = false
+                        }
+                    )
+                    Divider()
+                    DropdownMenuItem(
+                        text = { Text("Reset to Today") },
+                        onClick = {
+                            onEvent(TodayUiEvent.DebugResetDate)
+                            showDebugMenu = false
+                        }
+                    )
                 }
             }
         }
