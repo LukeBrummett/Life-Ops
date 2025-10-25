@@ -107,6 +107,14 @@ class TaskRepository @Inject constructor(
     }
     
     /**
+     * Observe tasks due on or before a specific date (reactive)
+     * Used for Today screen with reactive updates
+     */
+    fun observeTasksDueByDate(date: LocalDate): Flow<List<Task>> {
+        return taskDao.observeTasksDueByDate(date)
+    }
+    
+    /**
      * Get tasks by category
      */
     suspend fun getTasksByCategory(category: String): Result<List<Task>> {

@@ -66,6 +66,13 @@ interface TaskDao {
     suspend fun getTasksDueByDate(date: LocalDate): List<Task>
     
     /**
+     * Observe tasks due today or overdue (reactive)
+     * Used for Today screen with reactive updates
+     */
+    @Query("SELECT * FROM tasks WHERE active = 1 AND nextDue <= :date ORDER BY nextDue, category, name")
+    fun observeTasksDueByDate(date: LocalDate): Flow<List<Task>>
+    
+    /**
      * Get tasks by category
      */
     @Query("SELECT * FROM tasks WHERE active = 1 AND category = :category ORDER BY name")
