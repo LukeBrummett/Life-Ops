@@ -7,8 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.lifeops.app.presentation.alltasks.AllTasksScreen
-import com.lifeops.app.presentation.inventory.InventoryScreen
+import com.lifeops.presentation.inventory.InventoryScreen
 import com.lifeops.presentation.settings.SettingsScreen
+import com.lifeops.presentation.supplyedit.SupplyEditScreen
 import com.lifeops.app.presentation.taskcreate.TaskCreateScreen
 import com.lifeops.app.presentation.taskdetail.TaskDetailScreen
 import com.lifeops.app.presentation.today.TodayScreen
@@ -58,6 +59,25 @@ fun LifeOpsNavGraph(
         // Inventory Screen
         composable(Screen.Inventory.route) {
             InventoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToSupplyEdit = { supplyId ->
+                    navController.navigate(Screen.SupplyEdit.createRoute(supplyId))
+                }
+            )
+        }
+        
+        // Supply Edit Screen
+        composable(
+            route = Screen.SupplyEdit.route,
+            arguments = listOf(
+                navArgument(Screen.SupplyEdit.ARG_SUPPLY_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
+            SupplyEditScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

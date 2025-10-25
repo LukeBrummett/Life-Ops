@@ -20,6 +20,21 @@ sealed class Screen(val route: String) {
     data object Inventory : Screen("inventory")
     
     /**
+     * Supply Edit screen - create or edit a supply item
+     * Route includes optional supplyId parameter: supply_edit?supplyId={supplyId}
+     */
+    data object SupplyEdit : Screen("supply_edit?supplyId={supplyId}") {
+        fun createRoute(supplyId: String? = null): String {
+            return if (supplyId != null) {
+                "supply_edit?supplyId=$supplyId"
+            } else {
+                "supply_edit"
+            }
+        }
+        const val ARG_SUPPLY_ID = "supplyId"
+    }
+    
+    /**
      * Settings screen - app settings and preferences
      */
     data object Settings : Screen("settings")
