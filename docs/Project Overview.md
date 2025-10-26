@@ -988,6 +988,13 @@ ChecklistItem M:1 Task (task definition)
 - Task remains in checklist for next day
 - Different from Skip (which advances to next scheduled date)
 
+### Ephemeral Task Deletion
+- Tasks with `deleteAfterCompletion = true` that have been completed are deleted during end-of-day processing
+- Deletion occurs when the date advances (via `ProcessOverdueTasksUseCase`)
+- Query identifies completed ephemeral tasks: `deleteAfterCompletion = 1 AND lastCompleted IS NOT NULL`
+- Deletion happens before processing overdue tasks
+- Ensures one-time tasks don't clutter the task list after completion
+
 ### Recount Task Creation
 - When task with RECOUNT mode inventory completes
 - Multiple recount items bundle into single RestockTask
