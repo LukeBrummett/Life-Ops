@@ -379,6 +379,13 @@ private fun ScheduleConfigurationSection(
 ) {
     var expanded by remember { mutableStateOf(true) }
     
+    // Determine schedule mode based on interval unit
+    val scheduleMode = when (intervalUnit) {
+        IntervalUnit.WEEK -> "DaysOfWeek"
+        IntervalUnit.ADHOC -> "Adhoc"
+        else -> "Interval"  // DAY or MONTH
+    }
+    
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // Section Header
         Row(
@@ -402,44 +409,63 @@ private fun ScheduleConfigurationSection(
         }
         
         if (expanded) {
-            // Interval and Days of Week Row
+            // Three-way toggle: Interval | Days of Week | Adhoc
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.Top
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Interval Column
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Interval",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    
-                    // Interval quantity input and unit dropdown
+                FilterChip(
+                    selected = scheduleMode == "Interval",
+                    onClick = { 
+                        // Switch to Day interval as default for Interval mode
+                        if (intervalUnit == IntervalUnit.WEEK || intervalUnit == IntervalUnit.ADHOC) {
+                            onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.DAY))
+                        }
+                    },
+                    label = { Text("Interval") },
+                    modifier = Modifier.weight(1f)
+                )
+                
+                FilterChip(
+                    selected = scheduleMode == "DaysOfWeek",
+                    onClick = { 
+                        onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.WEEK))
+                    },
+                    label = { Text("Days of Week") },
+                    modifier = Modifier.weight(1f)
+                )
+                
+                FilterChip(
+                    selected = scheduleMode == "Adhoc",
+                    onClick = { 
+                        onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.ADHOC))
+                    },
+                    label = { Text("Adhoc") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            // Content based on selected mode
+            when (scheduleMode) {
+                "Interval" -> {
+                    // Number input + dropdown for Day/Days, Month/Months
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Number input
                         OutlinedTextField(
-                            value = if (intervalUnit == IntervalUnit.ADHOC) "" else intervalQty.toString(),
+                            value = intervalQty.toString(),
                             onValueChange = { newValue ->
-                                if (intervalUnit != IntervalUnit.ADHOC) {
-                                    newValue.toIntOrNull()?.let { qty ->
-                                        if (qty > 0) onEvent(TaskEditEvent.UpdateIntervalQty(qty))
-                                    }
+                                newValue.toIntOrNull()?.let { qty ->
+                                    if (qty > 0) onEvent(TaskEditEvent.UpdateIntervalQty(qty))
                                 }
                             },
-                            enabled = intervalUnit != IntervalUnit.ADHOC,
                             modifier = Modifier.width(80.dp),
                             singleLine = true
                         )
                         
-                        // Unit dropdown
+                        // Unit dropdown (only Day/Days, Month/Months)
                         var intervalDropdownExpanded by remember { mutableStateOf(false) }
                         
                         ExposedDropdownMenuBox(
@@ -450,9 +476,8 @@ private fun ScheduleConfigurationSection(
                             OutlinedTextField(
                                 value = when (intervalUnit) {
                                     IntervalUnit.DAY -> if (intervalQty == 1) "Day" else "Days"
-                                    IntervalUnit.WEEK -> if (intervalQty == 1) "Week" else "Weeks"
                                     IntervalUnit.MONTH -> if (intervalQty == 1) "Month" else "Months"
-                                    IntervalUnit.ADHOC -> "ADHOC"
+                                    else -> "Days"
                                 },
                                 onValueChange = {},
                                 readOnly = true,
@@ -467,15 +492,15 @@ private fun ScheduleConfigurationSection(
                                 expanded = intervalDropdownExpanded,
                                 onDismissRequest = { intervalDropdownExpanded = false }
                             ) {
-                                IntervalUnit.entries.forEach { unit ->
+                                // Only show Day and Month options
+                                listOf(IntervalUnit.DAY, IntervalUnit.MONTH).forEach { unit ->
                                     DropdownMenuItem(
                                         text = {
                                             Text(
                                                 when (unit) {
                                                     IntervalUnit.DAY -> if (intervalQty == 1) "Day" else "Days"
-                                                    IntervalUnit.WEEK -> if (intervalQty == 1) "Week" else "Weeks"
                                                     IntervalUnit.MONTH -> if (intervalQty == 1) "Month" else "Months"
-                                                    IntervalUnit.ADHOC -> "ADHOC"
+                                                    else -> ""
                                                 }
                                             )
                                         },
@@ -490,71 +515,68 @@ private fun ScheduleConfigurationSection(
                     }
                 }
                 
-                // Days of Week Column (only for WEEK interval)
-                if (intervalUnit == IntervalUnit.WEEK) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                "DaysOfWeek" -> {
+                    // M T W R F S U toggles
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = "Days of Week",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                        val orderedDays = listOf(
+                            DayOfWeek.MONDAY,
+                            DayOfWeek.TUESDAY,
+                            DayOfWeek.WEDNESDAY,
+                            DayOfWeek.THURSDAY,
+                            DayOfWeek.FRIDAY,
+                            DayOfWeek.SATURDAY,
+                            DayOfWeek.SUNDAY
                         )
                         
-                        // Day toggles: M T W R F S U
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            // Reorder to show M-U (Monday to Sunday)
-                            val orderedDays = listOf(
-                                DayOfWeek.MONDAY,
-                                DayOfWeek.TUESDAY,
-                                DayOfWeek.WEDNESDAY,
-                                DayOfWeek.THURSDAY,
-                                DayOfWeek.FRIDAY,
-                                DayOfWeek.SATURDAY,
-                                DayOfWeek.SUNDAY
+                        orderedDays.forEach { day ->
+                            FilterChip(
+                                selected = specificDaysOfWeek.contains(day),
+                                onClick = { onEvent(TaskEditEvent.ToggleSpecificDay(day)) },
+                                label = {
+                                    Text(
+                                        text = when (day) {
+                                            DayOfWeek.MONDAY -> "M"
+                                            DayOfWeek.TUESDAY -> "T"
+                                            DayOfWeek.WEDNESDAY -> "W"
+                                            DayOfWeek.THURSDAY -> "R"
+                                            DayOfWeek.FRIDAY -> "F"
+                                            DayOfWeek.SATURDAY -> "S"
+                                            DayOfWeek.SUNDAY -> "U"
+                                        }
+                                    )
+                                },
+                                modifier = Modifier.weight(1f)
                             )
-                            
-                            orderedDays.forEach { day ->
-                                FilterChip(
-                                    selected = specificDaysOfWeek.contains(day),
-                                    onClick = { onEvent(TaskEditEvent.ToggleSpecificDay(day)) },
-                                    label = {
-                                        Text(
-                                            text = when (day) {
-                                                DayOfWeek.MONDAY -> "M"
-                                                DayOfWeek.TUESDAY -> "T"
-                                                DayOfWeek.WEDNESDAY -> "W"
-                                                DayOfWeek.THURSDAY -> "R"
-                                                DayOfWeek.FRIDAY -> "F"
-                                                DayOfWeek.SATURDAY -> "S"
-                                                DayOfWeek.SUNDAY -> "U"
-                                            }
-                                        )
-                                    },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
                         }
                     }
                 }
+                
+                "Adhoc" -> {
+                    // No additional controls for Adhoc
+                    Text(
+                        text = "Task will be manually scheduled",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
             
-            // Never Schedule On - similar to days of week toggle
+            // Never Schedule On - always visible
             Text(
                 text = "Never schedule on",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 8.dp)
             )
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Reorder to show M-U (Monday to Sunday)
                 val orderedDays = listOf(
                     DayOfWeek.MONDAY,
                     DayOfWeek.TUESDAY,
