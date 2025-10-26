@@ -643,7 +643,7 @@ class TaskEditViewModel @Inject constructor(
                 if (result.isSuccess) {
                     val savedTaskId = result.getOrNull()!!
                     _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
-                    _events.value = TaskEditViewModelEvent.NavigateToDetail(savedTaskId)
+                    _events.value = TaskEditViewModelEvent.NavigateToDetail(savedTaskId, state.isCreateMode)
                 } else {
                     val error = result.exceptionOrNull()?.message ?: "Unknown error"
                     _uiState.update {
@@ -679,7 +679,7 @@ class TaskEditViewModel @Inject constructor(
  * One-time events from ViewModel
  */
 sealed class TaskEditViewModelEvent {
-    data class NavigateToDetail(val taskId: String) : TaskEditViewModelEvent()
+    data class NavigateToDetail(val taskId: String, val isCreateMode: Boolean) : TaskEditViewModelEvent()
     data object NavigateBack : TaskEditViewModelEvent()
     data object ShowUnsavedChangesDialog : TaskEditViewModelEvent()
 }

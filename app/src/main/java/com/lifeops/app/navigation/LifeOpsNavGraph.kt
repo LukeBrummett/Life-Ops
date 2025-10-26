@@ -172,13 +172,19 @@ fun LifeOpsNavGraph(
         ) {
             TaskEditScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToTaskDetail = { taskId ->
-                    // Need to pop both TaskEdit AND the old TaskDetail
-                    // Pop twice: once for TaskEdit, once for old TaskDetail
-                    navController.popBackStack()
-                    navController.popBackStack()
-                    // Now navigate fresh to TaskDetail with updated data
-                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
+                onNavigateToTaskDetail = { taskId, isCreateMode ->
+                    if (isCreateMode) {
+                        // Create mode: Stack is [Previous] -> [TaskEdit]
+                        // Pop TaskEdit, then navigate to new TaskDetail
+                        navController.popBackStack()
+                        navController.navigate(Screen.TaskDetail.createRoute(taskId))
+                    } else {
+                        // Edit mode: Stack is [Previous] -> [TaskDetail] -> [TaskEdit]
+                        // Pop TaskEdit and old TaskDetail, then navigate to updated TaskDetail
+                        navController.popBackStack()
+                        navController.popBackStack()
+                        navController.navigate(Screen.TaskDetail.createRoute(taskId))
+                    }
                 }
             )
         }

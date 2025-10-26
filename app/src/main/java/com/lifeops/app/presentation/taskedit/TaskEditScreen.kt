@@ -36,7 +36,7 @@ fun TaskEditScreen(
     modifier: Modifier = Modifier,
     viewModel: TaskEditViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
-    onNavigateToTaskDetail: (String) -> Unit
+    onNavigateToTaskDetail: (String, Boolean) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val events by viewModel.events.collectAsState()
@@ -48,7 +48,7 @@ fun TaskEditScreen(
     LaunchedEffect(events) {
         when (val event = events) {
             is TaskEditViewModelEvent.NavigateToDetail -> {
-                onNavigateToTaskDetail(event.taskId)
+                onNavigateToTaskDetail(event.taskId, event.isCreateMode)
                 viewModel.consumeEvent()
             }
             is TaskEditViewModelEvent.NavigateBack -> {
