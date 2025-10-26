@@ -19,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
+    private val supplyRepository: com.lifeops.app.data.repository.SupplyRepository,
     private val exportDataUseCase: ExportDataUseCase,
     private val importDataUseCase: ImportDataUseCase,
     private val createBackupUseCase: CreateBackupUseCase
@@ -34,6 +35,7 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadStatistics() {
         viewModelScope.launch {
+            // Load task count
             taskRepository.observeAllOrderedByNextDue()
                 .collect { tasks ->
                     _uiState.update { currentState ->
@@ -42,6 +44,16 @@ class SettingsViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+        
+        viewModelScope.launch {
+            // Load supply count
+            val supplies = supplyRepository.getAllSupplies()
+            _uiState.update { currentState ->
+                currentState.copy(
+                    totalSupplies = supplies.size
+                )
+            }
         }
     }
 
