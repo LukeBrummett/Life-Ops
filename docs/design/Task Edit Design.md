@@ -76,6 +76,11 @@ Display comprehensive technical information about a specific task in read-only f
 - "Never schedules on: Tuesday, Thursday"
 - "Excluded dates: Dec 24-26, Jan 1"
 
+**Task Lifecycle (if ephemeral):**
+- "⏳ Ephemeral task - will be deleted after completion"
+- Only shown when `deleteAfterCompletion = true`
+- Indicates task will auto-delete during end-of-day processing after being marked complete
+
 ##### 3. Completion Data
 **Always Show:**
 - Last completed: Date and relative time ("3 days ago")
@@ -372,8 +377,11 @@ The edit screen is organized into collapsible/expandable sections for easier nav
 ```
 - Checkbox (default: unchecked)
 - When checked: Task auto-deletes during end-of-day processing after being completed
-- Useful for one-off tasks like "Pick up dry cleaning", "Call dentist"
+- Deletion occurs only after the task has been marked complete (`lastCompleted IS NOT NULL`)
+- Happens during daily rollover, before processing overdue tasks
+- Useful for one-off tasks like "Pick up dry cleaning", "Call dentist", "Buy birthday gift"
 - Available for all task types (recurring or ADHOC)
+- **Warning**: Deletion is permanent and cannot be undone - use for truly one-time tasks only
 
 ##### Section 3: Relationships (Collapsible)
 
@@ -959,6 +967,11 @@ if (uiState.hasUnsavedChanges) {
 └─────────────────────────────────────┘
 ```
 
+**Note on Ephemeral Tasks:**
+- Tasks marked as "Delete after completion" (ephemeral) will automatically delete themselves during end-of-day processing after being completed
+- No user confirmation is required for automatic deletion
+- Manual deletion via this dialog follows the same confirmation flow as non-ephemeral tasks
+
 ---
 
 ## Accessibility
@@ -1057,6 +1070,7 @@ if (uiState.hasUnsavedChanges) {
 4. **Undo Delete:**
    - Should deleted tasks be soft-deleted with recovery option?
    - Proposal: V1 hard delete, V2 trash/archive
+   - Note: Ephemeral tasks (deleteAfterCompletion) are permanently deleted during end-of-day processing with no recovery option
 
 5. **Relationship Visualization:**
    - Should we show relationship graph/tree?
