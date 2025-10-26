@@ -6,6 +6,7 @@ import com.lifeops.app.data.local.LifeOpsDatabase
 import com.lifeops.app.data.local.dao.SupplyDao
 import com.lifeops.app.data.local.dao.TaskDao
 import com.lifeops.app.data.local.migrations.MIGRATION_4_5
+import com.lifeops.app.data.local.migrations.MIGRATION_5_6
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,7 +32,7 @@ object DatabaseModule {
             LifeOpsDatabase::class.java,
             LifeOpsDatabase.DATABASE_NAME
         )
-            .addMigrations(MIGRATION_4_5)
+            .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
             .fallbackToDestructiveMigration() // TODO: Replace with proper migrations in production
             .build()
     }

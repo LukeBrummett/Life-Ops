@@ -23,6 +23,7 @@ import com.lifeops.app.data.local.entity.TaskSupply
  * - v3: Added Supply and Inventory entities for inventory management
  * - v4: Added TaskSupply junction table for task-inventory integration
  * - v5: Added overdueBehavior field to Task entity
+ * - v6: Added deleteAfterCompletion field to Task entity for ephemeral tasks
  * 
  * As per Technical Architecture specification:
  * - SQLite via Room for local persistence
@@ -37,7 +38,7 @@ import com.lifeops.app.data.local.entity.TaskSupply
         TaskSupply::class
         // Additional entities will be added: ChecklistItem, TaskLog, RestockTask
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

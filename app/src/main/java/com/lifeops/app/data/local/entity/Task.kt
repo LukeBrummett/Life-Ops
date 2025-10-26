@@ -84,6 +84,14 @@ data class Task(
     val overdueBehavior: OverdueBehavior = OverdueBehavior.POSTPONE,
     
     /**
+     * Whether task should be automatically deleted after completion when day advances
+     * Used for one-time, ephemeral tasks that should not persist after being done
+     * Deletion happens during end-of-day processing, not immediately on completion
+     * Default: false (task persists and follows normal recurrence schedule)
+     */
+    val deleteAfterCompletion: Boolean = false,
+    
+    /**
      * Next scheduled date
      * Null for unscheduled ADHOC tasks
      */

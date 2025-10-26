@@ -720,6 +720,12 @@ Tasks can combine any of these configurations to create complex behaviors:
 - Updates all purchased quantities
 - Adds new items discovered during shopping
 
+**Ephemeral One-Time Task:**
+- Name: "Pick up dry cleaning"
+- Schedule: ADHOC (no recurrence) or set to tomorrow
+- Delete after completion: true
+- Task appears, user completes it, task auto-deletes at end of day
+
 ---
 
 ## Task Behavior Rules
@@ -755,6 +761,13 @@ Tasks can combine any of these configurations to create complex behaviors:
 - Maintains "overdue" awareness
 - Can be postponed repeatedly
 - Does not affect future schedule
+
+**Ephemeral/One-Time Tasks:**
+- Task marked with `deleteAfterCompletion = true`
+- Completes normally with all standard behavior (inventory, triggers, etc.)
+- Auto-deletes during end-of-day processing (not immediately on completion)
+- Useful for one-off tasks that shouldn't clutter the task list
+- Examples: "Pick up dry cleaning", "Call dentist about appointment", "Buy birthday gift"
 
 ---
 
@@ -807,6 +820,7 @@ Represents a unit of work with scheduling, relationships, and inventory configur
 - `excludedDates` - JSON array of excluded dates/date ranges (past dates can be cleaned up periodically or left)
 - `excludedDaysOfWeek` - JSON array of days to never schedule (e.g., ["TUESDAY", "THURSDAY"])
 - `overdueBehavior` - "POSTPONE" | "SKIP_TO_NEXT" - How task behaves when day advances without completion
+- `deleteAfterCompletion` - Boolean, whether task auto-deletes after completion when day advances (for ephemeral/one-time tasks)
 - `nextDue` - Next scheduled date (null for unscheduled ADHOC)
 - `lastCompleted` - Last completion timestamp
 
