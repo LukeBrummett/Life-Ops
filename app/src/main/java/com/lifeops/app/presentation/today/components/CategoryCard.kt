@@ -24,6 +24,7 @@ import java.time.LocalDate
 fun CategoryCard(
     categoryName: String,
     taskItems: List<TaskItem>,
+    today: LocalDate,
     totalTasksInCategory: Int,
     completedTasksInCategory: Int,
     onTaskChecked: (String) -> Unit,
@@ -93,6 +94,7 @@ fun CategoryCard(
                     ParentTaskItem(
                         parentTask = taskItem.task,
                         childTasks = taskItem.children,
+                        today = today,
                         onTaskChecked = onTaskChecked,
                         onTaskClick = onTaskClick
                     )
@@ -100,7 +102,7 @@ fun CategoryCard(
                     // Standalone task
                     com.lifeops.app.presentation.today.components.TaskItem(
                         task = taskItem.task,
-                        isCompleted = com.lifeops.app.presentation.today.components.isTaskCompleted(taskItem.task),
+                        isCompleted = com.lifeops.app.presentation.today.components.isTaskCompleted(taskItem.task, today),
                         onCheckedChange = { _ ->
                             onTaskChecked(taskItem.task.id)
                         },
@@ -123,18 +125,20 @@ fun CategoryCard(
 private fun PreviewCategoryCardMixed() {
     LifeOpsTheme {
         Surface {
+            val today = MockData.today
             val taskItems = MockData.tasksByCategory["Fitness"] ?: emptyList()
             val totalTasks = taskItems.sumOf { if (it.isParent) it.children.size else 1 }
             val completedTasks = taskItems.sumOf { item ->
                 if (item.isParent) {
-                    item.children.count { com.lifeops.app.presentation.today.components.isTaskCompleted(it) }
+                    item.children.count { com.lifeops.app.presentation.today.components.isTaskCompleted(it, today) }
                 } else {
-                    if (com.lifeops.app.presentation.today.components.isTaskCompleted(item.task)) 1 else 0
+                    if (com.lifeops.app.presentation.today.components.isTaskCompleted(item.task, today)) 1 else 0
                 }
             }
             CategoryCard(
                 categoryName = "Fitness",
                 taskItems = taskItems,
+                today = today,
                 totalTasksInCategory = totalTasks,
                 completedTasksInCategory = completedTasks,
                 onTaskChecked = {},
@@ -157,6 +161,7 @@ private fun PreviewCategoryCardAllIncomplete() {
             CategoryCard(
                 categoryName = "Home",
                 taskItems = taskItems,
+                today = MockData.today,
                 totalTasksInCategory = taskItems.size,
                 completedTasksInCategory = 0,
                 onTaskChecked = {},
@@ -171,7 +176,7 @@ private fun PreviewCategoryCardAllIncomplete() {
 private fun PreviewCategoryCardAllComplete() {
     LifeOpsTheme {
         Surface {
-            val today = LocalDate.now()
+            val today = MockData.today
             val taskItems = MockData.tasksByCategory["Work"]?.map { item ->
                 if (item.isParent) {
                     item.copy(
@@ -186,6 +191,7 @@ private fun PreviewCategoryCardAllComplete() {
             CategoryCard(
                 categoryName = "Work",
                 taskItems = taskItems,
+                today = today,
                 totalTasksInCategory = totalTasks,
                 completedTasksInCategory = totalTasks,
                 onTaskChecked = {},
@@ -204,6 +210,7 @@ private fun PreviewCategoryCardSingleTask() {
             CategoryCard(
                 categoryName = "Reading",
                 taskItems = taskItems,
+                today = MockData.today,
                 totalTasksInCategory = 1,
                 completedTasksInCategory = 0,
                 onTaskChecked = {},

@@ -1,6 +1,7 @@
 package com.lifeops.app.presentation.alltasks
 
 import com.lifeops.app.data.local.entity.Task
+import java.time.LocalDate
 
 /**
  * UI State for the All Tasks Screen
@@ -15,6 +16,11 @@ data class AllTasksUiState(
      * Tasks after applying filters, search, and sorting
      */
     val filteredTasks: List<Task> = emptyList(),
+    
+    /**
+     * Current date from DateProvider (may be offset for debugging)
+     */
+    val currentDate: LocalDate = LocalDate.now(),
     
     /**
      * Current search query text

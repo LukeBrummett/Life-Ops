@@ -20,6 +20,7 @@ fun RestockScreen(
     supplyIds: List<String>,
     onNavigateBack: () -> Unit = {},
     onNavigateToSupplyEdit: (String?) -> Unit = {},
+    onRestockCompleted: () -> Unit = {},
     viewModel: RestockViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -36,7 +37,8 @@ fun RestockScreen(
                 // Just navigate back without showing message
                 onNavigateBack()
             } else {
-                // Show success message then navigate
+                // Clear pending restock items and navigate
+                onRestockCompleted()
                 onNavigateBack()
             }
         }

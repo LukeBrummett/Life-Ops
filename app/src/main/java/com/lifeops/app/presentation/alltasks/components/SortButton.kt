@@ -1,4 +1,4 @@
-package com.lifeops.presentation.inventory.components
+package com.lifeops.app.presentation.alltasks.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.lifeops.presentation.inventory.SortOption
+import com.lifeops.app.presentation.alltasks.SortOption
 
 /**
  * Button that opens a bottom sheet to select sort option
@@ -144,16 +144,14 @@ private fun SortOptionItem(
  */
 private val SortOption.displayName: String
     get() = when (this) {
+        SortOption.BY_DATE -> "Date"
+        SortOption.BY_NAME -> "Name (A-Z)"
         SortOption.BY_CATEGORY -> "Category"
-        SortOption.BY_NAME_ASC -> "Name (A-Z)"
-        SortOption.BY_NAME_DESC -> "Name (Z-A)"
-        SortOption.BY_QUANTITY_ASC -> "Quantity (Low to High)"
-        SortOption.BY_QUANTITY_DESC -> "Quantity (High to Low)"
-        SortOption.BY_REORDER_URGENCY -> "Reorder Urgency"
     }
 
 private val SortOption.description: String
     get() = when (this) {
-        SortOption.BY_REORDER_URGENCY -> "Items needing reorder first"
-        else -> ""
+        SortOption.BY_DATE -> "Sort by next due date"
+        SortOption.BY_NAME -> "Sort alphabetically by name"
+        SortOption.BY_CATEGORY -> "Sort by category"
     }

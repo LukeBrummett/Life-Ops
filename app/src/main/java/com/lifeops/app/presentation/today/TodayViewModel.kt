@@ -1,11 +1,14 @@
 package com.lifeops.app.presentation.today
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lifeops.app.domain.usecase.CompleteTaskUseCase
 import com.lifeops.app.domain.usecase.GetTasksDueUseCase
+import com.lifeops.app.domain.usecase.ProcessOverdueTasksUseCase
 import com.lifeops.app.util.DateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,11 +28,14 @@ import javax.inject.Inject
 class TodayViewModel @Inject constructor(
     private val getTasksDueUseCase: GetTasksDueUseCase,
     private val completeTaskUseCase: CompleteTaskUseCase,
+    private val processOverdueTasksUseCase: ProcessOverdueTasksUseCase,
     private val dateProvider: DateProvider
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(TodayUiState())
     val uiState: StateFlow<TodayUiState> = _uiState.asStateFlow()
+    
+    private var loadTasksJob: Job? = null
     
     init {
         loadTasksDueToday()
@@ -59,7 +65,6 @@ class TodayViewModel @Inject constructor(
             }
             is TodayUiEvent.Refresh -> loadTasksDueToday()
             is TodayUiEvent.DebugAdvanceDate -> advanceDebugDate(event.days)
-            is TodayUiEvent.DebugResetDate -> resetDebugDate()
         }
     }
     
@@ -68,7 +73,11 @@ class TodayViewModel @Inject constructor(
      * Observes changes and updates UI state reactively
      */
     private fun loadTasksDueToday() {
-        viewModelScope.launch {
+        // Cancel previous job to avoid multiple simultaneous collectors
+        loadTasksJob?.cancel()
+        
+        loadTasksJob = viewModelScope.launch {
+            Log.d("TodayViewModel", "loadTasksDueToday() called")
             _uiState.update { it.copy(isLoading = true) }
             
             val today = dateProvider.now()
@@ -76,8 +85,11 @@ class TodayViewModel @Inject constructor(
                 DateTimeFormatter.ofPattern("MMM dd, yyyy")
             )
             
+            Log.d("TodayViewModel", "Loading tasks for date: $today ($formattedDate)")
+            
             getTasksDueUseCase(today)
                 .catch { exception ->
+                    Log.e("TodayViewModel", "Error loading tasks", exception)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -86,11 +98,23 @@ class TodayViewModel @Inject constructor(
                     }
                 }
                 .collect { tasks ->
+                    Log.d("TodayViewModel", "Received ${tasks.size} tasks from use case")
+                    tasks.forEach { task ->
+                        Log.d("TodayViewModel", "  - Task: ${task.name}, lastCompleted: ${task.lastCompleted}, category: ${task.category}")
+                    }
+                    
                     // Group tasks by category with parent-child relationships
                     val grouped = groupTasksWithHierarchy(tasks)
                     
+                    Log.d("TodayViewModel", "Grouped into ${grouped.size} categories")
+                    grouped.forEach { (category, items) ->
+                        Log.d("TodayViewModel", "  - Category '$category': ${items.size} items")
+                    }
+                    
                     val allComplete = tasks.isNotEmpty() && 
                         tasks.all { it.lastCompleted == today }
+                    
+                    Log.d("TodayViewModel", "All complete check: $allComplete (today: $today)")
                     
                     _uiState.update {
                         it.copy(
@@ -102,6 +126,8 @@ class TodayViewModel @Inject constructor(
                             error = null
                         )
                     }
+                    
+                    Log.d("TodayViewModel", "UI state updated - isLoading: false, categories: ${grouped.size}, allComplete: $allComplete")
                 }
         }
     }
@@ -176,15 +202,24 @@ class TodayViewModel @Inject constructor(
      * DEBUG: Advance the date by specified number of days
      */
     private fun advanceDebugDate(days: Int) {
-        dateProvider.advanceDebugDate(days)
-        loadTasksDueToday() // Reload tasks for the new date
-    }
-    
-    /**
-     * DEBUG: Reset date to real today
-     */
-    private fun resetDebugDate() {
-        dateProvider.resetDebugDate()
-        loadTasksDueToday() // Reload tasks for real today
+        Log.d("TodayViewModel", "advanceDebugDate($days) called")
+        
+        viewModelScope.launch {
+            // Calculate the new date we're advancing to
+            val currentDate = dateProvider.now()
+            val newDate = currentDate.plusDays(days.toLong())
+            
+            // Process overdue tasks based on the NEW date we're advancing to
+            processOverdueTasksUseCase(newDate)
+            Log.d("TodayViewModel", "Processed overdue tasks before advancing date")
+            
+            // Then advance the date
+            dateProvider.advanceDebugDate(days)
+            val actualNewDate = dateProvider.now()
+            Log.d("TodayViewModel", "New debug date: $actualNewDate (offset: ${dateProvider.getDebugOffset()})")
+            
+            // Finally, reload tasks for the new date
+            loadTasksDueToday()
+        }
     }
 }

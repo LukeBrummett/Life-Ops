@@ -125,17 +125,17 @@ class TaskTest {
     }
     
     @Test
-    fun `child task with parent reference and order`() {
+    fun `task with single parent`() {
         // Given
         val childTask = Task(
             name = "Clean Shower",
             category = "Household",
-            parentTaskIds = listOf(1L), // Parent task ID
+            parentTaskIds = listOf("parent-task-1"), // Parent task ID
             childOrder = 1
         )
         
         // Then
-        assertThat(childTask.parentTaskIds).containsExactly(1L)
+        assertThat(childTask.parentTaskIds).containsExactly("parent-task-1")
         assertThat(childTask.childOrder).isEqualTo(1)
     }
     
@@ -145,12 +145,12 @@ class TaskTest {
         val childTask = Task(
             name = "Stretch",
             category = "Health",
-            parentTaskIds = listOf(1L, 2L) // Part of two different workout routines
+            parentTaskIds = listOf("parent-task-1", "parent-task-2") // Part of two different workout routines
         )
         
         // Then
         assertThat(childTask.parentTaskIds).hasSize(2)
-        assertThat(childTask.parentTaskIds).containsExactly(1L, 2L)
+        assertThat(childTask.parentTaskIds).containsExactly("parent-task-1", "parent-task-2")
     }
     
     @Test
@@ -160,12 +160,12 @@ class TaskTest {
             name = "Clean Up After Dinner",
             category = "Household",
             intervalUnit = IntervalUnit.ADHOC, // Only appears when triggered
-            triggeredByTaskIds = listOf(10L) // Triggered by "Cook Dinner"
+            triggeredByTaskIds = listOf("trigger-task-10") // Triggered by "Cook Dinner"
         )
         
         // Then
         assertThat(triggeredTask.intervalUnit).isEqualTo(IntervalUnit.ADHOC)
-        assertThat(triggeredTask.triggeredByTaskIds).containsExactly(10L)
+        assertThat(triggeredTask.triggeredByTaskIds).containsExactly("trigger-task-10")
     }
     
     @Test
@@ -174,11 +174,12 @@ class TaskTest {
         val task = Task(
             name = "Cook Dinner",
             category = "Household",
-            triggersTaskIds = listOf(20L, 21L) // Triggers cleanup tasks
+            triggersTaskIds = listOf("cleanup-task-20", "cleanup-task-21") // Triggers cleanup tasks
         )
         
         // Then
-        assertThat(task.triggersTaskIds).containsExactly(20L, 21L)
+        assertThat(task.triggersTaskIds).hasSize(2)
+        assertThat(task.triggersTaskIds).containsExactly("cleanup-task-20", "cleanup-task-21")
     }
     
     @Test

@@ -10,12 +10,14 @@ data class InventoryUiState(
     val searchQuery: String = "",
     val filterOptions: FilterOptions = FilterOptions(),
     val sortOption: SortOption = SortOption.BY_CATEGORY,
+    val groupByCategory: Boolean = true, // Group supplies by category
     val expandedCategories: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
     val isShoppingMode: Boolean = false,
     val shoppingCheckedItems: Set<String> = emptySet(), // Supply IDs that are checked in shopping list
+    val pendingRestockItems: Set<String> = emptySet(), // Supply IDs from last shopping session, waiting to be restocked
     val navigateToRestock: List<String>? = null // Supply IDs to restock, triggers navigation when set
 )
 
@@ -58,6 +60,7 @@ sealed class InventoryUiEvent {
     data class SearchQueryChanged(val query: String) : InventoryUiEvent()
     data class SortOptionSelected(val option: SortOption) : InventoryUiEvent()
     data class FilterOptionsChanged(val options: FilterOptions) : InventoryUiEvent()
+    data class GroupByCategoryToggled(val enabled: Boolean) : InventoryUiEvent()
     data class CategoryExpandToggle(val category: String) : InventoryUiEvent()
     data class IncrementQuantity(val supplyId: String) : InventoryUiEvent()
     data class DecrementQuantity(val supplyId: String) : InventoryUiEvent()

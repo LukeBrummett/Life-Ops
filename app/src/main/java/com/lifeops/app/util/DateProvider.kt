@@ -1,5 +1,6 @@
 package com.lifeops.app.util
 
+import android.util.Log
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,21 +21,18 @@ class DateProvider @Inject constructor() {
      * Get the current date (with debug offset applied)
      */
     fun now(): LocalDate {
-        return LocalDate.now().plusDays(debugDaysOffset)
+        val date = LocalDate.now().plusDays(debugDaysOffset)
+        Log.d("DateProvider", "now() called - returning: $date (offset: $debugDaysOffset)")
+        return date
     }
     
     /**
      * Advance the debug date by the specified number of days
      */
     fun advanceDebugDate(days: Int) {
+        Log.d("DateProvider", "advanceDebugDate($days) - old offset: $debugDaysOffset")
         debugDaysOffset += days
-    }
-    
-    /**
-     * Reset debug date to real today
-     */
-    fun resetDebugDate() {
-        debugDaysOffset = 0
+        Log.d("DateProvider", "advanceDebugDate($days) - new offset: $debugDaysOffset, new date: ${now()}")
     }
     
     /**

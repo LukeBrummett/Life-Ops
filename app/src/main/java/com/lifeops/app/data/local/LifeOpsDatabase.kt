@@ -22,6 +22,7 @@ import com.lifeops.app.data.local.entity.TaskSupply
  * - v2: Migrated to UUID (String) task IDs for conflict-free sharing
  * - v3: Added Supply and Inventory entities for inventory management
  * - v4: Added TaskSupply junction table for task-inventory integration
+ * - v5: Added overdueBehavior field to Task entity
  * 
  * As per Technical Architecture specification:
  * - SQLite via Room for local persistence
@@ -36,7 +37,7 @@ import com.lifeops.app.data.local.entity.TaskSupply
         TaskSupply::class
         // Additional entities will be added: ChecklistItem, TaskLog, RestockTask
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

@@ -187,6 +187,34 @@ interface TaskDao {
     @Query("UPDATE tasks SET active = 1 WHERE id = :taskId")
     suspend fun restore(taskId: String)
     
+    /**
+     * Update only the nextDue field of a task
+     * Used when processing overdue tasks with SKIP_TO_NEXT behavior
+     */
+    @Query("UPDATE tasks SET nextDue = :nextDue WHERE id = :taskId")
+    suspend fun updateNextDue(taskId: String, nextDue: LocalDate)
+    
+    /**
+     * Update only the completionStreak field of a task
+     * Used when processing overdue tasks to reset streaks
+     */
+    @Query("UPDATE tasks SET completionStreak = :streak WHERE id = :taskId")
+    suspend fun updateStreak(taskId: String, streak: Int)
+    
+    /**
+     * Get all overdue tasks (both POSTPONE and SKIP_TO_NEXT)
+     * Used for streak resets and auto-advancement when date changes
+     */
+    @Query("SELECT * FROM tasks WHERE active = 1 AND nextDue < :currentDate")
+    suspend fun getOverdueTasks(currentDate: LocalDate): List<Task>
+    
+    /**
+     * Get all overdue tasks with SKIP_TO_NEXT behavior
+     * Used for automatic advancement when date changes
+     */
+    @Query("SELECT * FROM tasks WHERE active = 1 AND overdueBehavior = 'SKIP_TO_NEXT' AND nextDue < :currentDate")
+    suspend fun getOverdueTasksWithSkipBehavior(currentDate: LocalDate): List<Task>
+    
     // ============================================
     // Delete
     // ============================================

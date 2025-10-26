@@ -24,6 +24,7 @@ import java.time.LocalDate
 @Composable
 fun TasksList(
     tasksByCategory: Map<String, List<TaskItem>>,
+    today: LocalDate, // The current "today" date from DateProvider (may be offset for testing)
     showCompleted: Boolean,
     onTaskChecked: (String) -> Unit,
     onTaskClick: (String) -> Unit,
@@ -37,8 +38,8 @@ fun TasksList(
             taskItems.mapNotNull { taskItem ->
                 if (taskItem.isParent) {
                     // For parent tasks, filter children
-                    val incompleteChildren = taskItem.children.filter { !isTaskCompleted(it) }
-                    val parentCompleted = isTaskCompleted(taskItem.task)
+                    val incompleteChildren = taskItem.children.filter { !isTaskCompleted(it, today) }
+                    val parentCompleted = isTaskCompleted(taskItem.task, today)
                     
                     // Show parent if parent incomplete OR has incomplete children
                     if (!parentCompleted || incompleteChildren.isNotEmpty()) {
@@ -54,7 +55,7 @@ fun TasksList(
                     }
                 } else {
                     // For standalone tasks, only show if incomplete
-                    if (!isTaskCompleted(taskItem.task)) taskItem else null
+                    if (!isTaskCompleted(taskItem.task, today)) taskItem else null
                 }
             }
         }.filterValues { it.isNotEmpty() }
@@ -72,9 +73,9 @@ fun TasksList(
             }
             val completedCount = allTaskItemsInCategory.sumOf { taskItem ->
                 if (taskItem.isParent) {
-                    taskItem.children.count { isTaskCompleted(it) }
+                    taskItem.children.count { isTaskCompleted(it, today) }
                 } else {
-                    if (isTaskCompleted(taskItem.task)) 1 else 0
+                    if (isTaskCompleted(taskItem.task, today)) 1 else 0
                 }
             }
             
@@ -82,6 +83,7 @@ fun TasksList(
                 CategoryCard(
                     categoryName = category,
                     taskItems = filteredTaskItems,
+                    today = today,
                     totalTasksInCategory = totalCount,
                     completedTasksInCategory = completedCount,
                     onTaskChecked = onTaskChecked,
@@ -94,9 +96,10 @@ fun TasksList(
 
 /**
  * Determine if a task is completed based on lastCompleted date
+ * @param task The task to check
+ * @param today The current "today" date from DateProvider (may be offset for testing)
  */
-fun isTaskCompleted(task: Task): Boolean {
-    val today = LocalDate.now()
+fun isTaskCompleted(task: Task, today: LocalDate): Boolean {
     return task.lastCompleted == today
 }
 
@@ -110,6 +113,7 @@ private fun PreviewTasksListAll() {
     LifeOpsTheme {
         TasksList(
             tasksByCategory = MockData.tasksByCategory,
+            today = MockData.today,
             showCompleted = true,
             onTaskChecked = {},
             onTaskClick = {}
@@ -123,6 +127,7 @@ private fun PreviewTasksListHideCompleted() {
     LifeOpsTheme {
         TasksList(
             tasksByCategory = MockData.tasksByCategory,
+            today = MockData.today,
             showCompleted = false,
             onTaskChecked = {},
             onTaskClick = {}
@@ -138,6 +143,7 @@ private fun PreviewTasksListSingleCategory() {
             tasksByCategory = mapOf(
                 "Fitness" to (MockData.tasksByCategory["Fitness"] ?: emptyList())
             ),
+            today = MockData.today,
             showCompleted = true,
             onTaskChecked = {},
             onTaskClick = {}

@@ -16,7 +16,8 @@ Eliminates the mental overhead of remembering and tracking an overwhelming numbe
 
 **Core philosophy:**
 - **Next-occurrence timeline**: Tasks appear only once in the timeline at their next scheduled date; future views show when tasks will next occur, never duplicate instances
-- **Slide-forward persistence**: Missed tasks can either postpone to tomorrow or skip to their next scheduled occurrence; tasks without schedules disappear when skipped
+- **Slide-forward persistence**: Missed tasks can either postpone to tomorrow or skip to their next scheduled occurrence based on task configuration; tasks without schedules disappear when skipped
+- **Configurable overdue behavior**: Each task can be configured to either "postpone" (slide forward day-by-day) or "skip" (jump to next scheduled occurrence) when not completed
 - **Offline-only**: Runs entirely locally with zero network dependencies or sync capabilities
 - **Deterministic scheduling**: Tasks appear based on explicit rules and configurations, never algorithmic guessing
 - **Configuration over motivation**: Set up task logic once, execute without thinking
@@ -323,6 +324,9 @@ No unanswered questions - all current task configuration must be visible. Histor
     - Exclude specific dates
     - Exclude date ranges
   - When excluded date is hit, automatically finds next available date
+- Overdue behavior:
+  - **Postpone**: Task slides forward day-by-day when incomplete (default)
+  - **Skip to Next**: Task jumps to next scheduled occurrence when a day passes without completion
 
 **Relationship Configuration:**
 
@@ -802,6 +806,7 @@ Represents a unit of work with scheduling, relationships, and inventory configur
 - `specificDaysOfWeek` - JSON array of days (e.g., ["MONDAY", "WEDNESDAY", "FRIDAY"])
 - `excludedDates` - JSON array of excluded dates/date ranges (past dates can be cleaned up periodically or left)
 - `excludedDaysOfWeek` - JSON array of days to never schedule (e.g., ["TUESDAY", "THURSDAY"])
+- `overdueBehavior` - "POSTPONE" | "SKIP_TO_NEXT" - How task behaves when day advances without completion
 - `nextDue` - Next scheduled date (null for unscheduled ADHOC)
 - `lastCompleted` - Last completion timestamp
 
@@ -1325,9 +1330,11 @@ Room Database (@Singleton)
 - ADHOC (no automatic scheduling, trigger-only)
 
 **REQ-7**: The system SHALL implement slide-forward persistence where:
-- Overdue tasks remain in Today view until completed or skipped
-- Slide state is visually indicated (isSlid flag)
+- Tasks with overdueBehavior="POSTPONE" remain in Today view, sliding forward day-by-day until completed or manually skipped
+- Tasks with overdueBehavior="SKIP_TO_NEXT" automatically advance to their next scheduled occurrence when the day changes without completion
+- Overdue state is visually indicated (different color/icon)
 - No penalties or streak breaks for missed tasks
+- Default behavior is POSTPONE for backward compatibility
 
 **REQ-8**: The system SHALL support two skip behaviors:
 - **Skip**: Push task to next day only (temporary postponement)
@@ -1642,11 +1649,25 @@ A child task with its own interval separate from the parent. Behavior:
 **Example**: "Clean Toilet" (daily) is a child of "Clean Bathroom" (weekly). Toilet cleaning appears daily but still grouped under Bathroom.
 
 ### Slide-Forward Persistence
-The behavior of overdue tasks:
-- Overdue tasks remain in Today view until resolved (completed or skipped)
-- `isSlid = true` flag marks overdue state
-- Visual indicator (different color/icon) shows slide status
-- No punishment or penalties, just persistence
+The behavior of tasks when a day passes without completion:
+
+**POSTPONE behavior (default):**
+- Task remains in Today view, sliding forward day-by-day
+- `nextDue` stays at original due date until completed
+- Visual indicator shows overdue status
+- Task persists until user completes or manually skips it
+- Best for: Daily habits, flexible tasks, important recurring items
+
+**SKIP_TO_NEXT behavior:**
+- When day advances without completion, task automatically jumps to next scheduled occurrence
+- `nextDue` automatically advances based on task's recurrence pattern
+- No manual intervention required
+- Task disappears from Today view when day passes
+- Best for: Scheduled appointments, optional activities, date-specific tasks
+
+**Visual indicators:**
+- Postponed tasks shown with overdue styling (different color/icon)
+- No punishment or penalties, just persistence and clarity
 
 ### Today View
 The main application interface showing only:

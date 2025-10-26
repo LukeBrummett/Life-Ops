@@ -33,11 +33,12 @@ fun FilterButton(
                     Text(text = filterOptions.activeCount.toString())
                 }
             }
-        }
+        },
+        modifier = modifier
     ) {
         OutlinedButton(
             onClick = { showBottomSheet = true },
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Icon(
@@ -173,16 +174,6 @@ fun FilterBottomSheet(
                         onFilterOptionsChanged(currentFilters)
                     }
                 )
-            }
-            
-            // Apply button
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
-            ) {
-                Text("Apply")
             }
         }
     }

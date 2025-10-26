@@ -77,6 +77,13 @@ data class Task(
     val excludedDaysOfWeek: List<DayOfWeek>? = null,
     
     /**
+     * How task behaves when day advances without completion
+     * POSTPONE: Slides forward day-by-day (default)
+     * SKIP_TO_NEXT: Automatically advances to next scheduled occurrence
+     */
+    val overdueBehavior: OverdueBehavior = OverdueBehavior.POSTPONE,
+    
+    /**
      * Next scheduled date
      * Null for unscheduled ADHOC tasks
      */
@@ -191,4 +198,22 @@ enum class Difficulty {
     LOW,
     MEDIUM,
     HIGH
+}
+
+/**
+ * Overdue behavior enumeration
+ * Determines what happens when a day passes without completing the task
+ */
+enum class OverdueBehavior {
+    /**
+     * Task slides forward day-by-day, remaining in Today view until completed
+     * Best for: Daily habits, important recurring tasks, flexible deadlines
+     */
+    POSTPONE,
+    
+    /**
+     * Task automatically advances to next scheduled occurrence when day changes
+     * Best for: Scheduled appointments, optional activities, date-specific tasks
+     */
+    SKIP_TO_NEXT
 }

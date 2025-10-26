@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TodayScreenHeader(
     selectedDate: LocalDate,
+    todayDate: LocalDate, // The "current" date from DateProvider (may be offset for testing)
     showCompleted: Boolean,
     onNavigateToAllTasks: () -> Unit,
     onToggleCompleted: () -> Unit,
@@ -45,7 +46,7 @@ fun TodayScreenHeader(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = formatDate(selectedDate),
+                    text = formatDate(selectedDate, todayDate),
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center
                 )
@@ -113,9 +114,11 @@ fun TodayScreenHeader(
 /**
  * Format LocalDate for display in header
  * Shows "Today" for current date, otherwise shows formatted date
+ * 
+ * @param date The date to format
+ * @param today The current "today" date (may be offset for testing via DateProvider)
  */
-private fun formatDate(date: LocalDate): String {
-    val today = LocalDate.now()
+private fun formatDate(date: LocalDate, today: LocalDate): String {
     return when (date) {
         today -> "Today"
         today.minusDays(1) -> "Yesterday"
@@ -135,6 +138,7 @@ private fun PreviewTodayScreenHeaderDefault() {
         Surface {
             TodayScreenHeader(
                 selectedDate = LocalDate.now(),
+                todayDate = LocalDate.now(),
                 showCompleted = false,
                 onNavigateToAllTasks = {},
                 onToggleCompleted = {},
@@ -153,6 +157,7 @@ private fun PreviewTodayScreenHeaderWithCompleted() {
         Surface {
             TodayScreenHeader(
                 selectedDate = LocalDate.now(),
+                todayDate = LocalDate.now(),
                 showCompleted = true,
                 onNavigateToAllTasks = {},
                 onToggleCompleted = {},
@@ -171,6 +176,7 @@ private fun PreviewTodayScreenHeaderYesterday() {
         Surface {
             TodayScreenHeader(
                 selectedDate = LocalDate.now().minusDays(1),
+                todayDate = LocalDate.now(),
                 showCompleted = false,
                 onNavigateToAllTasks = {},
                 onToggleCompleted = {},
@@ -189,6 +195,7 @@ private fun PreviewTodayScreenHeaderCustomDate() {
         Surface {
             TodayScreenHeader(
                 selectedDate = LocalDate.of(2025, 12, 25),
+                todayDate = LocalDate.now(),
                 showCompleted = false,
                 onNavigateToAllTasks = {},
                 onToggleCompleted = {},

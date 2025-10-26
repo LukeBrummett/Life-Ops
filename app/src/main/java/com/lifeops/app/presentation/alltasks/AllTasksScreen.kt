@@ -22,6 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.lifeops.app.presentation.alltasks.components.SearchBar
+import com.lifeops.app.presentation.alltasks.components.SortButton
+import com.lifeops.app.presentation.alltasks.components.FilterButton
+import com.lifeops.app.presentation.alltasks.components.GroupButton
 
 /**
  * All Tasks Screen - Main entry point
@@ -84,36 +88,56 @@ private fun AllTasksScreenContent(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Search bar (when expanded)
-            if (uiState.isSearchExpanded) {
-                SearchBar(
-                    searchQuery = uiState.searchQuery,
-                    onSearchQueryChange = { query ->
-                        onEvent(AllTasksUiEvent.SearchQueryChanged(query))
-                    },
+            // Search and filter bar (always visible when not collapsed)
+            if (uiState.isSearchExpanded || uiState.isFilterExpanded) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-            
-            // Filter and sort bar (when expanded)
-            if (uiState.isFilterExpanded) {
-                FilterSortBar(
-                    filterState = uiState.filterState,
-                    groupByOption = uiState.groupByOption,
-                    sortOption = uiState.sortOption,
-                    onFilterChange = { filter ->
-                        onEvent(AllTasksUiEvent.FilterChanged(filter))
-                    },
-                    onGroupByChange = { groupBy ->
-                        onEvent(AllTasksUiEvent.GroupByChanged(groupBy))
-                    },
-                    onSortChange = { sort ->
-                        onEvent(AllTasksUiEvent.SortChanged(sort))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Search bar
+                    if (uiState.isSearchExpanded) {
+                        SearchBar(
+                            query = uiState.searchQuery,
+                            onQueryChanged = { query ->
+                                onEvent(AllTasksUiEvent.SearchQueryChanged(query))
+                            }
+                        )
+                    }
+                    
+                    // Group / Sort / Filter buttons
+                    if (uiState.isFilterExpanded) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            GroupButton(
+                                currentGroupBy = uiState.groupByOption,
+                                onGroupByChange = { groupBy ->
+                                    onEvent(AllTasksUiEvent.GroupByChanged(groupBy))
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            SortButton(
+                                currentSortOption = uiState.sortOption,
+                                onSortOptionSelected = { sort ->
+                                    onEvent(AllTasksUiEvent.SortChanged(sort))
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            FilterButton(
+                                filterState = uiState.filterState,
+                                onFilterChange = { filter ->
+                                    onEvent(AllTasksUiEvent.FilterChanged(filter))
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
             }
             
             // Task list
@@ -138,6 +162,7 @@ private fun AllTasksScreenContent(
                 else -> {
                     TaskList(
                         tasks = uiState.filteredTasks,
+                        currentDate = uiState.currentDate,
                         groupByOption = uiState.groupByOption,
                         onTaskClick = { taskId ->
                             onEvent(AllTasksUiEvent.NavigateToTaskDetail(taskId))
@@ -201,371 +226,9 @@ private fun AllTasksTopBar(
 }
 
 @Composable
-private fun SearchBar(
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = searchQuery,
-        onValueChange = onSearchQueryChange,
-        placeholder = { Text("Search tasks...") },
-        leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = "Search")
-        },
-        trailingIcon = {
-            if (searchQuery.isNotEmpty()) {
-                IconButton(onClick = { onSearchQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear search"
-                    )
-                }
-            }
-        },
-        singleLine = true,
-        modifier = modifier
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FilterSortBar(
-    filterState: FilterState,
-    groupByOption: GroupByOption,
-    sortOption: SortOption,
-    onFilterChange: (FilterState) -> Unit,
-    onGroupByChange: (GroupByOption) -> Unit,
-    onSortChange: (SortOption) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        tonalElevation = 1.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            // Status filter chips
-            Text(
-                text = "Status",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 2.dp)
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                FilterChip(
-                    selected = filterState.statusFilter == StatusFilter.ACTIVE,
-                    onClick = { 
-                        onFilterChange(filterState.copy(statusFilter = StatusFilter.ACTIVE))
-                    },
-                    label = { 
-                        Text(
-                            "Active",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-                
-                FilterChip(
-                    selected = filterState.statusFilter == StatusFilter.ALL,
-                    onClick = { 
-                        onFilterChange(filterState.copy(statusFilter = StatusFilter.ALL))
-                    },
-                    label = { 
-                        Text(
-                            "All",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-                
-                FilterChip(
-                    selected = filterState.statusFilter == StatusFilter.ARCHIVED,
-                    onClick = { 
-                        onFilterChange(filterState.copy(statusFilter = StatusFilter.ARCHIVED))
-                    },
-                    label = { 
-                        Text(
-                            "Archived",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-            }
-            
-            // Attribute filter chips
-            Text(
-                text = "Attributes",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                FilterChip(
-                    selected = filterState.hasInventory,
-                    onClick = { 
-                        onFilterChange(filterState.copy(hasInventory = !filterState.hasInventory))
-                    },
-                    label = { 
-                        Text(
-                            "Inventory",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-                
-                FilterChip(
-                    selected = filterState.isParent,
-                    onClick = { 
-                        onFilterChange(filterState.copy(isParent = !filterState.isParent))
-                    },
-                    label = { 
-                        Text(
-                            "Parent",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-                
-                FilterChip(
-                    selected = filterState.isChild,
-                    onClick = { 
-                        onFilterChange(filterState.copy(isChild = !filterState.isChild))
-                    },
-                    label = { 
-                        Text(
-                            "Child",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-                
-                FilterChip(
-                    selected = filterState.isTriggered,
-                    onClick = { 
-                        onFilterChange(filterState.copy(isTriggered = !filterState.isTriggered))
-                    },
-                    label = { 
-                        Text(
-                            "Triggered",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-                
-                FilterChip(
-                    selected = filterState.adhocOnly,
-                    onClick = { 
-                        onFilterChange(filterState.copy(adhocOnly = !filterState.adhocOnly))
-                    },
-                    label = { 
-                        Text(
-                            "Adhoc",
-                            style = MaterialTheme.typography.labelSmall
-                        ) 
-                    },
-                    modifier = Modifier.height(28.dp)
-                )
-            }
-            
-            // Group By and Sort By dropdowns
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Group By dropdown (left)
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Group By",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    GroupByDropdown(
-                        selectedGroupBy = groupByOption,
-                        onGroupByChange = onGroupByChange
-                    )
-                }
-                
-                // Sort By dropdown (right)
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Sort By",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    SortDropdown(
-                        selectedSort = sortOption,
-                        onSortChange = onSortChange
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun GroupByDropdown(
-    selectedGroupBy: GroupByOption,
-    onGroupByChange: (GroupByOption) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    Box(modifier = modifier) {
-        OutlinedButton(
-            onClick = { expanded = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(36.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = when (selectedGroupBy) {
-                        GroupByOption.RELATIVE_DATE -> "Date"
-                        GroupByOption.CATEGORY -> "Category"
-                    },
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Group by options"
-                )
-            }
-        }
-        
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("Date") },
-                onClick = {
-                    onGroupByChange(GroupByOption.RELATIVE_DATE)
-                    expanded = false
-                },
-                leadingIcon = if (selectedGroupBy == GroupByOption.RELATIVE_DATE) {
-                    { Icon(Icons.Default.Search, contentDescription = null) } // TODO: Use check icon
-                } else null
-            )
-            DropdownMenuItem(
-                text = { Text("Category") },
-                onClick = {
-                    onGroupByChange(GroupByOption.CATEGORY)
-                    expanded = false
-                },
-                leadingIcon = if (selectedGroupBy == GroupByOption.CATEGORY) {
-                    { Icon(Icons.Default.Search, contentDescription = null) } // TODO: Use check icon
-                } else null
-            )
-        }
-    }
-}
-
-@Composable
-private fun SortDropdown(
-    selectedSort: SortOption,
-    onSortChange: (SortOption) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    Box(modifier = modifier) {
-        OutlinedButton(
-            onClick = { expanded = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(36.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = when (selectedSort) {
-                        SortOption.BY_DATE -> "Date"
-                        SortOption.BY_CATEGORY -> "Category"
-                        SortOption.BY_NAME -> "Name"
-                    },
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Sort options"
-                )
-            }
-        }
-        
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("Date") },
-                onClick = {
-                    onSortChange(SortOption.BY_DATE)
-                    expanded = false
-                },
-                leadingIcon = if (selectedSort == SortOption.BY_DATE) {
-                    { Icon(Icons.Default.Search, contentDescription = null) } // TODO: Use check icon
-                } else null
-            )
-            DropdownMenuItem(
-                text = { Text("Category") },
-                onClick = {
-                    onSortChange(SortOption.BY_CATEGORY)
-                    expanded = false
-                },
-                leadingIcon = if (selectedSort == SortOption.BY_CATEGORY) {
-                    { Icon(Icons.Default.Search, contentDescription = null) } // TODO: Use check icon
-                } else null
-            )
-            DropdownMenuItem(
-                text = { Text("Name") },
-                onClick = {
-                    onSortChange(SortOption.BY_NAME)
-                    expanded = false
-                },
-                leadingIcon = if (selectedSort == SortOption.BY_NAME) {
-                    { Icon(Icons.Default.Search, contentDescription = null) } // TODO: Use check icon
-                } else null
-            )
-        }
-    }
-}
-
-@Composable
 private fun TaskList(
     tasks: List<com.lifeops.app.data.local.entity.Task>,
+    currentDate: java.time.LocalDate,
     groupByOption: com.lifeops.app.presentation.alltasks.GroupByOption,
     onTaskClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -578,7 +241,7 @@ private fun TaskList(
         when (groupByOption) {
             com.lifeops.app.presentation.alltasks.GroupByOption.RELATIVE_DATE -> {
                 // Group tasks by date section with parent-child hierarchy
-                val groupedTasks = com.lifeops.app.presentation.alltasks.groupTasksByDate(tasks)
+                val groupedTasks = com.lifeops.app.presentation.alltasks.groupTasksByDate(tasks, currentDate)
                 
                 groupedTasks.forEach { (section, sectionTaskItems) ->
                     // Section header

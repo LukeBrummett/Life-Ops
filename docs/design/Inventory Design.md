@@ -494,25 +494,47 @@ The Inventory Screen is the central hub for managing all consumable supplies use
 **Completion Flow**:
 1. User checks off items acquired during shopping
 2. User taps "Done Shopping" button
-3. System creates "Restock Inventory" task with checked items
+3. System saves checked items as pending restock
 4. Shopping session cleared
 5. Returns to Inventory Screen
-6. Toast: "Restock task created with [N] items"
-7. Restock task appears in Today view or All Tasks view
+6. Restock button appears in header with badge showing item count
+7. Toast: "Shopping complete! [N] items ready to restock."
 
 ---
 
 ## Restock Workflow
 
-### Restock Inventory Task
+### Restock Button in Header
+
+**Purpose**: Provide quick access to restock pending items from last shopping session
+
+**Trigger**: 
+- Automatically appears after completing Shopping Workflow
+- Only visible when there are pending restock items
+- Positioned to the left of the shopping cart button
+
+**Visual Design**:
+- Inventory icon (📦) with badge showing count of pending items
+- Badge displays number of items waiting to be restocked
+- Colored with secondary theme color to draw attention
+- Only visible when `pendingRestockItems` is not empty
+- Hidden during shopping mode
+
+**Behavior**:
+- Tap button to navigate to Restock Inventory Screen
+- Badge count updates in real-time as items are restocked
+- Button disappears when all items are restocked
+- State persists across app restarts via SavedStateHandle
+
+### Restock Inventory Screen
 
 **Purpose**: Update inventory quantities after shopping
 
 **Trigger**: 
-- Automatically created after completing Shopping Workflow
+- User taps Restock button in Inventory Screen header
 - OR automatically created when a task with RECOUNT mode inventory completes
 
-**Task Type**: Special workflow task (not a regular task)
+**Navigation**: Opens as dedicated screen (not a task)
 
 **Layout**:
 ```
@@ -595,13 +617,14 @@ The Inventory Screen is the central hub for managing all consumable supplies use
    - Stay on restock screen
 6. If all items done:
    - All inventory quantities updated in database
-   - Restock task marked complete and removed
-   - Returns to Today Screen or previous screen
+   - Pending restock items cleared from state
+   - Restock button disappears from Inventory Screen header
+   - Returns to Inventory Screen
    - Toast: "Inventory updated for [N] items"
 
 **Cancel Behavior**:
 - Confirmation dialog: "Discard restock progress?"
-- Confirm: Restock task remains (can be completed later), return to previous screen
+- Confirm: Returns to Inventory Screen, pending items remain (button still visible)
 - Cancel: Stay in restock workflow
 
 ---
@@ -615,17 +638,18 @@ The Inventory Screen is the central hub for managing all consumable supplies use
 **Flow**:
 1. User completes task (e.g., "Monthly Cleaning")
 2. Task has supplies in RECOUNT mode
-3. System creates Restock Inventory task with recount items
-4. Restock task appears in Today/All Tasks view
-5. User opens restock task when convenient
-6. User recounts and updates quantities
-7. User completes restock task
-8. Inventory updated
+3. System saves items as pending restock
+4. Restock button appears in Inventory Screen header with badge
+5. User taps restock button when convenient
+6. User opens restock screen
+7. User recounts and updates quantities
+8. User completes restock workflow
+9. Inventory updated, button disappears
 
 **Multiple Recount Items**:
 - If multiple supplies have RECOUNT mode on same task
-- All bundle into single Restock task
-- User updates all in one workflow
+- All bundle into pending restock items
+- User updates all in one workflow via restock screen
 
 **Difference from Shopping**:
 - No shopping list phase
@@ -645,7 +669,12 @@ Today Screen
     │   ├─→ Shopping Workflow Screen [Go Shopping button]
     │   │   ├─→ Pause → Inventory Screen (session saved, can resume)
     │   │   ├─→ Cancel → Inventory Screen (session discarded)
-    │   │   └─→ Done → Creates Restock Task → Inventory Screen
+    │   │   └─→ Done → Saves pending restock items → Inventory Screen (restock button appears)
+    │   │
+    │   ├─→ Restock Inventory Screen [Restock button - only visible with pending items]
+    │   │   ├─→ FAB → Supply Edit Screen → back to Restock
+    │   │   ├─→ Complete → Updates inventory → Inventory Screen (restock button disappears)
+    │   │   └─→ Cancel → Inventory Screen (pending items remain, button still visible)
     │   │
     │   ├─→ Supply Edit Screen [FAB or tap on item card]
     │   │   ├─→ Task Detail Screen [from task association]
@@ -657,16 +686,15 @@ Today Screen
     │       └─→ Shopping Workflow Screen (restored state)
     │
     └─→ All Tasks Screen
-        └─→ Restock Inventory Task [Special task type]
-            ├─→ FAB → Supply Edit Screen → back to Restock
-            └─→ Complete → Today Screen
 ```
 
 **Navigation Patterns**:
 - Inventory Screen accessible from Today Screen header
 - Shopping workflow supports pause/resume with state preservation
 - Paused shopping updates quantities in real-time when resumed
-- Restock Task is standalone special screen (not regular task detail)
+- Restock Screen accessible via header button (only visible with pending items)
+- Restock button appears after shopping completion with badge count
+- Restock button persists until all pending items are processed
 - Supply Edit accessible via FAB or tapping item cards
 - FAB available on both Inventory and Restock screens
 - Back navigation preserves state where appropriate

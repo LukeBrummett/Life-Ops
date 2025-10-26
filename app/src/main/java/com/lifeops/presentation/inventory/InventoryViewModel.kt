@@ -1,5 +1,6 @@
 package com.lifeops.presentation.inventory
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lifeops.app.data.local.dao.SupplyWithInventory
@@ -11,26 +12,54 @@ import javax.inject.Inject
 
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
-    private val supplyRepository: SupplyRepository
+    private val supplyRepository: SupplyRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InventoryUiState())
     val uiState: StateFlow<InventoryUiState> = _uiState.asStateFlow()
 
+    companion object {
+        private const val KEY_SHOPPING_MODE = "shopping_mode"
+        private const val KEY_SHOPPING_CHECKED_ITEMS = "shopping_checked_items"
+        private const val KEY_PENDING_RESTOCK_ITEMS = "pending_restock_items"
+    }
+
     init {
+        // Restore shopping mode state
+        val savedShoppingMode = savedStateHandle.get<Boolean>(KEY_SHOPPING_MODE) ?: false
+        val savedCheckedItems = savedStateHandle.get<ArrayList<String>>(KEY_SHOPPING_CHECKED_ITEMS)?.toSet() ?: emptySet()
+        val savedPendingRestockItems = savedStateHandle.get<ArrayList<String>>(KEY_PENDING_RESTOCK_ITEMS)?.toSet() ?: emptySet()
+        
+        android.util.Log.d("InventoryViewModel", "Restoring state - Shopping mode: $savedShoppingMode, Checked items: ${savedCheckedItems.size}, Pending restock: ${savedPendingRestockItems.size}")
+        
+        _uiState.update { 
+            it.copy(
+                isShoppingMode = savedShoppingMode,
+                shoppingCheckedItems = savedCheckedItems,
+                pendingRestockItems = savedPendingRestockItems
+            )
+        }
+        
         loadSupplies()
     }
 
     private fun loadSupplies() {
         viewModelScope.launch {
-            supplyRepository.observeSuppliesWithInventory()
+            // Combine supplies with UI state to react to filter/sort changes
+            combine(
+                supplyRepository.observeSuppliesWithInventory(),
+                _uiState
+            ) { supplies, state ->
+                applyFiltersAndSort(supplies, state)
+            }
                 .catch { e ->
                     _uiState.update { it.copy(error = "Failed to load supplies: ${e.message}", isLoading = false) }
                 }
-                .collect { supplies ->
+                .collect { filteredSupplies ->
                     _uiState.update { currentState ->
                         currentState.copy(
-                            supplies = applyFiltersAndSort(supplies, currentState),
+                            supplies = filteredSupplies,
                             isLoading = false
                         )
                     }
@@ -48,6 +77,9 @@ class InventoryViewModel @Inject constructor(
             }
             is InventoryUiEvent.FilterOptionsChanged -> {
                 _uiState.update { it.copy(filterOptions = event.options) }
+            }
+            is InventoryUiEvent.GroupByCategoryToggled -> {
+                _uiState.update { it.copy(groupByCategory = event.enabled) }
             }
             is InventoryUiEvent.CategoryExpandToggle -> {
                 _uiState.update { currentState ->
@@ -85,19 +117,20 @@ class InventoryViewModel @Inject constructor(
     
     private fun toggleShoppingMode() {
         _uiState.update { currentState ->
-            if (currentState.isShoppingMode) {
-                // Exiting shopping mode - clear checked items
-                currentState.copy(
-                    isShoppingMode = false,
-                    shoppingCheckedItems = emptySet()
-                )
-            } else {
-                // Entering shopping mode - auto-filter to items needing reorder
-                currentState.copy(
-                    isShoppingMode = true,
-                    shoppingCheckedItems = emptySet()
-                )
-            }
+            val newShoppingMode = !currentState.isShoppingMode
+            // Keep the checked items when toggling - don't clear them
+            val newCheckedItems = currentState.shoppingCheckedItems
+            
+            // Save to SavedStateHandle
+            savedStateHandle[KEY_SHOPPING_MODE] = newShoppingMode
+            savedStateHandle[KEY_SHOPPING_CHECKED_ITEMS] = ArrayList(newCheckedItems)
+            
+            android.util.Log.d("InventoryViewModel", "Toggle shopping mode to $newShoppingMode - Checked items: ${newCheckedItems.size}")
+            
+            currentState.copy(
+                isShoppingMode = newShoppingMode,
+                shoppingCheckedItems = newCheckedItems
+            )
         }
     }
     
@@ -109,6 +142,12 @@ class InventoryViewModel @Inject constructor(
             } else {
                 checkedItems.add(supplyId)
             }
+            
+            // Save to SavedStateHandle
+            savedStateHandle[KEY_SHOPPING_CHECKED_ITEMS] = ArrayList(checkedItems)
+            
+            android.util.Log.d("InventoryViewModel", "Toggled item $supplyId - Total checked: ${checkedItems.size}")
+            
             currentState.copy(shoppingCheckedItems = checkedItems)
         }
     }
@@ -119,18 +158,73 @@ class InventoryViewModel @Inject constructor(
             val checkedSupplyIds = currentState.shoppingCheckedItems
             
             if (checkedSupplyIds.isEmpty()) {
+                savedStateHandle[KEY_SHOPPING_MODE] = false
+                savedStateHandle[KEY_SHOPPING_CHECKED_ITEMS] = ArrayList<String>()
                 _uiState.update { it.copy(isShoppingMode = false) }
                 return@launch
             }
             
-            // Navigate to restock screen with checked items
+            // Save the checked items as pending restock
+            savedStateHandle[KEY_PENDING_RESTOCK_ITEMS] = ArrayList(checkedSupplyIds)
+            
+            // Exit shopping mode and show success message
+            savedStateHandle[KEY_SHOPPING_MODE] = false
+            savedStateHandle[KEY_SHOPPING_CHECKED_ITEMS] = ArrayList<String>()
+            
             _uiState.update {
                 it.copy(
                     isShoppingMode = false,
                     shoppingCheckedItems = emptySet(),
-                    navigateToRestock = checkedSupplyIds.toList()
+                    pendingRestockItems = checkedSupplyIds,
+                    successMessage = "Shopping complete! ${checkedSupplyIds.size} items ready to restock."
                 )
             }
+        }
+    }
+    
+    private fun completeRestockSession() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            val restockSupplyIds = currentState.pendingRestockItems
+            
+            if (restockSupplyIds.isEmpty()) {
+                return@launch
+            }
+            
+            // Increment inventory for all restocked items
+            var successCount = 0
+            var failureCount = 0
+            
+            restockSupplyIds.forEach { supplyId ->
+                val result = supplyRepository.incrementInventory(supplyId)
+                if (result.isSuccess) {
+                    successCount++
+                } else {
+                    failureCount++
+                }
+            }
+            
+            // Clear pending restock items
+            savedStateHandle[KEY_PENDING_RESTOCK_ITEMS] = ArrayList<String>()
+            
+            _uiState.update {
+                it.copy(
+                    pendingRestockItems = emptySet(),
+                    successMessage = if (failureCount == 0) {
+                        "Restock complete! Updated $successCount items."
+                    } else {
+                        "Restock complete with errors: $successCount succeeded, $failureCount failed."
+                    }
+                )
+            }
+        }
+    }
+    
+    fun clearPendingRestock() {
+        // Called when restock screen completes successfully
+        savedStateHandle[KEY_PENDING_RESTOCK_ITEMS] = ArrayList<String>()
+        _uiState.update {
+            it.copy(pendingRestockItems = emptySet())
         }
     }
 
@@ -185,6 +279,12 @@ class InventoryViewModel @Inject constructor(
             if (state.filterOptions.wellStocked) {
                 filtered = filtered.filter { it.isWellStocked }
             }
+            // TODO: Implement task associations filter when the relationship is added to the database
+            // if (state.filterOptions.hasTaskAssociations) {
+            //     filtered = filtered.filter { 
+            //         it.supply.taskAssociations?.isNotEmpty() == true 
+            //     }
+            // }
             if (state.filterOptions.categories.isNotEmpty()) {
                 filtered = filtered.filter { it.supply.category in state.filterOptions.categories }
             }

@@ -22,11 +22,11 @@ import java.time.LocalDate
 fun ParentTaskItem(
     parentTask: Task,
     childTasks: List<Task>,
+    today: LocalDate,
     onTaskChecked: (String) -> Unit,
     onTaskClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val today = LocalDate.now()
     val allChildrenComplete = childTasks.all { it.lastCompleted == today }
     val parentCompleted = parentTask.lastCompleted == today
     
@@ -89,6 +89,7 @@ private fun ParentTaskItemPreview() {
             ParentTaskItem(
                 parentTask = MockData.parentTask,
                 childTasks = MockData.childTasks,
+                today = MockData.today,
                 onTaskChecked = {},
                 onTaskClick = {},
                 modifier = Modifier.padding(16.dp)
@@ -102,10 +103,11 @@ private fun ParentTaskItemPreview() {
 private fun ParentTaskItemCompletedPreview() {
     LifeOpsTheme {
         Surface {
-            val today = LocalDate.now()
+            val today = MockData.today
             ParentTaskItem(
                 parentTask = MockData.parentTask.copy(lastCompleted = today),
                 childTasks = MockData.childTasks.map { it.copy(lastCompleted = today) },
+                today = today,
                 onTaskChecked = {},
                 onTaskClick = {},
                 modifier = Modifier.padding(16.dp)

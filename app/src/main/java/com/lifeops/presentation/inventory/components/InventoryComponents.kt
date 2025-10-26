@@ -12,7 +12,8 @@ import com.lifeops.presentation.inventory.FilterOptions
 import com.lifeops.presentation.inventory.SortOption
 
 /**
- * Search and filter bar combining search, sort, and filter controls
+ * Search and filter bar combining search, group, sort, and filter controls
+ * Layout: Search bar at top, then Group / Sort / Filter buttons
  */
 @Composable
 fun SearchAndFilterBar(
@@ -21,7 +22,9 @@ fun SearchAndFilterBar(
     sortOption: SortOption,
     onSortOptionSelected: (SortOption) -> Unit,
     filterOptions: FilterOptions,
-    onFilterOptionsChanged: (FilterOptions) -> Unit
+    onFilterOptionsChanged: (FilterOptions) -> Unit,
+    groupByCategory: Boolean = true,
+    onGroupByCategoryToggled: (Boolean) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -29,17 +32,23 @@ fun SearchAndFilterBar(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Search bar
+        // Search bar at top
         SearchBar(
             query = searchQuery,
             onQueryChanged = onSearchQueryChanged
         )
         
-        // Sort and Filter buttons
+        // Group / Sort / Filter buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            GroupButton(
+                groupByCategory = groupByCategory,
+                onGroupByCategoryToggled = onGroupByCategoryToggled,
+                modifier = Modifier.weight(1f)
+            )
+            
             SortButton(
                 currentSortOption = sortOption,
                 onSortOptionSelected = onSortOptionSelected,
@@ -56,10 +65,10 @@ fun SearchAndFilterBar(
 }
 
 /**
- * List of supplies grouped by category
+ * List of supplies grouped by category or flat list
  * Features:
  * - Lazy scrolling for performance
- * - Category grouping with collapsible sections
+ * - Optional category grouping with collapsible sections
  * - Supply cards with quick adjust buttons
  * - Shopping mode with checkboxes
  */
@@ -72,32 +81,63 @@ fun SupplyList(
     onDecrementQuantity: (String) -> Unit,
     onSupplyClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    groupByCategory: Boolean = true,
     isShoppingMode: Boolean = false,
     checkedItems: Set<String> = emptySet(),
     onToggleShoppingItem: (String) -> Unit = {}
 ) {
-    // Group supplies by category
-    val suppliesByCategory = supplies.groupBy { it.supply.category }
-    
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        suppliesByCategory.forEach { (category, categorySupplies) ->
-            item(key = "category_$category") {
-                CategorySection(
-                    categoryName = category,
-                    supplies = categorySupplies,
-                    isExpanded = expandedCategories.contains(category),
-                    onToggleExpand = { onCategoryExpandToggle(category) },
-                    onIncrementQuantity = onIncrementQuantity,
-                    onDecrementQuantity = onDecrementQuantity,
-                    onSupplyClick = onSupplyClick,
-                    isShoppingMode = isShoppingMode,
-                    checkedItems = checkedItems,
-                    onToggleShoppingItem = onToggleShoppingItem
-                )
+    if (groupByCategory) {
+        // Group supplies by category
+        val suppliesByCategory = supplies.groupBy { it.supply.category }
+        
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            suppliesByCategory.forEach { (category, categorySupplies) ->
+                item(key = "category_$category") {
+                    CategorySection(
+                        categoryName = category,
+                        supplies = categorySupplies,
+                        isExpanded = expandedCategories.contains(category),
+                        onToggleExpand = { onCategoryExpandToggle(category) },
+                        onIncrementQuantity = onIncrementQuantity,
+                        onDecrementQuantity = onDecrementQuantity,
+                        onSupplyClick = onSupplyClick,
+                        isShoppingMode = isShoppingMode,
+                        checkedItems = checkedItems,
+                        onToggleShoppingItem = onToggleShoppingItem
+                    )
+                }
+            }
+        }
+    } else {
+        // Flat list without grouping
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(
+                items = supplies,
+                key = { it.supply.id }
+            ) { supplyWithInventory ->
+                if (isShoppingMode) {
+                    ShoppingListItemCard(
+                        supply = supplyWithInventory,
+                        isChecked = checkedItems.contains(supplyWithInventory.supply.id),
+                        onToggleChecked = { onToggleShoppingItem(supplyWithInventory.supply.id) },
+                        onClick = { onSupplyClick(supplyWithInventory.supply.id) }
+                    )
+                } else {
+                    SupplyItemCard(
+                        supply = supplyWithInventory,
+                        onIncrementQuantity = { onIncrementQuantity(supplyWithInventory.supply.id) },
+                        onDecrementQuantity = { onDecrementQuantity(supplyWithInventory.supply.id) },
+                        onClick = { onSupplyClick(supplyWithInventory.supply.id) }
+                    )
+                }
             }
         }
     }

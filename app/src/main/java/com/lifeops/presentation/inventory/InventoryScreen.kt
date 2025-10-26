@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -57,7 +58,15 @@ fun InventoryScreen(
                     Text(if (uiState.isShoppingMode) "Shopping List" else "Inventory") 
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (uiState.isShoppingMode) {
+                            // Exit shopping mode instead of navigating back
+                            viewModel.onEvent(InventoryUiEvent.ToggleShoppingMode)
+                        } else {
+                            // Navigate back normally
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -65,6 +74,36 @@ fun InventoryScreen(
                     }
                 },
                 actions = {
+                    // Restock button (only show when there are pending restock items and not in shopping mode)
+                    if (uiState.pendingRestockItems.isNotEmpty() && !uiState.isShoppingMode) {
+                        Box(
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            BadgedBox(
+                                badge = { 
+                                    Badge(
+                                        modifier = Modifier.offset(x = (-8).dp, y = 8.dp)
+                                    ) { 
+                                        Text(uiState.pendingRestockItems.size.toString()) 
+                                    }
+                                }
+                            ) {
+                                IconButton(
+                                    onClick = { 
+                                        // Navigate to restock screen with pending items
+                                        onNavigateToRestock(uiState.pendingRestockItems.toList())
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Inventory,
+                                        contentDescription = "Restock Items",
+                                        tint = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
                     // Shopping mode toggle button
                     IconButton(
                         onClick = { viewModel.onEvent(InventoryUiEvent.ToggleShoppingMode) }
@@ -110,7 +149,9 @@ fun InventoryScreen(
                     sortOption = uiState.sortOption,
                     onSortOptionSelected = { viewModel.onEvent(InventoryUiEvent.SortOptionSelected(it)) },
                     filterOptions = uiState.filterOptions,
-                    onFilterOptionsChanged = { viewModel.onEvent(InventoryUiEvent.FilterOptionsChanged(it)) }
+                    onFilterOptionsChanged = { viewModel.onEvent(InventoryUiEvent.FilterOptionsChanged(it)) },
+                    groupByCategory = uiState.groupByCategory,
+                    onGroupByCategoryToggled = { viewModel.onEvent(InventoryUiEvent.GroupByCategoryToggled(it)) }
                 )
             } else {
                 // Shopping mode header
@@ -160,6 +201,7 @@ fun InventoryScreen(
                         onIncrementQuantity = { viewModel.onEvent(InventoryUiEvent.IncrementQuantity(it)) },
                         onDecrementQuantity = { viewModel.onEvent(InventoryUiEvent.DecrementQuantity(it)) },
                         onSupplyClick = { onNavigateToSupplyEdit(it) },
+                        groupByCategory = uiState.groupByCategory,
                         isShoppingMode = uiState.isShoppingMode,
                         checkedItems = uiState.shoppingCheckedItems,
                         onToggleShoppingItem = { viewModel.onEvent(InventoryUiEvent.ToggleShoppingItem(it)) },

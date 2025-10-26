@@ -154,27 +154,11 @@ fun SupplyItemCard(
                 }
             }
             
-            // Right side - Stacked increment/decrement buttons
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Right side - Horizontal increment/decrement buttons
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Increment button
-                FilledIconButton(
-                    onClick = onIncrementQuantity,
-                    modifier = Modifier.size(36.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Increment quantity",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                
                 // Decrement button
                 FilledIconButton(
                     onClick = onDecrementQuantity,
@@ -190,6 +174,22 @@ fun SupplyItemCard(
                     Icon(
                         imageVector = Icons.Default.Remove,
                         contentDescription = "Decrement quantity",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                
+                // Increment button
+                FilledIconButton(
+                    onClick = onIncrementQuantity,
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Increment quantity",
                         modifier = Modifier.size(20.dp)
                     )
                 }

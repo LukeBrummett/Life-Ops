@@ -266,6 +266,48 @@ class TaskRepository @Inject constructor(
         }
     }
     
+    /**
+     * Update only the nextDue field of a task
+     * Used when processing overdue tasks with SKIP_TO_NEXT behavior
+     */
+    suspend fun updateTaskNextDue(taskId: String, nextDue: LocalDate): Result<Unit> {
+        return try {
+            taskDao.updateNextDue(taskId, nextDue)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Update only the streak field of a task
+     * Used when processing overdue tasks to reset streaks
+     */
+    suspend fun updateTaskStreak(taskId: String, streak: Int): Result<Unit> {
+        return try {
+            taskDao.updateStreak(taskId, streak)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get all overdue tasks (both POSTPONE and SKIP_TO_NEXT)
+     * Used for processing streaks and auto-advancement when date changes
+     */
+    suspend fun getOverdueTasks(currentDate: LocalDate): List<Task> {
+        return taskDao.getOverdueTasks(currentDate)
+    }
+    
+    /**
+     * Get all overdue tasks with SKIP_TO_NEXT behavior
+     * Used for processing when date advances
+     */
+    suspend fun getOverdueTasksWithSkipBehavior(currentDate: LocalDate): List<Task> {
+        return taskDao.getOverdueTasksWithSkipBehavior(currentDate)
+    }
+    
     // ============================================
     // Delete
     // ============================================

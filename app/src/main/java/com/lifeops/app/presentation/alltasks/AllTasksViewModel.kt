@@ -25,7 +25,8 @@ import javax.inject.Inject
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class AllTasksViewModel @Inject constructor(
-    private val getAllTasksUseCase: GetAllTasksUseCase
+    private val getAllTasksUseCase: GetAllTasksUseCase,
+    private val dateProvider: com.lifeops.app.util.DateProvider
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(AllTasksUiState())
@@ -87,6 +88,7 @@ class AllTasksViewModel @Inject constructor(
                         it.copy(
                             tasks = tasks,
                             filteredTasks = applyFiltersAndSort(tasks, it.searchQuery, it.filterState, it.groupByOption, it.sortOption),
+                            currentDate = dateProvider.now(),
                             isLoading = false,
                             error = null
                         )
@@ -298,7 +300,7 @@ fun DateSection.label(): String {
 /**
  * Determine which section a task belongs to based on its next due date
  */
-fun getDateSection(task: Task, today: LocalDate = LocalDate.now()): DateSection {
+fun getDateSection(task: Task, today: LocalDate): DateSection {
     val nextDue = task.nextDue ?: return DateSection.NO_DATE
     
     val daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, nextDue)
@@ -325,9 +327,7 @@ data class TaskItem(
 /**
  * Group tasks by date section with parent-child hierarchy
  */
-fun groupTasksByDate(tasks: List<Task>): Map<DateSection, List<TaskItem>> {
-    val today = LocalDate.now()
-    
+fun groupTasksByDate(tasks: List<Task>, today: LocalDate): Map<DateSection, List<TaskItem>> {
     // First, organize tasks with hierarchy
     val taskItems = groupTasksWithHierarchy(tasks)
     

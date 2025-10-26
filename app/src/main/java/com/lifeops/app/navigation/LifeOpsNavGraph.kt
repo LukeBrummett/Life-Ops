@@ -1,6 +1,7 @@
 package com.lifeops.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -97,11 +98,21 @@ fun LifeOpsNavGraph(
         ) { backStackEntry ->
             val supplyIdsString = backStackEntry.arguments?.getString(Screen.Restock.ARG_SUPPLY_IDS) ?: ""
             val supplyIds = supplyIdsString.split(",").filter { it.isNotBlank() }
+            
+            // Get the inventory screen's back stack entry to access its ViewModel
+            val inventoryEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Screen.Inventory.route)
+            }
+            val inventoryViewModel: com.lifeops.presentation.inventory.InventoryViewModel = androidx.hilt.navigation.compose.hiltViewModel(inventoryEntry)
+            
             RestockScreen(
                 supplyIds = supplyIds,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSupplyEdit = { supplyId ->
                     navController.navigate(Screen.SupplyEdit.createRoute(supplyId))
+                },
+                onRestockCompleted = {
+                    inventoryViewModel.clearPendingRestock()
                 }
             )
         }

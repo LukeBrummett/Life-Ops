@@ -71,6 +71,7 @@ private fun TodayScreenContent(
         topBar = {
             TodayScreenHeader(
                 selectedDate = uiState.currentDateValue,
+                todayDate = uiState.currentDateValue, // Pass the same date - it IS "today" from DateProvider's perspective
                 showCompleted = uiState.showCompleted,
                 onNavigateToAllTasks = { onEvent(TodayUiEvent.NavigateToAllTasks) },
                 onToggleCompleted = { onEvent(TodayUiEvent.ToggleShowCompleted) },
@@ -111,6 +112,7 @@ private fun TodayScreenContent(
                     } else {
                         TasksList(
                             tasksByCategory = uiState.tasksByCategory,
+                            today = uiState.currentDateValue,
                             showCompleted = uiState.showCompleted,
                             onTaskChecked = { taskId -> onEvent(TodayUiEvent.CompleteTask(taskId)) },
                             onTaskClick = { taskId -> onEvent(TodayUiEvent.NavigateToTaskDetail(taskId)) }
@@ -158,14 +160,6 @@ private fun TodayScreenContent(
                         text = { Text("+30 Days") },
                         onClick = {
                             onEvent(TodayUiEvent.DebugAdvanceDate(30))
-                            showDebugMenu = false
-                        }
-                    )
-                    Divider()
-                    DropdownMenuItem(
-                        text = { Text("Reset to Today") },
-                        onClick = {
-                            onEvent(TodayUiEvent.DebugResetDate)
                             showDebugMenu = false
                         }
                     )
