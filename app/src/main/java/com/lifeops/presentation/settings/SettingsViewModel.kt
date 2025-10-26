@@ -22,7 +22,8 @@ class SettingsViewModel @Inject constructor(
     private val supplyRepository: com.lifeops.app.data.repository.SupplyRepository,
     private val exportDataUseCase: ExportDataUseCase,
     private val importDataUseCase: ImportDataUseCase,
-    private val createBackupUseCase: CreateBackupUseCase
+    private val createBackupUseCase: CreateBackupUseCase,
+    private val databaseInitializer: com.lifeops.app.data.local.DatabaseInitializer
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -102,6 +103,7 @@ class SettingsViewModel @Inject constructor(
             is SettingsUiEvent.ToggleDebugMode -> {
                 _uiState.update { it.copy(debugMode = event.enabled) }
             }
+            SettingsUiEvent.LoadSampleData -> loadSampleData()
             SettingsUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
             SettingsUiEvent.ClearSuccess -> _uiState.update { it.copy(successMessage = null) }
         }
@@ -241,6 +243,31 @@ class SettingsViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         error = "Failed to create backup: ${result.exceptionOrNull()?.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    private fun loadSampleData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            try {
+                databaseInitializer.initializeWithSampleData()
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        successMessage = "Sample data loaded successfully! Check the Today screen."
+                    )
+                }
+                // Reload statistics to show the new data
+                loadStatistics()
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load sample data: ${e.message}"
                     )
                 }
             }

@@ -154,6 +154,12 @@ fun SettingsScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
+            LoadSampleDataCard(
+                onLoadSampleData = { viewModel.onEvent(SettingsUiEvent.LoadSampleData) }
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
             // About Section
             SectionHeader(title = "ABOUT")
             
@@ -377,6 +383,57 @@ fun DebugModeToggle(
                 checked = enabled,
                 onCheckedChange = onToggle
             )
+        }
+    }
+}
+
+@Composable
+fun LoadSampleDataCard(
+    onLoadSampleData: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "📦",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    Text(
+                        text = "Sample Data",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Text(
+                    text = "Load example tasks and supplies to explore features",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Button(
+                onClick = onLoadSampleData,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text("Load")
+            }
         }
     }
 }
