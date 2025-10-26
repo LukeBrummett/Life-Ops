@@ -46,9 +46,7 @@ class GetTaskDetailsUseCase @Inject constructor(
             val childTasks = taskRepository.getChildTasks(taskId).getOrNull() ?: emptyList()
             
             // Get tasks that trigger this task (triggeredBy)
-            // For this we need to find tasks where this task's ID is in their `triggers` array
-            // This requires a repository method that we'll need to add
-            val triggeredByTasks = emptyList<Task>() // TODO: Add repository method
+            val triggeredByTasks = taskRepository.getTasksThatTrigger(taskId).getOrNull() ?: emptyList()
             
             // Get tasks that this task triggers
             val triggersTasks = taskRepository.getTriggeredTasks(taskId).getOrNull() ?: emptyList()

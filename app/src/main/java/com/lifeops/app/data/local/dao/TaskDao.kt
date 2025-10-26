@@ -105,6 +105,13 @@ interface TaskDao {
     suspend fun getTasksTriggeredBy(taskId: String): List<Task>
     
     /**
+     * Get tasks that trigger a specific task
+     * (Find tasks where triggersTaskIds contains the given taskId)
+     */
+    @Query("SELECT * FROM tasks WHERE active = 1 AND triggersTaskIds LIKE '%' || :taskId || '%'")
+    suspend fun getTasksThatTrigger(taskId: String): List<Task>
+    
+    /**
      * Get ADHOC tasks (no automatic scheduling)
      */
     @Query("SELECT * FROM tasks WHERE active = 1 AND intervalUnit = 'ADHOC' ORDER BY name")

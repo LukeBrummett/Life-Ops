@@ -166,6 +166,19 @@ class TaskRepository @Inject constructor(
     }
     
     /**
+     * Get tasks that trigger a specific task
+     * (Tasks that have this taskId in their triggersTaskIds)
+     */
+    suspend fun getTasksThatTrigger(taskId: String): Result<List<Task>> {
+        return try {
+            val tasks = taskDao.getTasksThatTrigger(taskId)
+            Result.success(tasks)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Search tasks by query string
      */
     suspend fun searchTasks(query: String): Result<List<Task>> {
