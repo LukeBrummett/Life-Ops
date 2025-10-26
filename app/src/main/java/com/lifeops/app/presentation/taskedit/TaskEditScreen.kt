@@ -379,11 +379,12 @@ private fun ScheduleConfigurationSection(
 ) {
     var expanded by remember { mutableStateOf(true) }
     
-    // Determine schedule mode based on interval unit
-    val scheduleMode = when (intervalUnit) {
-        IntervalUnit.WEEK -> "DaysOfWeek"
-        IntervalUnit.ADHOC -> "Adhoc"
-        else -> "Interval"  // DAY or MONTH
+    // Determine schedule mode based on interval unit and quantity
+    // Days of Week mode is specifically for WEEK interval with qty=1 and specific days selected
+    val scheduleMode = when {
+        intervalUnit == IntervalUnit.ADHOC -> "Adhoc"
+        intervalUnit == IntervalUnit.WEEK && intervalQty == 1 && specificDaysOfWeek.isNotEmpty() -> "DaysOfWeek"
+        else -> "Interval"  // DAY, WEEK (with qty>1), or MONTH
     }
     
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -418,8 +419,11 @@ private fun ScheduleConfigurationSection(
                     selected = scheduleMode == "Interval",
                     onClick = { 
                         // Switch to Day interval as default for Interval mode
-                        if (intervalUnit == IntervalUnit.WEEK || intervalUnit == IntervalUnit.ADHOC) {
+                        if (intervalUnit == IntervalUnit.ADHOC) {
                             onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.DAY))
+                        } else if (intervalUnit == IntervalUnit.WEEK && intervalQty == 1 && specificDaysOfWeek.isNotEmpty()) {
+                            // Coming from Days of Week mode, switch to every 1 week
+                            // Keep WEEK but it will show in Interval mode now
                         }
                     },
                     label = { Text("Interval") },
@@ -429,7 +433,11 @@ private fun ScheduleConfigurationSection(
                 FilterChip(
                     selected = scheduleMode == "DaysOfWeek",
                     onClick = { 
+                        // Set to weekly with quantity 1 for Days of Week mode
                         onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.WEEK))
+                        if (intervalQty != 1) {
+                            onEvent(TaskEditEvent.UpdateIntervalQty(1))
+                        }
                     },
                     label = { Text("Days of Week") },
                     modifier = Modifier.weight(1f)
@@ -448,7 +456,7 @@ private fun ScheduleConfigurationSection(
             // Content based on selected mode
             when (scheduleMode) {
                 "Interval" -> {
-                    // Number input + dropdown for Day/Days, Month/Months
+                    // Number input + dropdown for Day/Days, Week/Weeks, Month/Months
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -465,7 +473,7 @@ private fun ScheduleConfigurationSection(
                             singleLine = true
                         )
                         
-                        // Unit dropdown (only Day/Days, Month/Months)
+                        // Unit dropdown (Day/Days, Week/Weeks, Month/Months)
                         var intervalDropdownExpanded by remember { mutableStateOf(false) }
                         
                         ExposedDropdownMenuBox(
@@ -476,6 +484,7 @@ private fun ScheduleConfigurationSection(
                             OutlinedTextField(
                                 value = when (intervalUnit) {
                                     IntervalUnit.DAY -> if (intervalQty == 1) "Day" else "Days"
+                                    IntervalUnit.WEEK -> if (intervalQty == 1) "Week" else "Weeks"
                                     IntervalUnit.MONTH -> if (intervalQty == 1) "Month" else "Months"
                                     else -> "Days"
                                 },
@@ -492,13 +501,14 @@ private fun ScheduleConfigurationSection(
                                 expanded = intervalDropdownExpanded,
                                 onDismissRequest = { intervalDropdownExpanded = false }
                             ) {
-                                // Only show Day and Month options
-                                listOf(IntervalUnit.DAY, IntervalUnit.MONTH).forEach { unit ->
+                                // Show Day, Week, and Month options
+                                listOf(IntervalUnit.DAY, IntervalUnit.WEEK, IntervalUnit.MONTH).forEach { unit ->
                                     DropdownMenuItem(
                                         text = {
                                             Text(
                                                 when (unit) {
                                                     IntervalUnit.DAY -> if (intervalQty == 1) "Day" else "Days"
+                                                    IntervalUnit.WEEK -> if (intervalQty == 1) "Week" else "Weeks"
                                                     IntervalUnit.MONTH -> if (intervalQty == 1) "Month" else "Months"
                                                     else -> ""
                                                 }
