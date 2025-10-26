@@ -39,6 +39,7 @@ class TaskDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getTaskDetailsUseCase: GetTaskDetailsUseCase,
     private val completeTaskUseCase: CompleteTaskUseCase,
+    private val taskRepository: com.lifeops.app.data.repository.TaskRepository,
     private val dateProvider: DateProvider
 ) : ViewModel() {
     
@@ -48,6 +49,13 @@ class TaskDetailViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow(TaskDetailUiState())
     val uiState: StateFlow<TaskDetailUiState> = _uiState.asStateFlow()
+    
+    private val _navigationEvent = MutableStateFlow<TaskDetailNavigationEvent?>(null)
+    val navigationEvent: StateFlow<TaskDetailNavigationEvent?> = _navigationEvent.asStateFlow()
+    
+    fun consumeNavigationEvent() {
+        _navigationEvent.value = null
+    }
     
     init {
         loadTaskDetails()
@@ -164,8 +172,33 @@ class TaskDetailViewModel @Inject constructor(
      * TODO: Implement delete use case
      */
     private fun deleteTask() {
-        // TODO: Implement task deletion with confirmation
-        Log.d("TaskDetailViewModel", "Delete task not yet implemented")
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            try {
+                val result = taskRepository.deleteTask(taskId)
+                
+                if (result.isSuccess) {
+                    // Navigate back after successful deletion
+                    _navigationEvent.value = TaskDetailNavigationEvent.NavigateBack
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Failed to delete task: ${result.exceptionOrNull()?.message}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TaskDetailViewModel", "Error deleting task", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to delete task: ${e.message}"
+                    )
+                }
+            }
+        }
     }
     
     /**
@@ -360,4 +393,11 @@ class TaskDetailViewModel @Inject constructor(
         val today = dateProvider.now()
         return task.nextDue != null && !task.nextDue.isAfter(today)
     }
+}
+
+/**
+ * One-time navigation events
+ */
+sealed class TaskDetailNavigationEvent {
+    data object NavigateBack : TaskDetailNavigationEvent()
 }
