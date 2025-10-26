@@ -10,6 +10,8 @@ import com.lifeops.app.data.local.entity.Task
 import com.lifeops.app.data.local.entity.TaskSupply
 import com.lifeops.app.data.repository.SupplyRepository
 import com.lifeops.app.data.repository.TaskRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,8 +36,10 @@ class DatabaseInitializer @Inject constructor(
      * matching the three main workflows from Project Overview
      */
     suspend fun initializeWithSampleData() {
-        // Clear all existing data
-        database.clearAllTables()
+        // Clear all existing data (run on IO dispatcher to avoid main thread database access)
+        withContext(Dispatchers.IO) {
+            database.clearAllTables()
+        }
         
         // Load comprehensive sample data
         val today = LocalDate.now()

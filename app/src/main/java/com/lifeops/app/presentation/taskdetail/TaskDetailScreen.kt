@@ -8,8 +8,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +45,20 @@ fun TaskDetailScreen(
     onNavigateToInventory: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val navigationEvent by viewModel.navigationEvent.collectAsState()
+    
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    // Handle navigation events
+    LaunchedEffect(navigationEvent) {
+        when (navigationEvent) {
+            is TaskDetailNavigationEvent.NavigateBack -> {
+                onNavigateBack()
+                viewModel.consumeNavigationEvent()
+            }
+            null -> { /* No event */ }
+        }
+    }
     
     Scaffold(
         modifier = modifier,
@@ -69,6 +87,15 @@ fun TaskDetailScreen(
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Edit task"
+                        )
+                    }
+                    IconButton(
+                        onClick = { showDeleteDialog = true },
+                        enabled = uiState.task != null && !uiState.isLoading
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete task"
                         )
                     }
                 }
@@ -128,6 +155,39 @@ fun TaskDetailScreen(
                         .padding(paddingValues)
                 )
             }
+        }
+    }
+    
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        uiState.task?.let { task ->
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Task?") },
+                text = {
+                    Text(
+                        "Are you sure you want to delete '${task.name}'? This action cannot be undone."
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.onEvent(TaskDetailEvent.DeleteTask(task.id))
+                            showDeleteDialog = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

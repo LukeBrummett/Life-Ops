@@ -108,8 +108,9 @@ class SaveTaskUseCase @Inject constructor(
             return "Category is required"
         }
         
-        // Interval validation
-        if (request.intervalQty < 1) {
+        // Interval validation (ADHOC tasks can have intervalQty = 0)
+        if (request.intervalUnit != com.lifeops.app.data.local.entity.IntervalUnit.ADHOC && 
+            request.intervalQty < 1) {
             return "Interval quantity must be at least 1"
         }
         
