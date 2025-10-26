@@ -607,6 +607,7 @@ class TaskEditViewModel @Inject constructor(
                 _uiState.update { it.copy(isSaving = true, validationErrors = emptyMap()) }
                 
                 val state = _uiState.value
+                // Capture isCreateMode to ensure consistency throughout async operation
                 val isCreateMode = state.isCreateMode
                 
                 // Build save request
