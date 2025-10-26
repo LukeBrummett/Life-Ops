@@ -607,6 +607,7 @@ class TaskEditViewModel @Inject constructor(
                 _uiState.update { it.copy(isSaving = true, validationErrors = emptyMap()) }
                 
                 val state = _uiState.value
+                val isCreateMode = state.isCreateMode
                 
                 // Build save request
                 val request = SaveTaskRequest(
@@ -643,7 +644,7 @@ class TaskEditViewModel @Inject constructor(
                 if (result.isSuccess) {
                     val savedTaskId = result.getOrNull()!!
                     _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
-                    _events.value = TaskEditViewModelEvent.NavigateToDetail(savedTaskId, state.isCreateMode)
+                    _events.value = TaskEditViewModelEvent.NavigateToDetail(savedTaskId, isCreateMode)
                 } else {
                     val error = result.exceptionOrNull()?.message ?: "Unknown error"
                     _uiState.update {

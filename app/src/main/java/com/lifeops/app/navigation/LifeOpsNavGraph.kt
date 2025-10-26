@@ -177,14 +177,13 @@ fun LifeOpsNavGraph(
                         // Create mode: Stack is [Previous] -> [TaskEdit]
                         // Pop TaskEdit, then navigate to new TaskDetail
                         navController.popBackStack()
-                        navController.navigate(Screen.TaskDetail.createRoute(taskId))
                     } else {
                         // Edit mode: Stack is [Previous] -> [TaskDetail] -> [TaskEdit]
                         // Pop TaskEdit and old TaskDetail, then navigate to updated TaskDetail
                         navController.popBackStack()
                         navController.popBackStack()
-                        navController.navigate(Screen.TaskDetail.createRoute(taskId))
                     }
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 }
             )
         }
