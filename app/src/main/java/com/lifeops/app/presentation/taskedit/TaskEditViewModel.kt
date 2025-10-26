@@ -324,12 +324,32 @@ class TaskEditViewModel @Inject constructor(
     
     // Schedule Configuration Updates
     private fun updateIntervalUnit(unit: IntervalUnit) {
-        _uiState.update { it.copy(intervalUnit = unit, hasUnsavedChanges = true) }
+        _uiState.update { state ->
+            // Clear specific days of week when switching away from WEEK
+            // or when switching to WEEK with qty > 1 (Interval mode, not Days of Week mode)
+            val shouldClearDays = unit != IntervalUnit.WEEK || state.intervalQty > 1
+            
+            state.copy(
+                intervalUnit = unit,
+                specificDaysOfWeek = if (shouldClearDays) emptyList() else state.specificDaysOfWeek,
+                hasUnsavedChanges = true
+            )
+        }
     }
     
     private fun updateIntervalQty(qty: Int) {
         if (qty > 0) {
-            _uiState.update { it.copy(intervalQty = qty, hasUnsavedChanges = true) }
+            _uiState.update { state ->
+                // Clear specific days of week when qty > 1 with WEEK interval
+                // (switching from Days of Week mode to Interval mode)
+                val shouldClearDays = state.intervalUnit == IntervalUnit.WEEK && qty > 1
+                
+                state.copy(
+                    intervalQty = qty,
+                    specificDaysOfWeek = if (shouldClearDays) emptyList() else state.specificDaysOfWeek,
+                    hasUnsavedChanges = true
+                )
+            }
         }
     }
     
