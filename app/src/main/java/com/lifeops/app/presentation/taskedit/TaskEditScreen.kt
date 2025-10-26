@@ -48,15 +48,16 @@ fun TaskEditScreen(
     LaunchedEffect(events) {
         when (val event = events) {
             is TaskEditViewModelEvent.NavigateToDetail -> {
-                viewModel.consumeEvent()
                 onNavigateToTaskDetail(event.taskId)
+                viewModel.consumeEvent()
             }
             is TaskEditViewModelEvent.NavigateBack -> {
-                viewModel.consumeEvent()
                 onNavigateBack()
+                viewModel.consumeEvent()
             }
             is TaskEditViewModelEvent.ShowUnsavedChangesDialog -> {
                 showUnsavedChangesDialog = true
+                viewModel.consumeEvent()
             }
             null -> { /* No event */ }
         }
