@@ -215,6 +215,13 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE active = 1 AND overdueBehavior = 'SKIP_TO_NEXT' AND nextDue < :currentDate")
     suspend fun getOverdueTasksWithSkipBehavior(currentDate: LocalDate): List<Task>
     
+    /**
+     * Get all completed ephemeral tasks (deleteAfterCompletion = true and lastCompleted != null)
+     * Used for cleanup during end-of-day processing
+     */
+    @Query("SELECT * FROM tasks WHERE deleteAfterCompletion = 1 AND lastCompleted IS NOT NULL")
+    suspend fun getCompletedEphemeralTasks(): List<Task>
+    
     // ============================================
     // Delete
     // ============================================

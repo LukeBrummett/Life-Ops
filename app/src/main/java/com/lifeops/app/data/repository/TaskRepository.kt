@@ -308,6 +308,14 @@ class TaskRepository @Inject constructor(
         return taskDao.getOverdueTasksWithSkipBehavior(currentDate)
     }
     
+    /**
+     * Get all completed ephemeral tasks (deleteAfterCompletion = true and lastCompleted != null)
+     * Used for cleanup during end-of-day processing
+     */
+    suspend fun getCompletedEphemeralTasks(): List<Task> {
+        return taskDao.getCompletedEphemeralTasks()
+    }
+    
     // ============================================
     // Delete
     // ============================================

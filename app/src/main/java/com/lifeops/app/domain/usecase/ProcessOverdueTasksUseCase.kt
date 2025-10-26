@@ -9,6 +9,7 @@ import javax.inject.Inject
  * Use case for processing overdue tasks when the date advances
  * 
  * Handles tasks that were not completed on their due date:
+ * - Deletes ephemeral tasks (deleteAfterCompletion = true) that were completed
  * - Resets completion streaks for all incomplete tasks
  * - POSTPONE: Task remains in Today view (no action needed, naturally slides forward)
  * - SKIP_TO_NEXT: Task's nextDue is advanced to next scheduled occurrence
@@ -20,10 +21,17 @@ class ProcessOverdueTasksUseCase @Inject constructor(
 ) {
     /**
      * Process all overdue tasks based on their overdueBehavior setting
+     * Also deletes ephemeral tasks that were completed
      * 
      * @param currentDate The current date from DateProvider
      */
     suspend operator fun invoke(currentDate: LocalDate) {
+        // First, delete any ephemeral tasks that were completed
+        val completedEphemeralTasks = repository.getCompletedEphemeralTasks()
+        completedEphemeralTasks.forEach { task ->
+            repository.deleteTask(task.id)
+        }
+        
         // Get all overdue tasks (both POSTPONE and SKIP_TO_NEXT)
         val allOverdueTasks = repository.getOverdueTasks(currentDate)
         
