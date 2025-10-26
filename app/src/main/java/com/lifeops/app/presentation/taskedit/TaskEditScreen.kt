@@ -380,10 +380,11 @@ private fun ScheduleConfigurationSection(
     var expanded by remember { mutableStateOf(true) }
     
     // Determine schedule mode based on interval unit and quantity
-    // Days of Week mode is specifically for WEEK interval with qty=1 and specific days selected
+    // Days of Week mode is specifically for WEEK interval with qty=1
+    // Interval mode for WEEK is when qty > 1 (e.g., "every 2 weeks")
     val scheduleMode = when {
         intervalUnit == IntervalUnit.ADHOC -> "Adhoc"
-        intervalUnit == IntervalUnit.WEEK && intervalQty == 1 && specificDaysOfWeek.isNotEmpty() -> "DaysOfWeek"
+        intervalUnit == IntervalUnit.WEEK && intervalQty == 1 -> "DaysOfWeek"
         else -> "Interval"  // DAY, WEEK (with qty>1), or MONTH
     }
     
@@ -418,13 +419,15 @@ private fun ScheduleConfigurationSection(
                 FilterChip(
                     selected = scheduleMode == "Interval",
                     onClick = { 
-                        // Switch to Day interval as default for Interval mode
+                        // Switch to Day interval as default for Interval mode (unless already on DAY/MONTH)
                         if (intervalUnit == IntervalUnit.ADHOC) {
                             onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.DAY))
-                        } else if (intervalUnit == IntervalUnit.WEEK && intervalQty == 1 && specificDaysOfWeek.isNotEmpty()) {
-                            // Coming from Days of Week mode, switch to every 1 week
-                            // Keep WEEK but it will show in Interval mode now
+                        } else if (intervalUnit == IntervalUnit.WEEK && intervalQty == 1) {
+                            // Coming from Days of Week mode (WEEK qty=1), keep WEEK but increase qty
+                            // This switches to "every N weeks" interval mode
+                            onEvent(TaskEditEvent.UpdateIntervalQty(2))
                         }
+                        // If already on DAY, MONTH, or WEEK with qty>1, no change needed
                     },
                     label = { Text("Interval") },
                     modifier = Modifier.weight(1f)
