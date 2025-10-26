@@ -402,72 +402,139 @@ private fun ScheduleConfigurationSection(
         }
         
         if (expanded) {
-            // Interval Type Selection
-            Text(
-                text = "Recurrence Pattern",
-                style = MaterialTheme.typography.titleMedium
-            )
-            
+            // Interval and Days of Week Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                IntervalUnit.entries.forEach { unit ->
-                    FilterChip(
-                        selected = intervalUnit == unit,
-                        onClick = { onEvent(TaskEditEvent.UpdateIntervalUnit(unit)) },
-                        label = { Text(unit.name) }
-                    )
-                }
-            }
-            
-            // Interval Quantity (not for ADHOC)
-            if (intervalUnit != IntervalUnit.ADHOC) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Interval Column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Every")
-                    
-                    OutlinedTextField(
-                        value = intervalQty.toString(),
-                        onValueChange = { newValue ->
-                            newValue.toIntOrNull()?.let { qty ->
-                                if (qty > 0) onEvent(TaskEditEvent.UpdateIntervalQty(qty))
-                            }
-                        },
-                        modifier = Modifier.width(80.dp)
-                    )
-                    
                     Text(
-                        when (intervalUnit) {
-                            IntervalUnit.DAY -> if (intervalQty == 1) "day" else "days"
-                            IntervalUnit.WEEK -> if (intervalQty == 1) "week" else "weeks"
-                            IntervalUnit.MONTH -> if (intervalQty == 1) "month" else "months"
-                            IntervalUnit.ADHOC -> ""
-                        }
+                        text = "Interval",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
+                    
+                    // Interval quantity input and unit dropdown
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Number input
+                        OutlinedTextField(
+                            value = if (intervalUnit == IntervalUnit.ADHOC) "" else intervalQty.toString(),
+                            onValueChange = { newValue ->
+                                if (intervalUnit != IntervalUnit.ADHOC) {
+                                    newValue.toIntOrNull()?.let { qty ->
+                                        if (qty > 0) onEvent(TaskEditEvent.UpdateIntervalQty(qty))
+                                    }
+                                }
+                            },
+                            enabled = intervalUnit != IntervalUnit.ADHOC,
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                        
+                        // Unit dropdown
+                        var intervalDropdownExpanded by remember { mutableStateOf(false) }
+                        
+                        ExposedDropdownMenuBox(
+                            expanded = intervalDropdownExpanded,
+                            onExpandedChange = { intervalDropdownExpanded = it },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = when (intervalUnit) {
+                                    IntervalUnit.DAY -> if (intervalQty == 1) "Day" else "Days"
+                                    IntervalUnit.WEEK -> if (intervalQty == 1) "Week" else "Weeks"
+                                    IntervalUnit.MONTH -> if (intervalQty == 1) "Month" else "Months"
+                                    IntervalUnit.ADHOC -> "ADHOC"
+                                },
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = intervalDropdownExpanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                singleLine = true
+                            )
+                            
+                            ExposedDropdownMenu(
+                                expanded = intervalDropdownExpanded,
+                                onDismissRequest = { intervalDropdownExpanded = false }
+                            ) {
+                                IntervalUnit.entries.forEach { unit ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                when (unit) {
+                                                    IntervalUnit.DAY -> if (intervalQty == 1) "Day" else "Days"
+                                                    IntervalUnit.WEEK -> if (intervalQty == 1) "Week" else "Weeks"
+                                                    IntervalUnit.MONTH -> if (intervalQty == 1) "Month" else "Months"
+                                                    IntervalUnit.ADHOC -> "ADHOC"
+                                                }
+                                            )
+                                        },
+                                        onClick = {
+                                            onEvent(TaskEditEvent.UpdateIntervalUnit(unit))
+                                            intervalDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-            
-            // Specific Days (for WEEK interval)
-            if (intervalUnit == IntervalUnit.WEEK) {
-                Text(
-                    text = "On these days:",
-                    style = MaterialTheme.typography.titleMedium
-                )
                 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DayOfWeek.entries.chunked(4).forEach { rowDays ->
+                // Days of Week Column (only for WEEK interval)
+                if (intervalUnit == IntervalUnit.WEEK) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Days of Week",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        
+                        // Day toggles: M T W R F S U
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            rowDays.forEach { day ->
+                            // Reorder to show M-U (Monday to Sunday)
+                            val orderedDays = listOf(
+                                DayOfWeek.MONDAY,
+                                DayOfWeek.TUESDAY,
+                                DayOfWeek.WEDNESDAY,
+                                DayOfWeek.THURSDAY,
+                                DayOfWeek.FRIDAY,
+                                DayOfWeek.SATURDAY,
+                                DayOfWeek.SUNDAY
+                            )
+                            
+                            orderedDays.forEach { day ->
                                 FilterChip(
                                     selected = specificDaysOfWeek.contains(day),
                                     onClick = { onEvent(TaskEditEvent.ToggleSpecificDay(day)) },
-                                    label = { Text(day.name.take(3)) },
+                                    label = {
+                                        Text(
+                                            text = when (day) {
+                                                DayOfWeek.MONDAY -> "M"
+                                                DayOfWeek.TUESDAY -> "T"
+                                                DayOfWeek.WEDNESDAY -> "W"
+                                                DayOfWeek.THURSDAY -> "R"
+                                                DayOfWeek.FRIDAY -> "F"
+                                                DayOfWeek.SATURDAY -> "S"
+                                                DayOfWeek.SUNDAY -> "U"
+                                            }
+                                        )
+                                    },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -476,27 +543,47 @@ private fun ScheduleConfigurationSection(
                 }
             }
             
-            // Excluded Days
+            // Never Schedule On - similar to days of week toggle
             Text(
-                text = "Never schedule on (optional):",
-                style = MaterialTheme.typography.titleMedium
+                text = "Never schedule on",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
             
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                DayOfWeek.entries.chunked(4).forEach { rowDays ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        rowDays.forEach { day ->
-                            FilterChip(
-                                selected = excludedDaysOfWeek.contains(day),
-                                onClick = { onEvent(TaskEditEvent.ToggleExcludedDay(day)) },
-                                label = { Text(day.name.take(3)) },
-                                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Reorder to show M-U (Monday to Sunday)
+                val orderedDays = listOf(
+                    DayOfWeek.MONDAY,
+                    DayOfWeek.TUESDAY,
+                    DayOfWeek.WEDNESDAY,
+                    DayOfWeek.THURSDAY,
+                    DayOfWeek.FRIDAY,
+                    DayOfWeek.SATURDAY,
+                    DayOfWeek.SUNDAY
+                )
+                
+                orderedDays.forEach { day ->
+                    FilterChip(
+                        selected = excludedDaysOfWeek.contains(day),
+                        onClick = { onEvent(TaskEditEvent.ToggleExcludedDay(day)) },
+                        label = {
+                            Text(
+                                text = when (day) {
+                                    DayOfWeek.MONDAY -> "M"
+                                    DayOfWeek.TUESDAY -> "T"
+                                    DayOfWeek.WEDNESDAY -> "W"
+                                    DayOfWeek.THURSDAY -> "R"
+                                    DayOfWeek.FRIDAY -> "F"
+                                    DayOfWeek.SATURDAY -> "S"
+                                    DayOfWeek.SUNDAY -> "U"
+                                }
                             )
-                        }
-                    }
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
             
