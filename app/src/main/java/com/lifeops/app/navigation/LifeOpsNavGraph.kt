@@ -143,7 +143,19 @@ fun LifeOpsNavGraph(
             val taskId = backStackEntry.arguments?.getString(Screen.TaskDetail.ARG_TASK_ID) ?: ""
             TaskDetailScreen(
                 taskId = taskId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { editTaskId ->
+                    // TODO: Navigate to Task Edit screen when implemented
+                    // navController.navigate(Screen.TaskEdit.createRoute(editTaskId))
+                },
+                onNavigateToTask = { relatedTaskId ->
+                    // Navigate to another task's detail screen
+                    navController.navigate(Screen.TaskDetail.createRoute(relatedTaskId))
+                },
+                onNavigateToInventory = { supplyId ->
+                    // Navigate to inventory (supply edit or inventory screen)
+                    navController.navigate(Screen.SupplyEdit.createRoute(supplyId))
+                }
             )
         }
     }
