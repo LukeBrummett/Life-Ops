@@ -677,18 +677,32 @@ private fun InventorySection(
                         modifier = Modifier.padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "📦 ${item.supplyName}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (item.isLowStock) {
+                                Text(
+                                    text = "⚠️ Low",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         Text(
-                            text = "📦 ${item.supplyName}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "Mode: ${item.consumptionMode} ${item.modeDetails}",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "${item.consumptionMode} • ${item.modeDetails}",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Current stock: ${item.currentStock}",
+                            text = "Stock: ${item.currentStock}",
                             style = MaterialTheme.typography.bodySmall,
                             color = if (item.isLowStock) {
                                 MaterialTheme.colorScheme.error

@@ -1,6 +1,10 @@
 package com.lifeops.app.domain.usecase
 
+import com.lifeops.app.data.local.entity.Inventory
+import com.lifeops.app.data.local.entity.Supply
 import com.lifeops.app.data.local.entity.Task
+import com.lifeops.app.data.local.entity.TaskSupply
+import com.lifeops.app.data.repository.SupplyRepository
 import com.lifeops.app.data.repository.TaskRepository
 import javax.inject.Inject
 
@@ -16,7 +20,8 @@ import javax.inject.Inject
  * - Associated inventory items (via task-supply relationships)
  */
 class GetTaskDetailsUseCase @Inject constructor(
-    private val taskRepository: TaskRepository
+    private val taskRepository: TaskRepository,
+    private val supplyRepository: SupplyRepository
 ) {
     /**
      * Get complete task details including all relationships
@@ -51,7 +56,8 @@ class GetTaskDetailsUseCase @Inject constructor(
             // Get tasks that this task triggers
             val triggersTasks = taskRepository.getTriggeredTasks(taskId).getOrNull() ?: emptyList()
             
-            // TODO: Get inventory associations when TaskSupply relationship is implemented
+            // Get inventory associations
+            val inventoryAssociations = getInventoryAssociations(taskId)
             
             Result.success(
                 TaskDetails(
@@ -59,11 +65,34 @@ class GetTaskDetailsUseCase @Inject constructor(
                     parentTask = parentTask,
                     childTasks = childTasks,
                     triggeredByTasks = triggeredByTasks,
-                    triggersTasks = triggersTasks
+                    triggersTasks = triggersTasks,
+                    inventoryAssociations = inventoryAssociations
                 )
             )
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get inventory associations with supply and stock details
+     */
+    private suspend fun getInventoryAssociations(taskId: String): List<InventoryAssociation> {
+        val taskSupplies = supplyRepository.getTaskSuppliesForTask(taskId)
+        
+        return taskSupplies.mapNotNull { taskSupply ->
+            val supply = supplyRepository.getSupplyById(taskSupply.supplyId)
+            val inventory = supplyRepository.getInventory(taskSupply.supplyId)
+            
+            if (supply != null) {
+                InventoryAssociation(
+                    taskSupply = taskSupply,
+                    supply = supply,
+                    inventory = inventory
+                )
+            } else {
+                null
+            }
         }
     }
 }
@@ -76,6 +105,15 @@ data class TaskDetails(
     val parentTask: Task? = null,
     val childTasks: List<Task> = emptyList(),
     val triggeredByTasks: List<Task> = emptyList(),
-    val triggersTasks: List<Task> = emptyList()
-    // TODO: Add inventory associations when TaskSupply relationship is implemented
+    val triggersTasks: List<Task> = emptyList(),
+    val inventoryAssociations: List<InventoryAssociation> = emptyList()
+)
+
+/**
+ * Complete inventory association with supply and stock data
+ */
+data class InventoryAssociation(
+    val taskSupply: TaskSupply,
+    val supply: Supply,
+    val inventory: Inventory?
 )

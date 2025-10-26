@@ -4,11 +4,13 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lifeops.app.data.local.entity.ConsumptionMode
 import com.lifeops.app.data.local.entity.DayOfWeek
 import com.lifeops.app.data.local.entity.IntervalUnit
 import com.lifeops.app.data.local.entity.Task
 import com.lifeops.app.domain.usecase.CompleteTaskUseCase
 import com.lifeops.app.domain.usecase.GetTaskDetailsUseCase
+import com.lifeops.app.domain.usecase.InventoryAssociation
 import com.lifeops.app.domain.usecase.TaskDetails
 import com.lifeops.app.util.DateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -121,6 +123,7 @@ class TaskDetailViewModel @Inject constructor(
                         },
                         triggeredByTasks = taskDetails.triggeredByTasks.map { formatTaskSummary(it) },
                         triggersTasks = taskDetails.triggersTasks.map { formatTaskSummary(it) },
+                        inventoryItems = taskDetails.inventoryAssociations.map { formatInventoryItem(it) },
                         canComplete = canCompleteTask(taskDetails.task),
                         canDelete = true
                     )
@@ -297,6 +300,57 @@ class TaskDetailViewModel @Inject constructor(
                 if (task.intervalQty == 1) "Monthly" else "Every ${task.intervalQty} months"
             }
         }
+    }
+    
+    /**
+     * Format inventory association for display
+     */
+    private fun formatInventoryItem(association: InventoryAssociation): InventoryItemDisplay {
+        val taskSupply = association.taskSupply
+        val supply = association.supply
+        val inventory = association.inventory
+        
+        // Format consumption mode
+        val consumptionMode = when (taskSupply.consumptionMode) {
+            ConsumptionMode.FIXED -> "Fixed"
+            ConsumptionMode.PROMPTED -> "Prompted"
+            ConsumptionMode.RECOUNT -> "Recount"
+        }
+        
+        // Format mode details
+        val modeDetails = when (taskSupply.consumptionMode) {
+            ConsumptionMode.FIXED -> {
+                val qty = taskSupply.fixedQuantity ?: 0
+                "$qty ${supply.unit} per completion"
+            }
+            ConsumptionMode.PROMPTED -> {
+                taskSupply.promptedDefaultValue?.let { default ->
+                    "default: $default ${supply.unit}"
+                } ?: "prompt for quantity"
+            }
+            ConsumptionMode.RECOUNT -> "manual recount"
+        }
+        
+        // Format current stock
+        val currentStock = if (inventory != null) {
+            "${inventory.currentQuantity} ${supply.unit}"
+        } else {
+            "Not tracked"
+        }
+        
+        // Determine if low stock
+        val isLowStock = inventory?.let { inv ->
+            inv.currentQuantity <= supply.reorderThreshold
+        } ?: false
+        
+        return InventoryItemDisplay(
+            supplyId = supply.id,
+            supplyName = supply.name,
+            consumptionMode = consumptionMode,
+            modeDetails = modeDetails,
+            currentStock = currentStock,
+            isLowStock = isLowStock
+        )
     }
     
     /**
