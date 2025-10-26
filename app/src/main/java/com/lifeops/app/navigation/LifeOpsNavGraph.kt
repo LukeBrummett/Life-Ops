@@ -173,9 +173,10 @@ fun LifeOpsNavGraph(
             TaskEditScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToTaskDetail = { taskId ->
-                    navController.navigate(Screen.TaskDetail.createRoute(taskId)) {
-                        popUpTo(Screen.TaskEdit.route) { inclusive = true }
-                    }
+                    // Pop back to wherever we came from (before the old detail screen)
+                    // Then navigate fresh to detail so it loads the updated data
+                    navController.popBackStack()
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 }
             )
         }
