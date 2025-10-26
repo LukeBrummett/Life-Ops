@@ -403,6 +403,32 @@ class DatabaseInitializer @Inject constructor(
                 timeEstimate = 5,
                 nextDue = getNextDayOfWeek(today, listOf(DayOfWeek.WEDNESDAY)),
                 active = true
+            ),
+            
+            // Ephemeral tasks - these will auto-delete after completion
+            Task(
+                name = "Pick up dry cleaning",
+                category = "Errands",
+                description = "Pick up shirts from dry cleaner on Main St",
+                intervalUnit = IntervalUnit.ADHOC,
+                intervalQty = 0,
+                difficulty = Difficulty.LOW,
+                timeEstimate = 15,
+                nextDue = today,
+                active = true,
+                deleteAfterCompletion = true
+            ),
+            Task(
+                name = "Call dentist about appointment",
+                category = "Personal",
+                description = "Schedule 6-month checkup",
+                intervalUnit = IntervalUnit.ADHOC,
+                intervalQty = 0,
+                difficulty = Difficulty.LOW,
+                timeEstimate = 5,
+                nextDue = today,
+                active = true,
+                deleteAfterCompletion = true
             )
         )
         
