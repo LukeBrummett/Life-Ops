@@ -51,6 +51,13 @@ class TaskEditViewModel @Inject constructor(
     private val _events = MutableStateFlow<TaskEditViewModelEvent?>(null)
     val events: StateFlow<TaskEditViewModelEvent?> = _events.asStateFlow()
     
+    /**
+     * Consume the current event to prevent re-triggering
+     */
+    fun consumeEvent() {
+        _events.value = null
+    }
+    
     init {
         loadInitialData()
     }

@@ -41,17 +41,22 @@ fun TaskEditScreen(
     val uiState by viewModel.uiState.collectAsState()
     val events by viewModel.events.collectAsState()
     
+    // State for unsaved changes dialog
+    var showUnsavedChangesDialog by remember { mutableStateOf(false) }
+    
     // Handle one-time events
     LaunchedEffect(events) {
-        when (events) {
+        when (val event = events) {
             is TaskEditViewModelEvent.NavigateToDetail -> {
-                onNavigateToTaskDetail((events as TaskEditViewModelEvent.NavigateToDetail).taskId)
+                viewModel.consumeEvent()
+                onNavigateToTaskDetail(event.taskId)
             }
             is TaskEditViewModelEvent.NavigateBack -> {
+                viewModel.consumeEvent()
                 onNavigateBack()
             }
             is TaskEditViewModelEvent.ShowUnsavedChangesDialog -> {
-                // TODO: Show dialog
+                showUnsavedChangesDialog = true
             }
             null -> { /* No event */ }
         }
@@ -127,6 +132,39 @@ fun TaskEditScreen(
                 Text(error)
             }
         }
+    }
+    
+    // Unsaved changes confirmation dialog
+    if (showUnsavedChangesDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showUnsavedChangesDialog = false
+                viewModel.consumeEvent()
+            },
+            title = { Text("Unsaved Changes") },
+            text = { Text("You have unsaved changes. Are you sure you want to discard them?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showUnsavedChangesDialog = false
+                        viewModel.consumeEvent()
+                        onNavigateBack()
+                    }
+                ) {
+                    Text("Discard")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showUnsavedChangesDialog = false
+                        viewModel.consumeEvent()
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

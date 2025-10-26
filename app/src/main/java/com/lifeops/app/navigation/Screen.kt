@@ -63,4 +63,20 @@ sealed class Screen(val route: String) {
         fun createRoute(taskId: String): String = "task_detail/$taskId"
         const val ARG_TASK_ID = "taskId"
     }
+    
+    /**
+     * Task Edit screen - create or edit a task
+     * Route includes optional taskId parameter: task_edit?taskId={taskId}
+     * Null taskId = create mode, non-null taskId = edit mode
+     */
+    data object TaskEdit : Screen("task_edit?taskId={taskId}") {
+        fun createRoute(taskId: String? = null): String {
+            return if (taskId != null) {
+                "task_edit?taskId=$taskId"
+            } else {
+                "task_edit"
+            }
+        }
+        const val ARG_TASK_ID = "taskId"
+    }
 }

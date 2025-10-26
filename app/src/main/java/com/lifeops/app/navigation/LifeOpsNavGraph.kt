@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.lifeops.app.presentation.alltasks.AllTasksScreen
+import com.lifeops.app.presentation.taskedit.TaskEditScreen
 import com.lifeops.presentation.inventory.InventoryScreen
 import com.lifeops.presentation.inventory.restock.RestockScreen
 import com.lifeops.presentation.settings.SettingsScreen
@@ -40,7 +41,7 @@ fun LifeOpsNavGraph(
                     navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 },
                 onNavigateToTaskCreate = {
-                    navController.navigate(Screen.TaskCreate.route)
+                    navController.navigate(Screen.TaskEdit.createRoute())
                 }
             )
         }
@@ -53,7 +54,7 @@ fun LifeOpsNavGraph(
                     navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 },
                 onNavigateToTaskCreate = {
-                    navController.navigate(Screen.TaskCreate.route)
+                    navController.navigate(Screen.TaskEdit.createRoute())
                 }
             )
         }
@@ -145,8 +146,7 @@ fun LifeOpsNavGraph(
                 taskId = taskId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToEdit = { editTaskId ->
-                    // TODO: Navigate to Task Edit screen when implemented
-                    // navController.navigate(Screen.TaskEdit.createRoute(editTaskId))
+                    navController.navigate(Screen.TaskEdit.createRoute(editTaskId))
                 },
                 onNavigateToTask = { relatedTaskId ->
                     // Navigate to another task's detail screen
@@ -155,6 +155,27 @@ fun LifeOpsNavGraph(
                 onNavigateToInventory = { supplyId ->
                     // Navigate to inventory (supply edit or inventory screen)
                     navController.navigate(Screen.SupplyEdit.createRoute(supplyId))
+                }
+            )
+        }
+        
+        // Task Edit Screen (with optional taskId argument)
+        composable(
+            route = Screen.TaskEdit.route,
+            arguments = listOf(
+                navArgument(Screen.TaskEdit.ARG_TASK_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
+            TaskEditScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTaskDetail = { taskId ->
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId)) {
+                        popUpTo(Screen.TaskEdit.route) { inclusive = true }
+                    }
                 }
             )
         }
