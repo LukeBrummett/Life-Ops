@@ -288,7 +288,7 @@ class TaskEditViewModel @Inject constructor(
             TaskEditEvent.Save -> saveTask()
             TaskEditEvent.Cancel -> handleCancel()
             TaskEditEvent.DismissError -> _uiState.update { it.copy(errorMessage = null, validationErrors = emptyMap()) }
-            is TaskEditEvent.NavigateToTaskDetail -> _events.value = TaskEditViewModelEvent.NavigateToDetail(event.taskId)
+            is TaskEditEvent.NavigateToTaskDetail -> _events.value = TaskEditViewModelEvent.NavigateToDetail(event.taskId, isCreateMode = false)
         }
     }
     
