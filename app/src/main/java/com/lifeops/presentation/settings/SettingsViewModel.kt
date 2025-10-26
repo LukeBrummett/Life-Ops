@@ -87,6 +87,9 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(importConflicts = null) }
             }
             SettingsUiEvent.CreateBackup -> createBackup()
+            is SettingsUiEvent.ToggleDebugMode -> {
+                _uiState.update { it.copy(debugMode = event.enabled) }
+            }
             SettingsUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
             SettingsUiEvent.ClearSuccess -> _uiState.update { it.copy(successMessage = null) }
         }

@@ -15,6 +15,7 @@ sealed interface SettingsUiEvent {
     ) : SettingsUiEvent
     data object DismissConflictDialog : SettingsUiEvent
     data object CreateBackup : SettingsUiEvent
+    data class ToggleDebugMode(val enabled: Boolean) : SettingsUiEvent
     data object ClearError : SettingsUiEvent
     data object ClearSuccess : SettingsUiEvent
 }

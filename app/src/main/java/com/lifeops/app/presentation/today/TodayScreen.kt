@@ -29,6 +29,7 @@ import java.time.LocalDate
 fun TodayScreen(
     modifier: Modifier = Modifier,
     viewModel: TodayViewModel = hiltViewModel(),
+    settingsViewModel: com.lifeops.presentation.settings.SettingsViewModel = hiltViewModel(),
     onNavigateToAllTasks: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
@@ -36,10 +37,12 @@ fun TodayScreen(
     onNavigateToTaskCreate: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val settingsState by settingsViewModel.uiState.collectAsState()
     
     TodayScreenContent(
         modifier = modifier,
         uiState = uiState,
+        debugMode = settingsState.debugMode,
         onEvent = { event ->
             // Handle navigation events directly
             when (event) {
@@ -62,6 +65,7 @@ fun TodayScreen(
 private fun TodayScreenContent(
     modifier: Modifier = Modifier,
     uiState: TodayUiState,
+    debugMode: Boolean = false,
     onEvent: (TodayUiEvent) -> Unit
 ) {
     var showDebugMenu by remember { mutableStateOf(false) }
@@ -121,48 +125,50 @@ private fun TodayScreenContent(
                 }
             }
             
-            // Debug FAB - positioned in bottom-start
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            ) {
-                SmallFloatingActionButton(
-                    onClick = { showDebugMenu = !showDebugMenu },
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+            // Debug FAB - positioned in bottom-start (only shown when debug mode is enabled)
+            if (debugMode) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
                 ) {
-                    Icon(
-                        Icons.Default.BugReport,
-                        contentDescription = "Debug date controls"
-                    )
-                }
-                
-                DropdownMenu(
-                    expanded = showDebugMenu,
-                    onDismissRequest = { showDebugMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("+1 Day") },
-                        onClick = {
-                            onEvent(TodayUiEvent.DebugAdvanceDate(1))
-                            showDebugMenu = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("+7 Days") },
-                        onClick = {
-                            onEvent(TodayUiEvent.DebugAdvanceDate(7))
-                            showDebugMenu = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("+30 Days") },
-                        onClick = {
-                            onEvent(TodayUiEvent.DebugAdvanceDate(30))
-                            showDebugMenu = false
-                        }
-                    )
+                    SmallFloatingActionButton(
+                        onClick = { showDebugMenu = !showDebugMenu },
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ) {
+                        Icon(
+                            Icons.Default.BugReport,
+                            contentDescription = "Debug date controls"
+                        )
+                    }
+                    
+                    DropdownMenu(
+                        expanded = showDebugMenu,
+                        onDismissRequest = { showDebugMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("+1 Day") },
+                            onClick = {
+                                onEvent(TodayUiEvent.DebugAdvanceDate(1))
+                                showDebugMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("+7 Days") },
+                            onClick = {
+                                onEvent(TodayUiEvent.DebugAdvanceDate(7))
+                                showDebugMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("+30 Days") },
+                            onClick = {
+                                onEvent(TodayUiEvent.DebugAdvanceDate(30))
+                                showDebugMenu = false
+                            }
+                        )
+                    }
                 }
             }
         }

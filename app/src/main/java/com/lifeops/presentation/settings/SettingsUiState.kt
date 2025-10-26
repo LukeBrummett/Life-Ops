@@ -9,6 +9,7 @@ data class SettingsUiState(
     val totalSupplies: Int = 0,
     val lastManualBackup: String? = null,
     val lastAutoBackup: String? = null,
+    val debugMode: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
