@@ -17,18 +17,10 @@ import com.lifeops.app.data.local.entity.TaskSupply
  * Single source of truth for all application data
  * Completely offline, no network dependencies
  * 
- * Version History:
- * - v1: Initial schema with Long task IDs
- * - v2: Migrated to UUID (String) task IDs for conflict-free sharing
- * - v3: Added Supply and Inventory entities for inventory management
- * - v4: Added TaskSupply junction table for task-inventory integration
- * - v5: Added overdueBehavior field to Task entity
- * - v6: Added deleteAfterCompletion field to Task entity for ephemeral tasks
- * 
  * As per Technical Architecture specification:
  * - SQLite via Room for local persistence
  * - Type converters for complex types (LocalDate, JSON arrays)
- * - Database migrations for future schema changes
+ * - Destructive migration during development (pre-1.0 release)
  */
 @Database(
     entities = [
@@ -38,7 +30,7 @@ import com.lifeops.app.data.local.entity.TaskSupply
         TaskSupply::class
         // Additional entities will be added: ChecklistItem, TaskLog, RestockTask
     ],
-    version = 6,
+    version = 1,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
