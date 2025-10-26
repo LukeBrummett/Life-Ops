@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2025-10-26
+
+### 🐛 Bug Fixes
+
+**Task Editing**
+- Fixed TaskEditScreen save button not triggering navigation after successful save
+- Fixed ADHOC tasks unable to be saved (validation incorrectly required intervalQty >= 1)
+- Fixed event consumption happening before navigation callbacks in TaskEditScreen
+
+**Sample Data**
+- Fixed "cannot access database on main thread" error when loading sample data
+- Wrapped database.clearAllTables() in withContext(Dispatchers.IO) for proper thread handling
+
+### ✨ Features
+
+**Task Deletion**
+- Added delete functionality to TaskDetailScreen
+- Delete button in TopAppBar next to Edit button
+- Confirmation dialog with task name and "cannot be undone" warning
+- Proper error handling and navigation after deletion
+- Styled with error color scheme for destructive actions
+
+**Developer Experience**
+- Sample data loading now optional via Settings instead of auto-loading on every launch
+- Improved project structure (removed unused folders, organized documentation)
+
+---
+
 ## [1.0.0] - 2025-10-26
 
 ### 🎉 Initial Release
