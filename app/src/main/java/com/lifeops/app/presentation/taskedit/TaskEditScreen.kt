@@ -283,11 +283,11 @@ private fun BasicInformationSection(
                 label = { Text("Category *") },
                 readOnly = false,
                 trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown)
+                    IconButton(onClick = { showCategoryDropdown = !showCategoryDropdown }) {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown)
+                    }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
+                modifier = Modifier.fillMaxWidth()
             )
             
             ExposedDropdownMenu(
