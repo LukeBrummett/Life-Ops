@@ -40,24 +40,24 @@ class DatabaseInitializer @Inject constructor(
         // Load comprehensive sample data
         val today = LocalDate.now()
         
-        // Pre-generate UUIDs for tasks that need relationships
-        val workoutParentId = java.util.UUID.randomUUID().toString()
-        val stretchFirstId = java.util.UUID.randomUUID().toString()
-        val pushUpsId = java.util.UUID.randomUUID().toString()
-        val squatsId = java.util.UUID.randomUUID().toString()
-        val planksId = java.util.UUID.randomUUID().toString()
-        val stretchLastId = java.util.UUID.randomUUID().toString()
+        // Fixed UUIDs for tasks that need relationships (consistent across app launches)
+        val workoutParentId = "workout-parent-001"
+        val stretchFirstId = "stretch-first-001"
+        val pushUpsId = "pushups-001"
+        val squatsId = "squats-001"
+        val planksId = "planks-001"
+        val stretchLastId = "stretch-last-001"
         
-        val cookDinnerId = java.util.UUID.randomUUID().toString()
-        val cleanUpDinnerId = java.util.UUID.randomUUID().toString()
+        val cookDinnerId = "cook-dinner-001"
+        val cleanUpDinnerId = "cleanup-dinner-001"
         
-        val cleanBathroomId = java.util.UUID.randomUUID().toString()
-        val cleanShowerId = java.util.UUID.randomUUID().toString()
-        val cleanToiletId = java.util.UUID.randomUUID().toString()
-        val mopFloorId = java.util.UUID.randomUUID().toString()
+        val cleanBathroomId = "clean-bathroom-001"
+        val cleanShowerId = "clean-shower-001"
+        val cleanToiletId = "clean-toilet-001"
+        val mopFloorId = "mop-floor-001"
         
-        val swapAirFiltersId = java.util.UUID.randomUUID().toString()
-        val monthlyCleaningId = java.util.UUID.randomUUID().toString()
+        val swapAirFiltersId = "swap-air-filters-001"
+        val monthlyCleaningId = "monthly-cleaning-001"
         
         // ===========================================
         // WORKFLOW 1: Exercise Routine (Parent-Child)
@@ -461,7 +461,7 @@ class DatabaseInitializer @Inject constructor(
             // Household supplies
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-air-filters-001",
                     name = "Air Filters",
                     category = "Household",
                     tags = "hvac, filters",
@@ -474,7 +474,7 @@ class DatabaseInitializer @Inject constructor(
             ),
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-trash-bags-001",
                     name = "Trash Bags",
                     category = "Household",
                     tags = "bags, kitchen",
@@ -489,7 +489,7 @@ class DatabaseInitializer @Inject constructor(
             // Kitchen supplies
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-coffee-filters-001",
                     name = "Coffee Filters",
                     category = "Kitchen",
                     tags = "coffee, filters",
@@ -502,7 +502,7 @@ class DatabaseInitializer @Inject constructor(
             ),
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-dish-soap-001",
                     name = "Dish Soap",
                     category = "Kitchen",
                     tags = "cleaning, dishes",
@@ -515,7 +515,7 @@ class DatabaseInitializer @Inject constructor(
             ),
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-paper-towels-001",
                     name = "Paper Towels",
                     category = "Kitchen",
                     tags = "cleaning, paper",
@@ -530,7 +530,7 @@ class DatabaseInitializer @Inject constructor(
             // Cleaning supplies
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-all-purpose-cleaner-001",
                     name = "All-Purpose Cleaner",
                     category = "Cleaning",
                     tags = "cleaning, spray",
@@ -543,7 +543,7 @@ class DatabaseInitializer @Inject constructor(
             ),
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-toilet-cleaner-001",
                     name = "Toilet Bowl Cleaner",
                     category = "Cleaning",
                     tags = "cleaning, bathroom",
@@ -556,7 +556,7 @@ class DatabaseInitializer @Inject constructor(
             ),
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-glass-cleaner-001",
                     name = "Glass Cleaner",
                     category = "Cleaning",
                     tags = "cleaning, windows",
@@ -569,7 +569,7 @@ class DatabaseInitializer @Inject constructor(
             ),
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-floor-cleaner-001",
                     name = "Floor Cleaner",
                     category = "Cleaning",
                     tags = "cleaning, floors",
@@ -582,7 +582,7 @@ class DatabaseInitializer @Inject constructor(
             ),
             Pair(
                 Supply(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = "supply-sponges-001",
                     name = "Sponges",
                     category = "Cleaning",
                     tags = "cleaning, kitchen",

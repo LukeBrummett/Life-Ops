@@ -278,7 +278,7 @@ fun ImportConflictDialog(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "All conflicting tasks will be imported with new IDs to avoid duplicates.",
+                    text = "Do you want to override the existing tasks or import them separately?",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -287,19 +287,32 @@ fun ImportConflictDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Auto-resolve all conflicts with KEEP_BOTH
+                    // Override existing tasks
                     val resolutions = conflicts.associate { 
-                        it.taskId to com.lifeops.presentation.settings.import_data.ConflictResolution.KEEP_BOTH
+                        it.taskId to com.lifeops.presentation.settings.import_data.ConflictResolution.REPLACE
                     }
                     onResolve(resolutions)
                 }
             ) {
-                Text("Import All")
+                Text("Override")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel")
+                }
+                TextButton(
+                    onClick = {
+                        // Keep both - import with new IDs
+                        val resolutions = conflicts.associate { 
+                            it.taskId to com.lifeops.presentation.settings.import_data.ConflictResolution.KEEP_BOTH
+                        }
+                        onResolve(resolutions)
+                    }
+                ) {
+                    Text("Import Separately")
+                }
             }
         }
     )

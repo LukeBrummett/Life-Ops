@@ -186,6 +186,7 @@ private fun TaskEditContent(
             category = uiState.category,
             tags = uiState.tags,
             description = uiState.description,
+            deleteAfterCompletion = uiState.deleteAfterCompletion,
             availableCategories = uiState.availableCategories,
             availableTags = uiState.availableTags,
             validationErrors = uiState.validationErrors,
@@ -202,7 +203,6 @@ private fun TaskEditContent(
             excludedDaysOfWeek = uiState.excludedDaysOfWeek,
             excludedDateRanges = uiState.excludedDateRanges,
             overdueBehavior = uiState.overdueBehavior,
-            deleteAfterCompletion = uiState.deleteAfterCompletion,
             onEvent = onEvent
         )
         
@@ -241,6 +241,7 @@ private fun BasicInformationSection(
     category: String,
     tags: List<String>,
     description: String,
+    deleteAfterCompletion: Boolean,
     availableCategories: List<String>,
     availableTags: List<String>,
     validationErrors: Map<String, String>,
@@ -250,7 +251,7 @@ private fun BasicInformationSection(
     var showTagDropdown by remember { mutableStateOf(false) }
     var tagSearchText by remember { mutableStateOf("") }
     
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = "Basic Information",
             style = MaterialTheme.typography.titleLarge,
@@ -263,8 +264,8 @@ private fun BasicInformationSection(
             onValueChange = { onEvent(TaskEditEvent.UpdateName(it)) },
             label = { Text("Task Name *") },
             isError = validationErrors.containsKey(ValidationError.NAME_REQUIRED),
-            supportingText = {
-                validationErrors[ValidationError.NAME_REQUIRED]?.let { Text(it) }
+            supportingText = validationErrors[ValidationError.NAME_REQUIRED]?.let { 
+                { Text(it) } 
             },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             modifier = Modifier.fillMaxWidth()
@@ -359,6 +360,25 @@ private fun BasicInformationSection(
             maxLines = 6,
             modifier = Modifier.fillMaxWidth()
         )
+        
+        // Delete After Completion
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Checkbox(
+                checked = deleteAfterCompletion,
+                onCheckedChange = { onEvent(TaskEditEvent.UpdateDeleteAfterCompletion(it)) }
+            )
+            Column(modifier = Modifier.padding(start = 8.dp)) {
+                Text("Delete after completion")
+                Text(
+                    text = "(one-time/ephemeral task)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -374,18 +394,20 @@ private fun ScheduleConfigurationSection(
     excludedDaysOfWeek: List<DayOfWeek>,
     excludedDateRanges: List<DateRange>,
     overdueBehavior: OverdueBehavior,
-    deleteAfterCompletion: Boolean,
     onEvent: (TaskEditEvent) -> Unit
 ) {
     var expanded by remember { mutableStateOf(true) }
     
-    // Determine schedule mode based on interval unit and quantity
-    // Days of Week mode is specifically for WEEK interval with qty=1
-    // Interval mode for WEEK is when qty > 1 (e.g., "every 2 weeks")
-    val scheduleMode = when {
-        intervalUnit == IntervalUnit.ADHOC -> "Adhoc"
-        intervalUnit == IntervalUnit.WEEK && intervalQty == 1 -> "DaysOfWeek"
-        else -> "Interval"  // DAY, WEEK (with qty>1), or MONTH
+    // Track which mode the user has explicitly selected
+    // Initialize based on which data is present in the task
+    var selectedMode by remember(intervalUnit, specificDaysOfWeek) {
+        mutableStateOf(
+            when {
+                intervalUnit == IntervalUnit.ADHOC -> "Adhoc"
+                specificDaysOfWeek.isNotEmpty() -> "DaysOfWeek"
+                else -> "Interval"
+            }
+        )
     }
     
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -417,27 +439,26 @@ private fun ScheduleConfigurationSection(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
-                    selected = scheduleMode == "Interval",
+                    selected = selectedMode == "Interval",
                     onClick = { 
-                        // Switch to Day interval as default for Interval mode (unless already on DAY/MONTH)
-                        if (intervalUnit == IntervalUnit.ADHOC) {
-                            onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.DAY))
-                        } else if (intervalUnit == IntervalUnit.WEEK && intervalQty == 1) {
-                            // Coming from Days of Week mode (WEEK qty=1), keep WEEK but increase qty
-                            // This switches to "every N weeks" interval mode
-                            onEvent(TaskEditEvent.UpdateIntervalQty(2))
+                        selectedMode = "Interval"
+                        // Clear days of week when switching to interval mode
+                        specificDaysOfWeek.forEach { day ->
+                            onEvent(TaskEditEvent.ToggleSpecificDay(day))
                         }
-                        // If already on DAY, MONTH, or WEEK with qty>1, no change needed
                     },
                     label = { Text("Interval") },
                     modifier = Modifier.weight(1f)
                 )
                 
                 FilterChip(
-                    selected = scheduleMode == "DaysOfWeek",
+                    selected = selectedMode == "DaysOfWeek",
                     onClick = { 
-                        // Set to weekly with quantity 1 for Days of Week mode
-                        onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.WEEK))
+                        selectedMode = "DaysOfWeek"
+                        // Set interval to WEEK with qty 1, and clear any specific days
+                        if (intervalUnit != IntervalUnit.WEEK) {
+                            onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.WEEK))
+                        }
                         if (intervalQty != 1) {
                             onEvent(TaskEditEvent.UpdateIntervalQty(1))
                         }
@@ -447,9 +468,14 @@ private fun ScheduleConfigurationSection(
                 )
                 
                 FilterChip(
-                    selected = scheduleMode == "Adhoc",
+                    selected = selectedMode == "Adhoc",
                     onClick = { 
+                        selectedMode = "Adhoc"
+                        // Set to ADHOC and clear everything else
                         onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.ADHOC))
+                        specificDaysOfWeek.forEach { day ->
+                            onEvent(TaskEditEvent.ToggleSpecificDay(day))
+                        }
                     },
                     label = { Text("Adhoc") },
                     modifier = Modifier.weight(1f)
@@ -457,7 +483,7 @@ private fun ScheduleConfigurationSection(
             }
             
             // Content based on selected mode
-            when (scheduleMode) {
+            when (selectedMode) {
                 "Interval" -> {
                     // Number input + dropdown for Day/Days, Week/Weeks, Month/Months
                     Row(
@@ -654,25 +680,6 @@ private fun ScheduleConfigurationSection(
                             )
                         }
                     }
-                }
-            }
-            
-            // Delete After Completion
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Checkbox(
-                    checked = deleteAfterCompletion,
-                    onCheckedChange = { onEvent(TaskEditEvent.UpdateDeleteAfterCompletion(it)) }
-                )
-                Column(modifier = Modifier.padding(start = 8.dp)) {
-                    Text("Delete after completion")
-                    Text(
-                        text = "(one-time/ephemeral task)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
         }
