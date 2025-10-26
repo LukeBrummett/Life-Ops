@@ -288,7 +288,7 @@ class TaskEditViewModel @Inject constructor(
             TaskEditEvent.Save -> saveTask()
             TaskEditEvent.Cancel -> handleCancel()
             TaskEditEvent.DismissError -> _uiState.update { it.copy(errorMessage = null, validationErrors = emptyMap()) }
-            is TaskEditEvent.NavigateToTaskDetail -> _events.value = TaskEditViewModelEvent.NavigateToDetail(event.taskId)
+            is TaskEditEvent.NavigateToTaskDetail -> _events.value = TaskEditViewModelEvent.NavigateToDetail(event.taskId, isCreateMode = false)
         }
     }
     
@@ -607,6 +607,8 @@ class TaskEditViewModel @Inject constructor(
                 _uiState.update { it.copy(isSaving = true, validationErrors = emptyMap()) }
                 
                 val state = _uiState.value
+                // Capture isCreateMode to ensure consistency throughout async operation
+                val isCreateMode = state.isCreateMode
                 
                 // Build save request
                 val request = SaveTaskRequest(
@@ -643,7 +645,7 @@ class TaskEditViewModel @Inject constructor(
                 if (result.isSuccess) {
                     val savedTaskId = result.getOrNull()!!
                     _uiState.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
-                    _events.value = TaskEditViewModelEvent.NavigateToDetail(savedTaskId)
+                    _events.value = TaskEditViewModelEvent.NavigateToDetail(savedTaskId, isCreateMode)
                 } else {
                     val error = result.exceptionOrNull()?.message ?: "Unknown error"
                     _uiState.update {
@@ -679,7 +681,7 @@ class TaskEditViewModel @Inject constructor(
  * One-time events from ViewModel
  */
 sealed class TaskEditViewModelEvent {
-    data class NavigateToDetail(val taskId: String) : TaskEditViewModelEvent()
+    data class NavigateToDetail(val taskId: String, val isCreateMode: Boolean) : TaskEditViewModelEvent()
     data object NavigateBack : TaskEditViewModelEvent()
     data object ShowUnsavedChangesDialog : TaskEditViewModelEvent()
 }
