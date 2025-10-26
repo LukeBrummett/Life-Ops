@@ -461,12 +461,19 @@ private fun ScheduleConfigurationSection(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Number input
+                        // Number input - store as local state to allow backspacing
+                        var quantityText by remember(intervalQty) { mutableStateOf(intervalQty.toString()) }
+                        
                         OutlinedTextField(
-                            value = intervalQty.toString(),
+                            value = quantityText,
                             onValueChange = { newValue ->
-                                newValue.toIntOrNull()?.let { qty ->
-                                    if (qty > 0) onEvent(TaskEditEvent.UpdateIntervalQty(qty))
+                                // Allow empty or valid numbers
+                                if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                    quantityText = newValue
+                                    // Only update the actual value if it's a valid positive number
+                                    newValue.toIntOrNull()?.let { qty ->
+                                        if (qty > 0) onEvent(TaskEditEvent.UpdateIntervalQty(qty))
+                                    }
                                 }
                             },
                             modifier = Modifier.width(80.dp),
@@ -1096,12 +1103,21 @@ private fun InventorySection(
                         // Mode-specific fields
                         when (assoc.consumptionMode) {
                             ConsumptionMode.FIXED -> {
+                                var fixedQtyText by remember(assoc.fixedQuantity) { 
+                                    mutableStateOf((assoc.fixedQuantity ?: 1).toString()) 
+                                }
+                                
                                 OutlinedTextField(
-                                    value = (assoc.fixedQuantity ?: 1).toString(),
+                                    value = fixedQtyText,
                                     onValueChange = { newValue ->
-                                        newValue.toIntOrNull()?.let { qty ->
-                                            if (qty > 0) {
-                                                onEvent(TaskEditEvent.UpdateInventoryFixedQuantity(assoc.supplyId, qty))
+                                        // Allow empty or valid numbers
+                                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                            fixedQtyText = newValue
+                                            // Only update if valid positive number
+                                            newValue.toIntOrNull()?.let { qty ->
+                                                if (qty > 0) {
+                                                    onEvent(TaskEditEvent.UpdateInventoryFixedQuantity(assoc.supplyId, qty))
+                                                }
                                             }
                                         }
                                     },
@@ -1111,11 +1127,20 @@ private fun InventorySection(
                                 )
                             }
                             ConsumptionMode.PROMPTED -> {
+                                var promptedQtyText by remember(assoc.promptedDefaultValue) { 
+                                    mutableStateOf((assoc.promptedDefaultValue ?: 0).toString()) 
+                                }
+                                
                                 OutlinedTextField(
-                                    value = (assoc.promptedDefaultValue ?: 0).toString(),
+                                    value = promptedQtyText,
                                     onValueChange = { newValue ->
-                                        newValue.toIntOrNull()?.let { qty ->
-                                            onEvent(TaskEditEvent.UpdateInventoryPromptedDefault(assoc.supplyId, qty))
+                                        // Allow empty or valid numbers (including 0 for prompted)
+                                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                            promptedQtyText = newValue
+                                            // Update with the value (0 is ok for prompted default)
+                                            newValue.toIntOrNull()?.let { qty ->
+                                                onEvent(TaskEditEvent.UpdateInventoryPromptedDefault(assoc.supplyId, qty))
+                                            }
                                         }
                                     },
                                     label = { Text("Default quantity (optional)") },
