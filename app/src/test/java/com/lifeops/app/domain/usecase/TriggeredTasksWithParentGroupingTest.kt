@@ -129,7 +129,13 @@ class TriggeredTasksWithParentGroupingTest {
     
     /**
      * Mimics the groupTasksWithHierarchy logic from TodayViewModel
-     * This is a simplified version for testing purposes
+     * 
+     * NOTE: This duplicates the production logic for testing purposes to avoid
+     * modifying production code. In the future, consider extracting this to a
+     * shared utility class that can be tested directly.
+     * 
+     * This is a simplified version for unit testing that demonstrates the
+     * grouping behavior works correctly for triggered tasks with parents.
      */
     private fun groupTasksWithHierarchy(tasks: List<Task>): List<TaskItem> {
         // Track which tasks are children (so we don't show them as standalone)
@@ -157,8 +163,7 @@ class TriggeredTasksWithParentGroupingTest {
             
             TaskItem(
                 task = task,
-                children = children,
-                isParent = children.isNotEmpty()
+                children = children
             )
         }
         
