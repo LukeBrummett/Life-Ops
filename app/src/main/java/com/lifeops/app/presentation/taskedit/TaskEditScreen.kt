@@ -400,8 +400,10 @@ private fun ScheduleConfigurationSection(
     var expanded by remember { mutableStateOf(true) }
     
     // Track which mode the user has explicitly selected
-    // Initialize based on which data is present in the task
-    var selectedMode by remember(intervalUnit, specificDaysOfWeek) {
+    // Initialize based on which data is present in the task, but only once
+    // Don't re-evaluate on intervalUnit or specificDaysOfWeek changes to avoid
+    // resetting the mode when the user switches between modes
+    var selectedMode by remember {
         mutableStateOf(
             when {
                 intervalUnit == IntervalUnit.ADHOC -> "Adhoc"
