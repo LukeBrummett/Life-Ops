@@ -82,6 +82,9 @@ class SaveTaskUseCase @Inject constructor(
             // Update child task relationships (update their parentTaskIds)
             updateChildRelationships(taskId, request.childTaskIds)
             
+            // Update trigger relationships (bidirectional sync)
+            updateTriggerRelationships(taskId, request.triggeredByTaskIds, request.triggersTaskIds)
+            
             // Save inventory associations
             saveInventoryAssociations(taskId, request.inventoryAssociations)
             
@@ -191,6 +194,63 @@ class SaveTaskUseCase @Inject constructor(
             taskRepository.getTaskById(childId).getOrNull()?.let { child ->
                 val updatedParents = (child.parentTaskIds ?: emptyList()) + parentId
                 taskRepository.updateTask(child.copy(parentTaskIds = updatedParents))
+            }
+        }
+    }
+    
+    /**
+     * Update trigger relationships bidirectionally
+     * 
+     * This ensures that:
+     * - If this task is triggered by task X, then X's triggersTaskIds includes this task
+     * - If this task triggers task Y, then Y's triggeredByTaskIds includes this task
+     */
+    private suspend fun updateTriggerRelationships(
+        taskId: String,
+        triggeredByTaskIds: List<String>,
+        triggersTaskIds: List<String>
+    ) {
+        // Update "triggered by" relationships
+        // Get tasks that currently trigger this task
+        val currentTriggeringTasks = taskRepository.getTasksThatTrigger(taskId).getOrNull() ?: emptyList()
+        
+        // Remove this task from tasks that no longer trigger it
+        val removedTriggers = currentTriggeringTasks.filter { !triggeredByTaskIds.contains(it.id) }
+        removedTriggers.forEach { triggerTask ->
+            val updatedTriggers = triggerTask.triggersTaskIds?.filter { it != taskId } ?: emptyList()
+            taskRepository.updateTask(triggerTask.copy(triggersTaskIds = updatedTriggers.takeIf { it.isNotEmpty() }))
+        }
+        
+        // Add this task to new triggering tasks
+        val newTriggers = triggeredByTaskIds.filter { triggerId ->
+            !currentTriggeringTasks.any { it.id == triggerId }
+        }
+        newTriggers.forEach { triggerId ->
+            taskRepository.getTaskById(triggerId).getOrNull()?.let { triggerTask ->
+                val updatedTriggers = (triggerTask.triggersTaskIds ?: emptyList()) + taskId
+                taskRepository.updateTask(triggerTask.copy(triggersTaskIds = updatedTriggers))
+            }
+        }
+        
+        // Update "triggers" relationships
+        // Get tasks that this task currently triggers
+        val currentTriggeredTasks = taskRepository.getTriggeredTasks(taskId).getOrNull() ?: emptyList()
+        
+        // Remove this task from tasks it no longer triggers
+        val removedTriggered = currentTriggeredTasks.filter { !triggersTaskIds.contains(it.id) }
+        removedTriggered.forEach { triggeredTask ->
+            val updatedTriggeredBy = triggeredTask.triggeredByTaskIds?.filter { it != taskId } ?: emptyList()
+            taskRepository.updateTask(triggeredTask.copy(triggeredByTaskIds = updatedTriggeredBy.takeIf { it.isNotEmpty() }))
+        }
+        
+        // Add this task to new triggered tasks
+        val newTriggered = triggersTaskIds.filter { triggeredId ->
+            !currentTriggeredTasks.any { it.id == triggeredId }
+        }
+        newTriggered.forEach { triggeredId ->
+            taskRepository.getTaskById(triggeredId).getOrNull()?.let { triggeredTask ->
+                val updatedTriggeredBy = (triggeredTask.triggeredByTaskIds ?: emptyList()) + taskId
+                taskRepository.updateTask(triggeredTask.copy(triggeredByTaskIds = updatedTriggeredBy))
             }
         }
     }
