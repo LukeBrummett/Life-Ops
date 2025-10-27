@@ -3,9 +3,12 @@ package com.lifeops.app.presentation.today
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lifeops.app.data.local.entity.ConsumptionMode
 import com.lifeops.app.domain.usecase.CompleteTaskUseCase
+import com.lifeops.app.domain.usecase.GetTaskDetailsUseCase
 import com.lifeops.app.domain.usecase.GetTasksDueUseCase
 import com.lifeops.app.domain.usecase.ProcessOverdueTasksUseCase
+import com.lifeops.app.presentation.taskdetail.PromptedInventoryItem
 import com.lifeops.app.util.DateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -29,6 +32,8 @@ class TodayViewModel @Inject constructor(
     private val getTasksDueUseCase: GetTasksDueUseCase,
     private val completeTaskUseCase: CompleteTaskUseCase,
     private val processOverdueTasksUseCase: ProcessOverdueTasksUseCase,
+    private val getTaskDetailsUseCase: GetTaskDetailsUseCase,
+    private val supplyRepository: com.lifeops.app.data.repository.SupplyRepository,
     private val dateProvider: DateProvider
 ) : ViewModel() {
     
@@ -46,7 +51,7 @@ class TodayViewModel @Inject constructor(
      */
     fun onEvent(event: TodayUiEvent) {
         when (event) {
-            is TodayUiEvent.CompleteTask -> completeTask(event.taskId)
+            is TodayUiEvent.CompleteTask -> prepareCompleteTask(event.taskId)
             is TodayUiEvent.ToggleShowCompleted -> toggleShowCompleted()
             is TodayUiEvent.NavigateToAllTasks -> {
                 // Navigation handled by MainActivity/NavHost in Phase 4
@@ -65,6 +70,8 @@ class TodayViewModel @Inject constructor(
             }
             is TodayUiEvent.Refresh -> loadTasksDueToday()
             is TodayUiEvent.DebugAdvanceDate -> advanceDebugDate(event.days)
+            is TodayUiEvent.DismissInventoryPrompt -> dismissInventoryPrompt()
+            is TodayUiEvent.ConfirmInventoryConsumption -> confirmInventoryConsumption(event.taskId, event.consumptions)
         }
     }
     
@@ -178,7 +185,135 @@ class TodayViewModel @Inject constructor(
     }
     
     /**
-     * Toggle task completion status
+     * Prepare to complete a task - check for prompted inventory items first
+     */
+    private fun prepareCompleteTask(taskId: String) {
+        viewModelScope.launch {
+            try {
+                // Get task details to check inventory associations
+                val result = getTaskDetailsUseCase(taskId)
+                val taskDetails = result.getOrNull()
+                
+                if (taskDetails == null) {
+                    Log.e("TodayViewModel", "Failed to load task details for $taskId")
+                    return@launch
+                }
+                
+                // Find all prompted inventory items
+                val promptedItems = taskDetails.inventoryAssociations
+                    .filter { it.taskSupply.consumptionMode == ConsumptionMode.PROMPTED }
+                    .map { association ->
+                        PromptedInventoryItem(
+                            supplyId = association.supply.id,
+                            supplyName = association.supply.name,
+                            unit = association.supply.unit,
+                            defaultValue = association.taskSupply.promptedDefaultValue ?: 1,
+                            currentQuantity = association.inventory?.currentQuantity ?: 0
+                        )
+                    }
+                
+                // If there are prompted items, show the dialog
+                if (promptedItems.isNotEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            showInventoryPrompt = true,
+                            inventoryPromptTaskId = taskId,
+                            inventoryPromptTaskName = taskDetails.task.name,
+                            promptedInventoryItems = promptedItems
+                        )
+                    }
+                } else {
+                    // No prompted items, complete immediately with FIXED items
+                    completeTaskWithInventory(taskId, emptyMap())
+                }
+            } catch (e: Exception) {
+                Log.e("TodayViewModel", "Error preparing task completion for $taskId", e)
+            }
+        }
+    }
+    
+    /**
+     * Dismiss the inventory prompt dialog
+     */
+    private fun dismissInventoryPrompt() {
+        _uiState.update {
+            it.copy(
+                showInventoryPrompt = false,
+                inventoryPromptTaskId = null,
+                inventoryPromptTaskName = null,
+                promptedInventoryItems = emptyList()
+            )
+        }
+    }
+    
+    /**
+     * Confirm inventory consumption and complete the task
+     */
+    private fun confirmInventoryConsumption(taskId: String, consumptions: Map<String, Int>) {
+        viewModelScope.launch {
+            try {
+                // Dismiss dialog first
+                _uiState.update {
+                    it.copy(
+                        showInventoryPrompt = false,
+                        inventoryPromptTaskId = null,
+                        inventoryPromptTaskName = null,
+                        promptedInventoryItems = emptyList()
+                    )
+                }
+                
+                // Complete task with inventory consumption
+                completeTaskWithInventory(taskId, consumptions)
+            } catch (e: Exception) {
+                Log.e("TodayViewModel", "Error confirming inventory consumption", e)
+            }
+        }
+    }
+    
+    /**
+     * Complete the task and handle inventory consumption
+     */
+    private suspend fun completeTaskWithInventory(taskId: String, promptedConsumptions: Map<String, Int>) {
+        try {
+            val currentDate = dateProvider.now()
+            
+            // Get task details for inventory associations
+            val result = getTaskDetailsUseCase(taskId)
+            val taskDetails = result.getOrNull() ?: return
+            
+            // Process all inventory consumption
+            taskDetails.inventoryAssociations.forEach { association ->
+                when (association.taskSupply.consumptionMode) {
+                    ConsumptionMode.FIXED -> {
+                        // Consume fixed quantity
+                        val quantity = association.taskSupply.fixedQuantity ?: 0
+                        if (quantity > 0) {
+                            supplyRepository.decrementInventory(association.supply.id, quantity)
+                        }
+                    }
+                    ConsumptionMode.PROMPTED -> {
+                        // Consume prompted quantity (from user input)
+                        val quantity = promptedConsumptions[association.supply.id] ?: 0
+                        if (quantity > 0) {
+                            supplyRepository.decrementInventory(association.supply.id, quantity)
+                        }
+                    }
+                    ConsumptionMode.RECOUNT -> {
+                        // No automatic consumption for recount mode
+                    }
+                }
+            }
+            
+            // Complete the task
+            completeTaskUseCase(taskId, currentDate)
+            // UI will update automatically via Flow from getTasksDueUseCase
+        } catch (e: Exception) {
+            Log.e("TodayViewModel", "Error completing task with inventory", e)
+        }
+    }
+    
+    /**
+     * Toggle task completion status (legacy - now handled by prepareCompleteTask)
      * Uses CompleteTaskUseCase to handle all business logic
      */
     private fun completeTask(taskId: String) {
