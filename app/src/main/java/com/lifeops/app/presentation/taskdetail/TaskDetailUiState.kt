@@ -31,7 +31,11 @@ data class TaskDetailUiState(
     
     // Action availability
     val canComplete: Boolean = false,
-    val canDelete: Boolean = true
+    val canDelete: Boolean = true,
+    
+    // Inventory prompt dialog state
+    val showInventoryPrompt: Boolean = false,
+    val promptedInventoryItems: List<PromptedInventoryItem> = emptyList()
 )
 
 /**
@@ -65,4 +69,15 @@ data class InventoryItemDisplay(
     val modeDetails: String, // e.g., "2 per execution", "default: 30g", ""
     val currentStock: String, // e.g., "8 filters"
     val isLowStock: Boolean = false
+)
+
+/**
+ * Information for prompted inventory item in completion dialog
+ */
+data class PromptedInventoryItem(
+    val supplyId: String,
+    val supplyName: String,
+    val unit: String,
+    val defaultValue: Int,
+    val currentQuantity: Int
 )

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+
 
 /**
  * Task Detail Screen - comprehensive read-only view of a task
@@ -186,6 +188,22 @@ fun TaskDetailScreen(
                     TextButton(onClick = { showDeleteDialog = false }) {
                         Text("Cancel")
                     }
+                }
+            )
+        }
+    }
+    
+    // Inventory consumption prompt dialog
+    if (uiState.showInventoryPrompt) {
+        uiState.task?.let { task ->
+            InventoryPromptDialog(
+                taskName = task.name,
+                inventoryItems = uiState.promptedInventoryItems,
+                onConfirm = { consumptions ->
+                    viewModel.onEvent(TaskDetailEvent.ConfirmInventoryConsumption(task.id, consumptions))
+                },
+                onDismiss = {
+                    viewModel.onEvent(TaskDetailEvent.DismissInventoryPrompt)
                 }
             )
         }
@@ -831,4 +849,92 @@ private fun DetailSection(
         Spacer(modifier = Modifier.height(12.dp))
         content()
     }
+}
+
+/**
+ * Dialog for prompting inventory consumption when completing a task
+ */
+@Composable
+private fun InventoryPromptDialog(
+    taskName: String,
+    inventoryItems: List<PromptedInventoryItem>,
+    onConfirm: (Map<String, Int>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Track user input for each inventory item
+    val consumptions = remember {
+        mutableStateMapOf<String, String>().apply {
+            inventoryItems.forEach { item ->
+                put(item.supplyId, item.defaultValue.toString())
+            }
+        }
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Text("Complete Task: $taskName") 
+        },
+        text = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Text(
+                        text = "How much of each supply did you use?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                items(inventoryItems) { item ->
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = item.supplyName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Current stock: ${item.currentQuantity} ${item.unit}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        OutlinedTextField(
+                            value = consumptions[item.supplyId] ?: item.defaultValue.toString(),
+                            onValueChange = { value ->
+                                // Only allow numeric input
+                                if (value.isEmpty() || value.all { it.isDigit() }) {
+                                    consumptions[item.supplyId] = value
+                                }
+                            },
+                            label = { Text("Quantity used (${item.unit})") },
+                            suffix = { Text(item.unit) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // Convert string inputs to integers
+                    val consumptionMap = consumptions.mapValues { (_, value) ->
+                        value.toIntOrNull() ?: 0
+                    }
+                    onConfirm(consumptionMap)
+                }
+            ) {
+                Text("Complete Task")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
