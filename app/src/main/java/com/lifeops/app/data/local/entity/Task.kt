@@ -122,8 +122,16 @@ data class Task(
     
     /**
      * JSON array of parent task IDs
-     * Tasks can have multiple parents
-     * Multiple parents means task appears when ANY parent is due
+     * Tasks can have multiple parents for UI grouping purposes
+     * 
+     * Parent-child relationship behavior:
+     * - Child tasks are grouped under their parent in the UI
+     * - Child tasks still need their own schedule (nextDue) to appear in today's list
+     * - ADHOC child tasks (e.g., triggered tasks) only appear when explicitly triggered
+     * - Child tasks do NOT automatically inherit their parent's schedule
+     * 
+     * This allows triggered tasks to have a parent for organization while remaining
+     * trigger-only (ADHOC) - they appear under the parent when both are due today.
      */
     val parentTaskIds: List<String>? = null,
     

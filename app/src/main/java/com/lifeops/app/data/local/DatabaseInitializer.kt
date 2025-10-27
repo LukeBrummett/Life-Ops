@@ -55,6 +55,11 @@ class DatabaseInitializer @Inject constructor(
         val cookDinnerId = "cook-dinner-001"
         val cleanUpDinnerId = "cleanup-dinner-001"
         
+        val cleanKitchenId = "clean-kitchen-001"
+        val loadDishwasherId = "load-dishwasher-001"
+        val unloadDishwasherId = "unload-dishwasher-001"
+        val cleanSinkId = "clean-sink-001"
+        
         val cleanBathroomId = "clean-bathroom-001"
         val cleanShowerId = "clean-shower-001"
         val cleanToiletId = "clean-toilet-001"
@@ -233,6 +238,73 @@ class DatabaseInitializer @Inject constructor(
                 timeEstimate = 10,
                 nextDue = getNextWeekday(today),
                 active = true
+            ),
+            
+            // Part E: Triggered Tasks with Parent (demonstrates the feature)
+            // Parent Task - Clean Kitchen
+            Task(
+                id = cleanKitchenId,
+                name = "Clean Kitchen",
+                category = "Household",
+                description = "Complete kitchen cleaning routine",
+                intervalUnit = IntervalUnit.DAY,
+                intervalQty = 1,
+                difficulty = Difficulty.MEDIUM,
+                timeEstimate = 30,
+                nextDue = today,
+                active = true,
+                requiresManualCompletion = false
+            ),
+            
+            // Child 1: Load Dishwasher (part of Clean Kitchen, triggers other tasks)
+            Task(
+                id = loadDishwasherId,
+                name = "Load Dishwasher",
+                category = "Household",
+                description = "Load dirty dishes into dishwasher",
+                intervalUnit = IntervalUnit.DAY,
+                intervalQty = 1,
+                difficulty = Difficulty.LOW,
+                timeEstimate = 5,
+                nextDue = today,
+                active = true,
+                parentTaskIds = listOf(cleanKitchenId),
+                childOrder = 1,
+                triggersTaskIds = listOf(unloadDishwasherId, cleanSinkId)
+            ),
+            
+            // Triggered Child 2: Unload Dishwasher (ADHOC, triggered by Load Dishwasher, part of Clean Kitchen)
+            Task(
+                id = unloadDishwasherId,
+                name = "Unload Dishwasher",
+                category = "Household",
+                description = "Put away clean dishes",
+                intervalUnit = IntervalUnit.ADHOC, // Only appears when triggered
+                intervalQty = 0,
+                difficulty = Difficulty.LOW,
+                timeEstimate = 5,
+                nextDue = null, // Will be set when Load Dishwasher completes
+                active = true,
+                parentTaskIds = listOf(cleanKitchenId), // Shows up under Clean Kitchen when triggered
+                childOrder = 2,
+                triggeredByTaskIds = listOf(loadDishwasherId)
+            ),
+            
+            // Triggered Child 3: Clean Sink (ADHOC, triggered by Load Dishwasher, part of Clean Kitchen)
+            Task(
+                id = cleanSinkId,
+                name = "Clean Sink",
+                category = "Household",
+                description = "Scrub and rinse sink",
+                intervalUnit = IntervalUnit.ADHOC, // Only appears when triggered
+                intervalQty = 0,
+                difficulty = Difficulty.LOW,
+                timeEstimate = 5,
+                nextDue = null, // Will be set when Load Dishwasher completes
+                active = true,
+                parentTaskIds = listOf(cleanKitchenId), // Shows up under Clean Kitchen when triggered
+                childOrder = 3,
+                triggeredByTaskIds = listOf(loadDishwasherId)
             )
         )
         
