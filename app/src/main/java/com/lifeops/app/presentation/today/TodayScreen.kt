@@ -1,6 +1,8 @@
 package com.lifeops.app.presentation.today
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BugReport
@@ -8,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -267,7 +270,7 @@ private fun InventoryPromptDialog(
 ) {
     // Track user input for each inventory item
     val consumptions = remember {
-        androidx.compose.runtime.mutableStateMapOf<String, String>().apply {
+        mutableStateMapOf<String, String>().apply {
             inventoryItems.forEach { item ->
                 put(item.supplyId, item.defaultValue.toString())
             }
@@ -280,7 +283,7 @@ private fun InventoryPromptDialog(
             Text("Complete Task: $taskName") 
         },
         text = {
-            androidx.compose.foundation.lazy.LazyColumn(
+            LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
@@ -298,7 +301,7 @@ private fun InventoryPromptDialog(
                         Text(
                             text = item.supplyName,
                             style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                            fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = "Current stock: ${item.currentQuantity} ${item.unit}",
