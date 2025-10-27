@@ -3,6 +3,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/LukeBrummett/Life-Ops/releases)
 [![Android](https://img.shields.io/badge/platform-Android-green.svg)](https://www.android.com/)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
+[![Build Status](https://github.com/LukeBrummett/Life-Ops/actions/workflows/android-build.yml/badge.svg)](https://github.com/LukeBrummett/Life-Ops/actions/workflows/android-build.yml)
 
 > Produce a daily checklist that you can execute without thinking. Tasks are atomic. Scheduling is interval-based. Inventory gates execution.
 
@@ -67,9 +68,12 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ## 🛠️ Building from Source
 
+> **Cross-Platform Support**: This project builds successfully on Linux, macOS, and Windows.
+> The Gradle wrapper is included and configured to work on all platforms without additional setup.
+
 ### Prerequisites
 - **JDK**: OpenJDK 21 or higher
-- **Android Studio**: Hedgehog (2023.1.1) or newer
+- **Android Studio**: Latest stable version recommended (optional, for IDE development)
 - **Android SDK**: API Level 34 (Android 14)
 - **Gradle**: 8.2+ (included via wrapper)
 
@@ -81,7 +85,12 @@ adb install app/build/outputs/apk/debug/app-debug.apk
    cd Life-Ops
    ```
 
-2. **Build the APK**
+2. **Make gradlew executable (Linux/macOS only)**
+   ```bash
+   chmod +x gradlew
+   ```
+
+3. **Build the APK**
    ```bash
    # Debug build
    ./gradlew assembleDebug
@@ -89,16 +98,28 @@ adb install app/build/outputs/apk/debug/app-debug.apk
    # Release build (requires signing key)
    ./gradlew assembleRelease
    ```
+   
+   On Windows, use `gradlew.bat` instead:
+   ```cmd
+   gradlew.bat assembleDebug
+   ```
 
-3. **Install on connected device**
+4. **Install on connected device**
    ```bash
    ./gradlew installDebug
    ```
 
-4. **Run tests**
+5. **Run tests**
    ```bash
    ./gradlew test
    ```
+
+### Important Notes
+- **Do not** set `org.gradle.java.home` in the project's `gradle.properties` file
+- If you need to specify a custom JDK path, use your user-level `gradle.properties` file:
+  - Linux/macOS: `~/.gradle/gradle.properties`
+  - Windows: `%USERPROFILE%\.gradle\gradle.properties`
+- Or set the `JAVA_HOME` environment variable before building
 
 ---
 
