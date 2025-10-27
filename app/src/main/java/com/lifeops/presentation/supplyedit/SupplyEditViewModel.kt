@@ -64,7 +64,7 @@ class SupplyEditViewModel @Inject constructor(
                             unit = it.unit,
                             reorderThreshold = it.reorderThreshold.toString(),
                             reorderTargetQuantity = it.reorderTargetQuantity.toString(),
-                            tags = it.tags ?: "",
+                            tags = it.tags?.split(",")?.map { tag -> tag.trim() }?.filter { tag -> tag.isNotBlank() } ?: emptyList(),
                             notes = it.notes ?: "",
                             isLoading = false
                         )
@@ -95,7 +95,8 @@ class SupplyEditViewModel @Inject constructor(
             is SupplyEditUiEvent.UnitChanged -> updateUnit(event.unit)
             is SupplyEditUiEvent.ReorderThresholdChanged -> updateReorderThreshold(event.threshold)
             is SupplyEditUiEvent.ReorderTargetQuantityChanged -> updateReorderTargetQuantity(event.quantity)
-            is SupplyEditUiEvent.TagsChanged -> updateTags(event.tags)
+            is SupplyEditUiEvent.AddTag -> addTag(event.tag)
+            is SupplyEditUiEvent.RemoveTag -> removeTag(event.tag)
             is SupplyEditUiEvent.NotesChanged -> updateNotes(event.notes)
             is SupplyEditUiEvent.InitialQuantityChanged -> updateInitialQuantity(event.quantity)
             SupplyEditUiEvent.SaveClicked -> saveSupply()
@@ -170,8 +171,18 @@ class SupplyEditViewModel @Inject constructor(
         }
     }
     
-    private fun updateTags(tags: String) {
-        _uiState.update { it.copy(tags = tags) }
+    private fun addTag(tag: String) {
+        if (tag.isBlank()) return
+        val currentTags = _uiState.value.tags
+        if (!currentTags.contains(tag)) {
+            _uiState.update { it.copy(tags = currentTags + tag) }
+        }
+    }
+    
+    private fun removeTag(tag: String) {
+        _uiState.update {
+            it.copy(tags = it.tags.filter { t -> t != tag })
+        }
     }
     
     private fun updateNotes(notes: String) {
