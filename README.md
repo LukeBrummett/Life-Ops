@@ -73,7 +73,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ### Prerequisites
 - **JDK**: OpenJDK 21 or higher
-- **Android Studio**: Hedgehog (2023.1.1) or newer (optional, for IDE development)
+- **Android Studio**: Latest stable version recommended (optional, for IDE development)
 - **Android SDK**: API Level 34 (Android 14)
 - **Gradle**: 8.2+ (included via wrapper)
 
