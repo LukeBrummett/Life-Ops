@@ -1,6 +1,6 @@
 package com.lifeops.presentation.settings
 
-import android.app.Application
+import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -14,13 +14,14 @@ import com.lifeops.presentation.settings.import_data.ConflictResolution
 import com.lifeops.presentation.settings.import_data.ImportDataUseCase
 import com.lifeops.presentation.settings.import_data.ImportResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val application: Application,
+    @ApplicationContext private val context: Context,
     private val taskRepository: TaskRepository,
     private val supplyRepository: com.lifeops.app.data.repository.SupplyRepository,
     private val exportDataUseCase: ExportDataUseCase,
@@ -29,9 +30,9 @@ class SettingsViewModel @Inject constructor(
     private val databaseInitializer: com.lifeops.app.data.local.DatabaseInitializer
 ) : ViewModel() {
 
-    private val prefs: SharedPreferences = application.getSharedPreferences(
+    private val prefs: SharedPreferences = context.getSharedPreferences(
         "lifeops_settings",
-        Application.MODE_PRIVATE
+        Context.MODE_PRIVATE
     )
 
     private val _uiState = MutableStateFlow(SettingsUiState())
