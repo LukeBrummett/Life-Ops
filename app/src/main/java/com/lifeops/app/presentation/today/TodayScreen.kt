@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -268,11 +269,11 @@ private fun InventoryPromptDialog(
     onConfirm: (Map<String, Int>) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // Track user input for each inventory item
+    // Track consumption quantities for each inventory item
     val consumptions = remember {
-        mutableStateMapOf<String, String>().apply {
+        mutableStateMapOf<String, Int>().apply {
             inventoryItems.forEach { item ->
-                put(item.supplyId, item.defaultValue.toString())
+                put(item.supplyId, item.defaultValue)
             }
         }
     }
@@ -295,32 +296,102 @@ private fun InventoryPromptDialog(
                 }
                 
                 items(inventoryItems) { item ->
+                    val consumption = consumptions[item.supplyId] ?: item.defaultValue
+                    val newCount = (item.currentQuantity - consumption).coerceAtLeast(0)
+                    
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = item.supplyName,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
-                        Text(
-                            text = "Current stock: ${item.currentQuantity} ${item.unit}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        OutlinedTextField(
-                            value = consumptions[item.supplyId] ?: item.defaultValue.toString(),
-                            onValueChange = { value ->
-                                // Only allow numeric input
-                                if (value.isEmpty() || value.all { it.isDigit() }) {
-                                    consumptions[item.supplyId] = value
-                                }
-                            },
-                            label = { Text("Quantity used (${item.unit})") },
-                            suffix = { Text(item.unit) },
-                            singleLine = true,
+                        
+                        // Quantity control row
+                        OutlinedCard(
                             modifier = Modifier.fillMaxWidth()
-                        )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // New count (grey)
+                                Text(
+                                    text = newCount.toString(),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                
+                                // Consumption amount
+                                Text(
+                                    text = consumption.toString(),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                
+                                // Plus/Minus controls
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Minus button
+                                    FilledIconButton(
+                                        onClick = {
+                                            val current = consumptions[item.supplyId] ?: item.defaultValue
+                                            if (current > 0) {
+                                                consumptions[item.supplyId] = current - 1
+                                            }
+                                        },
+                                        enabled = consumption > 0,
+                                        modifier = Modifier.size(36.dp),
+                                        colors = IconButtonDefaults.filledIconButtonColors(
+                                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                                        )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Remove,
+                                            contentDescription = "Decrease",
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    
+                                    // Plus button
+                                    FilledIconButton(
+                                        onClick = {
+                                            val current = consumptions[item.supplyId] ?: item.defaultValue
+                                            // Don't allow consuming more than current stock
+                                            if (current < item.currentQuantity) {
+                                                consumptions[item.supplyId] = current + 1
+                                            }
+                                        },
+                                        enabled = consumption < item.currentQuantity,
+                                        modifier = Modifier.size(36.dp),
+                                        colors = IconButtonDefaults.filledIconButtonColors(
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                                        )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Increase",
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -328,11 +399,7 @@ private fun InventoryPromptDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Convert string inputs to integers
-                    val consumptionMap = consumptions.mapValues { (_, value) ->
-                        value.toIntOrNull() ?: 0
-                    }
-                    onConfirm(consumptionMap)
+                    onConfirm(consumptions.toMap())
                 }
             ) {
                 Text("Complete Task")
