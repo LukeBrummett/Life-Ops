@@ -1,5 +1,7 @@
 package com.lifeops.presentation.settings
 
+import android.app.Application
+import android.content.SharedPreferences
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,6 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    private val application: Application,
     private val taskRepository: TaskRepository,
     private val supplyRepository: com.lifeops.app.data.repository.SupplyRepository,
     private val exportDataUseCase: ExportDataUseCase,
@@ -26,14 +29,25 @@ class SettingsViewModel @Inject constructor(
     private val databaseInitializer: com.lifeops.app.data.local.DatabaseInitializer
 ) : ViewModel() {
 
+    private val prefs: SharedPreferences = application.getSharedPreferences(
+        "lifeops_settings",
+        Application.MODE_PRIVATE
+    )
+
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
     
     private var aboutTapCount = 0
 
     init {
+        loadDebugMode()
         loadStatistics()
         loadBackupTimestamps()
+    }
+    
+    private fun loadDebugMode() {
+        val debugMode = prefs.getBoolean(PREF_DEBUG_MODE, false)
+        _uiState.update { it.copy(debugMode = debugMode) }
     }
 
     private fun loadStatistics() {
@@ -104,6 +118,9 @@ class SettingsViewModel @Inject constructor(
             SettingsUiEvent.CreateBackup -> createBackup()
             is SettingsUiEvent.ToggleDebugMode -> {
                 _uiState.update { it.copy(debugMode = event.enabled) }
+                prefs.edit()
+                    .putBoolean(PREF_DEBUG_MODE, event.enabled)
+                    .apply()
             }
             SettingsUiEvent.LoadSampleData -> loadSampleData()
             SettingsUiEvent.AboutSectionTapped -> handleAboutSectionTap()
@@ -282,5 +299,9 @@ class SettingsViewModel @Inject constructor(
                 }
             }
         }
+    }
+    
+    companion object {
+        private const val PREF_DEBUG_MODE = "debug_mode"
     }
 }
