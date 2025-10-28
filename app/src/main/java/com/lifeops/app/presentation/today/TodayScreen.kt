@@ -358,12 +358,8 @@ private fun InventoryPromptDialog(
                                 FilledIconButton(
                                     onClick = {
                                         val current = consumptions[item.supplyId] ?: item.defaultValue
-                                        // Don't allow consuming more than current stock
-                                        if (current < item.currentQuantity) {
-                                            consumptions[item.supplyId] = current + 1
-                                        }
+                                        consumptions[item.supplyId] = current + 1
                                     },
-                                    enabled = consumption < item.currentQuantity,
                                     modifier = Modifier.size(36.dp),
                                     colors = IconButtonDefaults.filledIconButtonColors(
                                         containerColor = MaterialTheme.colorScheme.primaryContainer,
