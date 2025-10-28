@@ -2,6 +2,7 @@ package com.lifeops.presentation.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -144,26 +148,31 @@ fun SettingsScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Developer Section
-            SectionHeader(title = "DEVELOPER")
-            
-            DebugModeToggle(
-                enabled = uiState.debugMode,
-                onToggle = { viewModel.onEvent(SettingsUiEvent.ToggleDebugMode(it)) }
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            LoadSampleDataCard(
-                onLoadSampleData = { viewModel.onEvent(SettingsUiEvent.LoadSampleData) }
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
+            // Developer Section - only shown after tapping About 7 times
+            if (uiState.showDeveloperSection) {
+                SectionHeader(title = "DEVELOPER")
+                
+                DebugModeToggle(
+                    enabled = uiState.debugMode,
+                    onToggle = { viewModel.onEvent(SettingsUiEvent.ToggleDebugMode(it)) }
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                LoadSampleDataCard(
+                    onLoadSampleData = { viewModel.onEvent(SettingsUiEvent.LoadSampleData) }
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             
             // About Section
             SectionHeader(title = "ABOUT")
             
-            AboutCard(uiState = uiState)
+            AboutCard(
+                uiState = uiState,
+                onTap = { viewModel.onEvent(SettingsUiEvent.AboutSectionTapped) }
+            )
         }
     }
 }
@@ -198,42 +207,48 @@ fun SettingsCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Title row with icon, title, and button
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = icon,
-                    style = MaterialTheme.typography.headlineMedium
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = icon,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                
+                Button(onClick = onButtonClick) {
+                    Text(buttonText)
+                }
             }
             
+            // Description
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(onClick = onButtonClick) {
-                    Text(buttonText)
-                }
-            }
         }
     }
 }
 
 @Composable
-fun AboutCard(uiState: SettingsUiState) {
+fun AboutCard(uiState: SettingsUiState, onTap: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onTap() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         )
@@ -391,6 +406,33 @@ fun DebugModeToggle(
 fun LoadSampleDataCard(
     onLoadSampleData: () -> Unit
 ) {
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Load Sample Data?") },
+            text = { 
+                Text("This will add example tasks and supplies to your database. This action cannot be undone.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showConfirmDialog = false
+                        onLoadSampleData()
+                    }
+                ) {
+                    Text("Load")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -429,7 +471,7 @@ fun LoadSampleDataCard(
             }
             
             Button(
-                onClick = onLoadSampleData,
+                onClick = { showConfirmDialog = true },
                 modifier = Modifier.padding(start = 8.dp)
             ) {
                 Text("Load")

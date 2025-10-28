@@ -28,6 +28,8 @@ class SettingsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    
+    private var aboutTapCount = 0
 
     init {
         loadStatistics()
@@ -104,8 +106,16 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(debugMode = event.enabled) }
             }
             SettingsUiEvent.LoadSampleData -> loadSampleData()
+            SettingsUiEvent.AboutSectionTapped -> handleAboutSectionTap()
             SettingsUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
             SettingsUiEvent.ClearSuccess -> _uiState.update { it.copy(successMessage = null) }
+        }
+    }
+    
+    private fun handleAboutSectionTap() {
+        aboutTapCount++
+        if (aboutTapCount >= 7) {
+            _uiState.update { it.copy(showDeveloperSection = true) }
         }
     }
 
