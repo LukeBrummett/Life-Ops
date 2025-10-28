@@ -889,98 +889,86 @@ private fun InventoryPromptDialog(
                 
                 items(inventoryItems) { item ->
                     val consumption = consumptions[item.supplyId] ?: item.defaultValue
-                    val newCount = (item.currentQuantity - consumption).coerceAtLeast(0)
                     
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    // Single card with all content on one row
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = item.supplyName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                        
-                        // Quantity control row
-                        OutlinedCard(
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            // Item name
+                            Text(
+                                text = item.supplyName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            // Consumption amount
+                            Text(
+                                text = consumption.toString(),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            
+                            // Plus/Minus controls
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // New count (grey)
-                                Text(
-                                    text = newCount.toString(),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                
-                                // Consumption amount
-                                Text(
-                                    text = consumption.toString(),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp)
-                                )
-                                
-                                // Plus/Minus controls
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                // Minus button
+                                FilledIconButton(
+                                    onClick = {
+                                        val current = consumptions[item.supplyId] ?: item.defaultValue
+                                        if (current > 0) {
+                                            consumptions[item.supplyId] = current - 1
+                                        }
+                                    },
+                                    enabled = consumption > 0,
+                                    modifier = Modifier.size(36.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                                    )
                                 ) {
-                                    // Minus button
-                                    FilledIconButton(
-                                        onClick = {
-                                            val current = consumptions[item.supplyId] ?: item.defaultValue
-                                            if (current > 0) {
-                                                consumptions[item.supplyId] = current - 1
-                                            }
-                                        },
-                                        enabled = consumption > 0,
-                                        modifier = Modifier.size(36.dp),
-                                        colors = IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                                        )
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Remove,
-                                            contentDescription = "Decrease",
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    
-                                    // Plus button
-                                    FilledIconButton(
-                                        onClick = {
-                                            val current = consumptions[item.supplyId] ?: item.defaultValue
-                                            // Don't allow consuming more than current stock
-                                            if (current < item.currentQuantity) {
-                                                consumptions[item.supplyId] = current + 1
-                                            }
-                                        },
-                                        enabled = consumption < item.currentQuantity,
-                                        modifier = Modifier.size(36.dp),
-                                        colors = IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                                        )
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Add,
-                                            contentDescription = "Increase",
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.Remove,
+                                        contentDescription = "Decrease",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                
+                                // Plus button
+                                FilledIconButton(
+                                    onClick = {
+                                        val current = consumptions[item.supplyId] ?: item.defaultValue
+                                        // Don't allow consuming more than current stock
+                                        if (current < item.currentQuantity) {
+                                            consumptions[item.supplyId] = current + 1
+                                        }
+                                    },
+                                    enabled = consumption < item.currentQuantity,
+                                    modifier = Modifier.size(36.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Increase",
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
                             }
                         }
