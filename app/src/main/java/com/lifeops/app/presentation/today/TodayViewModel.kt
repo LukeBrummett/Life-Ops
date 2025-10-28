@@ -207,7 +207,7 @@ class TodayViewModel @Inject constructor(
                             supplyId = association.supply.id,
                             supplyName = association.supply.name,
                             unit = association.supply.unit,
-                            defaultValue = association.taskSupply.promptedDefaultValue ?: 1,
+                            defaultValue = association.taskSupply.promptedDefaultValue ?: 0,
                             currentQuantity = association.inventory?.currentQuantity ?: 0
                         )
                     }
