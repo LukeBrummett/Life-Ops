@@ -48,4 +48,17 @@ sealed class TaskDetailEvent {
      * Dismiss error message
      */
     object DismissError : TaskDetailEvent()
+    
+    /**
+     * Dismiss inventory prompt dialog
+     */
+    object DismissInventoryPrompt : TaskDetailEvent()
+    
+    /**
+     * Confirm inventory consumption and complete task
+     */
+    data class ConfirmInventoryConsumption(
+        val taskId: String,
+        val consumptions: Map<String, Int> // supplyId to quantity consumed
+    ) : TaskDetailEvent()
 }

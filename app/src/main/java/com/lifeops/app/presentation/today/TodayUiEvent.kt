@@ -62,4 +62,19 @@ sealed interface TodayUiEvent {
      * @param days Number of days to advance (can be negative to go backwards)
      */
     data class DebugAdvanceDate(val days: Int) : TodayUiEvent
+    
+    /**
+     * Dismiss the inventory prompt dialog
+     */
+    data object DismissInventoryPrompt : TodayUiEvent
+    
+    /**
+     * Confirm inventory consumption and complete task
+     * @param taskId The ID of the task to complete
+     * @param consumptions Map of supply ID to quantity consumed
+     */
+    data class ConfirmInventoryConsumption(
+        val taskId: String,
+        val consumptions: Map<String, Int>
+    ) : TodayUiEvent
 }

@@ -40,6 +40,7 @@ class TaskDetailViewModel @Inject constructor(
     private val getTaskDetailsUseCase: GetTaskDetailsUseCase,
     private val completeTaskUseCase: CompleteTaskUseCase,
     private val taskRepository: com.lifeops.app.data.repository.TaskRepository,
+    private val supplyRepository: com.lifeops.app.data.repository.SupplyRepository,
     private val dateProvider: DateProvider
 ) : ViewModel() {
     
@@ -66,9 +67,11 @@ class TaskDetailViewModel @Inject constructor(
      */
     fun onEvent(event: TaskDetailEvent) {
         when (event) {
-            is TaskDetailEvent.CompleteTask -> completeTask()
+            is TaskDetailEvent.CompleteTask -> prepareCompleteTask()
             is TaskDetailEvent.DeleteTask -> deleteTask()
             is TaskDetailEvent.DismissError -> dismissError()
+            is TaskDetailEvent.DismissInventoryPrompt -> dismissInventoryPrompt()
+            is TaskDetailEvent.ConfirmInventoryConsumption -> confirmInventoryConsumption(event.consumptions)
             // Navigation events handled by composable
             is TaskDetailEvent.NavigateToEdit -> {}
             is TaskDetailEvent.NavigateToTask -> {}
@@ -149,7 +152,136 @@ class TaskDetailViewModel @Inject constructor(
     }
     
     /**
-     * Complete the current task
+     * Prepare to complete the task - check for prompted inventory items first
+     */
+    private fun prepareCompleteTask() {
+        viewModelScope.launch {
+            try {
+                // Get task details to check inventory associations
+                val result = getTaskDetailsUseCase(taskId)
+                val taskDetails = result.getOrNull()
+                
+                if (taskDetails == null) {
+                    _uiState.update {
+                        it.copy(errorMessage = "Failed to load task details")
+                    }
+                    return@launch
+                }
+                
+                // Find all prompted inventory items
+                val promptedItems = taskDetails.inventoryAssociations
+                    .filter { it.taskSupply.consumptionMode == ConsumptionMode.PROMPTED }
+                    .map { association ->
+                        PromptedInventoryItem(
+                            supplyId = association.supply.id,
+                            supplyName = association.supply.name,
+                            unit = association.supply.unit,
+                            defaultValue = association.taskSupply.promptedDefaultValue ?: 0,
+                            currentQuantity = association.inventory?.currentQuantity ?: 0
+                        )
+                    }
+                
+                // If there are prompted items, show the dialog
+                if (promptedItems.isNotEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            showInventoryPrompt = true,
+                            promptedInventoryItems = promptedItems
+                        )
+                    }
+                } else {
+                    // No prompted items, complete immediately with FIXED items
+                    completeTaskWithInventory(emptyMap())
+                }
+            } catch (e: Exception) {
+                Log.e("TaskDetailViewModel", "Error preparing task completion", e)
+                _uiState.update {
+                    it.copy(errorMessage = "Failed to prepare task completion: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Dismiss the inventory prompt dialog
+     */
+    private fun dismissInventoryPrompt() {
+        _uiState.update {
+            it.copy(showInventoryPrompt = false, promptedInventoryItems = emptyList())
+        }
+    }
+    
+    /**
+     * Confirm inventory consumption and complete the task
+     */
+    private fun confirmInventoryConsumption(consumptions: Map<String, Int>) {
+        viewModelScope.launch {
+            try {
+                // Dismiss dialog first
+                _uiState.update {
+                    it.copy(showInventoryPrompt = false, promptedInventoryItems = emptyList())
+                }
+                
+                // Complete task with inventory consumption
+                completeTaskWithInventory(consumptions)
+            } catch (e: Exception) {
+                Log.e("TaskDetailViewModel", "Error confirming inventory consumption", e)
+                _uiState.update {
+                    it.copy(errorMessage = "Failed to confirm inventory: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Complete the task and handle inventory consumption
+     */
+    private suspend fun completeTaskWithInventory(promptedConsumptions: Map<String, Int>) {
+        try {
+            val currentDate = dateProvider.now()
+            
+            // Get task details for inventory associations
+            val result = getTaskDetailsUseCase(taskId)
+            val taskDetails = result.getOrNull() ?: return
+            
+            // Process all inventory consumption
+            taskDetails.inventoryAssociations.forEach { association ->
+                when (association.taskSupply.consumptionMode) {
+                    ConsumptionMode.FIXED -> {
+                        // Consume fixed quantity
+                        val quantity = association.taskSupply.fixedQuantity ?: 0
+                        if (quantity > 0) {
+                            supplyRepository.decrementInventory(association.supply.id, quantity)
+                        }
+                    }
+                    ConsumptionMode.PROMPTED -> {
+                        // Consume prompted quantity (from user input)
+                        val quantity = promptedConsumptions[association.supply.id] ?: 0
+                        if (quantity > 0) {
+                            supplyRepository.decrementInventory(association.supply.id, quantity)
+                        }
+                    }
+                    ConsumptionMode.RECOUNT -> {
+                        // No automatic consumption for recount mode
+                    }
+                }
+            }
+            
+            // Complete the task
+            completeTaskUseCase(taskId, currentDate)
+            
+            // Reload to get updated completion data
+            loadTaskDetails()
+        } catch (e: Exception) {
+            Log.e("TaskDetailViewModel", "Error completing task with inventory", e)
+            _uiState.update {
+                it.copy(errorMessage = "Failed to complete task: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Complete the current task (legacy - now handled by prepareCompleteTask)
      */
     private fun completeTask() {
         viewModelScope.launch {

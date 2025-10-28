@@ -1150,13 +1150,12 @@ private fun InventorySection(
                                         // Allow empty or valid numbers (including 0 for prompted)
                                         if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
                                             promptedQtyText = newValue
-                                            // Update with the value (0 is ok for prompted default)
-                                            newValue.toIntOrNull()?.let { qty ->
-                                                onEvent(TaskEditEvent.UpdateInventoryPromptedDefault(assoc.supplyId, qty))
-                                            }
+                                            // Update with the value, treating empty as 0
+                                            val qty = newValue.toIntOrNull() ?: 0
+                                            onEvent(TaskEditEvent.UpdateInventoryPromptedDefault(assoc.supplyId, qty))
                                         }
                                     },
-                                    label = { Text("Default quantity (optional)") },
+                                    label = { Text("Default quantity") },
                                     suffix = { Text(assoc.unit) },
                                     modifier = Modifier.fillMaxWidth()
                                 )

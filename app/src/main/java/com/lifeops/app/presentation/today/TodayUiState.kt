@@ -1,6 +1,7 @@
 package com.lifeops.app.presentation.today
 
 import com.lifeops.app.data.local.entity.Task
+import com.lifeops.app.presentation.taskdetail.PromptedInventoryItem
 import java.time.LocalDate
 
 /**
@@ -60,5 +61,25 @@ data class TodayUiState(
      * Error message if data loading failed
      * null if no error, non-null string shows error state
      */
-    val error: String? = null
+    val error: String? = null,
+    
+    /**
+     * Whether to show the inventory prompt dialog
+     */
+    val showInventoryPrompt: Boolean = false,
+    
+    /**
+     * Task ID for which inventory prompt is shown
+     */
+    val inventoryPromptTaskId: String? = null,
+    
+    /**
+     * Task name for the inventory prompt dialog
+     */
+    val inventoryPromptTaskName: String? = null,
+    
+    /**
+     * Prompted inventory items for the dialog
+     */
+    val promptedInventoryItems: List<PromptedInventoryItem> = emptyList()
 )
