@@ -1,5 +1,7 @@
 package com.lifeops.presentation.settings
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,12 +14,14 @@ import com.lifeops.presentation.settings.import_data.ConflictResolution
 import com.lifeops.presentation.settings.import_data.ImportDataUseCase
 import com.lifeops.presentation.settings.import_data.ImportResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val taskRepository: TaskRepository,
     private val supplyRepository: com.lifeops.app.data.repository.SupplyRepository,
     private val exportDataUseCase: ExportDataUseCase,
@@ -26,12 +30,25 @@ class SettingsViewModel @Inject constructor(
     private val databaseInitializer: com.lifeops.app.data.local.DatabaseInitializer
 ) : ViewModel() {
 
+    private val prefs: SharedPreferences = context.getSharedPreferences(
+        "lifeops_settings",
+        Context.MODE_PRIVATE
+    )
+
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    
+    private var aboutTapCount = 0
 
     init {
+        loadDebugMode()
         loadStatistics()
         loadBackupTimestamps()
+    }
+    
+    private fun loadDebugMode() {
+        val debugMode = prefs.getBoolean(PREF_DEBUG_MODE, false)
+        _uiState.update { it.copy(debugMode = debugMode) }
     }
 
     private fun loadStatistics() {
@@ -102,10 +119,21 @@ class SettingsViewModel @Inject constructor(
             SettingsUiEvent.CreateBackup -> createBackup()
             is SettingsUiEvent.ToggleDebugMode -> {
                 _uiState.update { it.copy(debugMode = event.enabled) }
+                prefs.edit()
+                    .putBoolean(PREF_DEBUG_MODE, event.enabled)
+                    .apply()
             }
             SettingsUiEvent.LoadSampleData -> loadSampleData()
+            SettingsUiEvent.AboutSectionTapped -> handleAboutSectionTap()
             SettingsUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
             SettingsUiEvent.ClearSuccess -> _uiState.update { it.copy(successMessage = null) }
+        }
+    }
+    
+    private fun handleAboutSectionTap() {
+        aboutTapCount++
+        if (aboutTapCount >= 7) {
+            _uiState.update { it.copy(showDeveloperSection = true) }
         }
     }
 
@@ -272,5 +300,9 @@ class SettingsViewModel @Inject constructor(
                 }
             }
         }
+    }
+    
+    companion object {
+        private const val PREF_DEBUG_MODE = "debug_mode"
     }
 }
