@@ -26,8 +26,8 @@ class ProcessOverdueTasksUseCase @Inject constructor(
      * @param currentDate The current date from DateProvider
      */
     suspend operator fun invoke(currentDate: LocalDate) {
-        // First, delete any ephemeral tasks that were completed
-        val completedEphemeralTasks = repository.getCompletedEphemeralTasks()
+        // First, delete any ephemeral tasks that were completed before today
+        val completedEphemeralTasks = repository.getCompletedEphemeralTasks(currentDate)
         completedEphemeralTasks.forEach { task ->
             repository.deleteTask(task.id)
         }

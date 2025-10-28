@@ -225,9 +225,10 @@ interface TaskDao {
     /**
      * Get all completed ephemeral tasks (deleteAfterCompletion = true and lastCompleted != null)
      * Used for cleanup during end-of-day processing
+     * Only returns tasks completed before the current date (not today)
      */
-    @Query("SELECT * FROM tasks WHERE deleteAfterCompletion = 1 AND lastCompleted IS NOT NULL")
-    suspend fun getCompletedEphemeralTasks(): List<Task>
+    @Query("SELECT * FROM tasks WHERE deleteAfterCompletion = 1 AND lastCompleted IS NOT NULL AND lastCompleted < :currentDate")
+    suspend fun getCompletedEphemeralTasks(currentDate: LocalDate): List<Task>
     
     // ============================================
     // Delete

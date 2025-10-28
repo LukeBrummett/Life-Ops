@@ -324,9 +324,10 @@ class TaskRepository @Inject constructor(
     /**
      * Get all completed ephemeral tasks (deleteAfterCompletion = true and lastCompleted != null)
      * Used for cleanup during end-of-day processing
+     * Only returns tasks completed before the current date (not today)
      */
-    suspend fun getCompletedEphemeralTasks(): List<Task> {
-        return taskDao.getCompletedEphemeralTasks()
+    suspend fun getCompletedEphemeralTasks(currentDate: LocalDate): List<Task> {
+        return taskDao.getCompletedEphemeralTasks(currentDate)
     }
     
     // ============================================
