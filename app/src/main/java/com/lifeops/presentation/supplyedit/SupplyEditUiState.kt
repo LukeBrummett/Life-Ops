@@ -12,7 +12,7 @@ data class SupplyEditUiState(
     val unit: String = "",
     val reorderThreshold: String = "5",
     val reorderTargetQuantity: String = "10",
-    val tags: String = "",
+    val tags: List<String> = emptyList(),
     val notes: String = "",
     val initialQuantity: String = "0",
     val isLoading: Boolean = false,
@@ -56,7 +56,8 @@ sealed class SupplyEditUiEvent {
     data class UnitChanged(val unit: String) : SupplyEditUiEvent()
     data class ReorderThresholdChanged(val threshold: String) : SupplyEditUiEvent()
     data class ReorderTargetQuantityChanged(val quantity: String) : SupplyEditUiEvent()
-    data class TagsChanged(val tags: String) : SupplyEditUiEvent()
+    data class AddTag(val tag: String) : SupplyEditUiEvent()
+    data class RemoveTag(val tag: String) : SupplyEditUiEvent()
     data class NotesChanged(val notes: String) : SupplyEditUiEvent()
     data class InitialQuantityChanged(val quantity: String) : SupplyEditUiEvent()
     object SaveClicked : SupplyEditUiEvent()
@@ -76,7 +77,7 @@ fun SupplyEditUiState.toSupply(): Supply {
         unit = unit.trim().ifBlank { "units" },
         reorderThreshold = reorderThreshold.toIntOrNull() ?: 5,
         reorderTargetQuantity = reorderTargetQuantity.toIntOrNull() ?: 10,
-        tags = tags.trim(),
+        tags = tags.joinToString(", "),
         notes = notes.trim()
     )
 }
