@@ -157,8 +157,8 @@ class TriggeredTasksWithParentGroupingTest {
             
             // Find children for this task
             val children = tasks.filter { potentialChild ->
-                !potentialChild.parentTaskIds.isNullOrEmpty() && 
-                task.id in potentialChild.parentTaskIds
+                val parentIds = potentialChild.parentTaskIds
+                !parentIds.isNullOrEmpty() && task.id in parentIds
             }.sortedBy { it.childOrder ?: 0 }
             
             TaskItem(
