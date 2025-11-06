@@ -64,7 +64,11 @@ class SaveTaskUseCase @Inject constructor(
                 requiresManualCompletion = request.requiresManualCompletion,
                 triggeredByTaskIds = request.triggeredByTaskIds.takeIf { it.isNotEmpty() },
                 triggersTaskIds = request.triggersTaskIds.takeIf { it.isNotEmpty() },
-                nextDue = request.nextDue ?: dateProvider.now(), // Set initial due date
+                nextDue = when {
+                    request.nextDue != null -> request.nextDue // Use provided date if specified
+                    request.intervalUnit == com.lifeops.app.data.local.entity.IntervalUnit.ADHOC -> null // ADHOC tasks have no automatic schedule
+                    else -> dateProvider.now() // Set initial due date for scheduled tasks
+                },
                 active = true
             )
             
