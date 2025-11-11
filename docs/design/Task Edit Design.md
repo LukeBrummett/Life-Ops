@@ -302,6 +302,20 @@ The edit screen is organized into collapsible/expandable sections for easier nav
 - Optional
 - Character limit (e.g., 500 chars)
 
+**Next Due Date**
+```
+┌─────────────────────────────────────┐
+│ Next Due Date                       │
+│ ┌─────────────────────────────────┐ │
+│ │ [Date Picker]              📅   │ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+- Date picker for selecting when task should first be due
+- Defaults to today's date
+- Only shown for scheduled tasks (hidden for ADHOC)
+- Allows users to create tasks for future dates without needing to complete them to push the date forward
+
 ##### Section 2: Schedule Configuration (Collapsible)
 
 **Recurrence Pattern**
