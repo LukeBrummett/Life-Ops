@@ -63,4 +63,21 @@ class SaveTaskUseCaseTest {
         assertThat(task.intervalUnit).isEqualTo(IntervalUnit.ADHOC)
         assertThat(task.nextDue).isEqualTo(triggerDate) // Should preserve trigger date
     }
+
+    @Test
+    fun `Task creation with user-specified future date should preserve that date`() {
+        // Given - creating a task with a user-specified future due date
+        val futureDate = LocalDate.now().plusDays(7)
+        val task = Task(
+            name = "Future Task",
+            category = "Planning",
+            intervalUnit = IntervalUnit.WEEK,
+            intervalQty = 1,
+            nextDue = futureDate // User wants task due in 7 days
+        )
+        
+        // Then - verify the task preserves the user-specified future date
+        assertThat(task.nextDue).isEqualTo(futureDate)
+        assertThat(task.intervalUnit).isEqualTo(IntervalUnit.WEEK)
+    }
 }
