@@ -39,6 +39,7 @@ data class TaskEditUiState(
     val excludedDateRanges: List<DateRange> = emptyList(),
     val overdueBehavior: OverdueBehavior = OverdueBehavior.POSTPONE,
     val deleteAfterCompletion: Boolean = false,
+    val nextDue: LocalDate = LocalDate.now(),
     
     // Relationships
     val parentTaskId: String? = null,

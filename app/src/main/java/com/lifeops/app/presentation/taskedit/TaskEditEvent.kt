@@ -26,6 +26,7 @@ sealed class TaskEditEvent {
     data class RemoveExcludedDateRange(val dateRange: DateRange) : TaskEditEvent()
     data class UpdateOverdueBehavior(val behavior: OverdueBehavior) : TaskEditEvent()
     data class UpdateDeleteAfterCompletion(val delete: Boolean) : TaskEditEvent()
+    data class UpdateNextDue(val date: LocalDate) : TaskEditEvent()
     
     // Parent-Child Relationship Events
     data class UpdateParentTask(val taskId: String?) : TaskEditEvent()

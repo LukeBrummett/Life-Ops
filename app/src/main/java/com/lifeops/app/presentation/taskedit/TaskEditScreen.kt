@@ -191,6 +191,8 @@ private fun TaskEditContent(
             availableCategories = uiState.availableCategories,
             availableTags = uiState.availableTags,
             validationErrors = uiState.validationErrors,
+            intervalUnit = uiState.intervalUnit,
+            nextDue = uiState.nextDue,
             onEvent = onEvent
         )
         
@@ -246,6 +248,8 @@ private fun BasicInformationSection(
     availableCategories: List<String>,
     availableTags: List<String>,
     validationErrors: Map<String, String>,
+    intervalUnit: IntervalUnit,
+    nextDue: java.time.LocalDate,
     onEvent: (TaskEditEvent) -> Unit
 ) {
     var showCategoryDropdown by remember { mutableStateOf(false) }
@@ -302,6 +306,56 @@ private fun BasicInformationSection(
                             showCategoryDropdown = false
                         }
                     )
+                }
+            }
+        }
+        
+        // Next Due Date (only for scheduled tasks, not ADHOC)
+        if (intervalUnit != IntervalUnit.ADHOC) {
+            var showDatePicker by remember { mutableStateOf(false) }
+            
+            OutlinedTextField(
+                value = nextDue.toString(),
+                onValueChange = { },
+                label = { Text("Next Due Date") },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Filled.CalendarToday, "Select date")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            if (showDatePicker) {
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = nextDue.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                )
+                
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    val selectedDate = java.time.Instant.ofEpochMilli(millis)
+                                        .atZone(java.time.ZoneId.systemDefault())
+                                        .toLocalDate()
+                                    onEvent(TaskEditEvent.UpdateNextDue(selectedDate))
+                                }
+                                showDatePicker = false
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
                 }
             }
         }
