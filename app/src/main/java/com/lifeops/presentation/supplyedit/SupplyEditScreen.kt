@@ -5,7 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SupplyEditScreen(
     onNavigateBack: () -> Unit = {},
@@ -22,6 +24,7 @@ fun SupplyEditScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var tagInputText by remember { mutableStateOf("") }
     
     // Set navigation callbacks
     LaunchedEffect(Unit) {
@@ -183,15 +186,53 @@ fun SupplyEditScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                     
-                    OutlinedTextField(
-                        value = uiState.tags,
-                        onValueChange = { viewModel.onEvent(SupplyEditUiEvent.TagsChanged(it)) },
-                        label = { Text("Tags") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        placeholder = { Text("grocery, pantry, etc.") },
-                        supportingText = { Text("Comma-separated tags for organization") }
-                    )
+                    // Tags Section with InputChips
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = tagInputText,
+                            onValueChange = { tagInputText = it },
+                            label = { Text("Add Tags") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("grocery, pantry, etc.") },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        if (tagInputText.isNotBlank()) {
+                                            viewModel.onEvent(SupplyEditUiEvent.AddTag(tagInputText.trim()))
+                                            tagInputText = ""
+                                        }
+                                    }
+                                ) {
+                                    Icon(Icons.Default.Add, "Add tag")
+                                }
+                            }
+                        )
+                        
+                        // Tag chips display
+                        if (uiState.tags.isNotEmpty()) {
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                uiState.tags.forEach { tag ->
+                                    InputChip(
+                                        selected = false,
+                                        onClick = { viewModel.onEvent(SupplyEditUiEvent.RemoveTag(tag)) },
+                                        label = { Text(tag) },
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Remove $tag",
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                     
                     OutlinedTextField(
                         value = uiState.notes,
