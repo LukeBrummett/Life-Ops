@@ -100,7 +100,7 @@ git checkout -b release/v1.1.0
 
 # Update version numbers
 # - app/build.gradle.kts (versionCode, versionName)
-# - Update CHANGELOG.md
+# - Update changelog.md
 
 # Commit version bump
 git add .
@@ -303,6 +303,6 @@ Fixes #42
 
 ## 🔗 Links
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Full contribution guidelines
+- [contributing.md](contributing.md) - Full contribution guidelines
 - [GitHub Flow Guide](https://guides.github.com/introduction/flow/)
 - [Git Flow Cheatsheet](https://danielkummer.github.io/git-flow-cheatsheet/)

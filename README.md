@@ -1,6 +1,6 @@
 # Life-Ops
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/LukeBrummett/Life-Ops/releases)
+[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/LukeBrummett/Life-Ops/releases)
 [![Android](https://img.shields.io/badge/platform-Android-green.svg)](https://www.android.com/)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
 [![Build Status](https://github.com/LukeBrummett/Life-Ops/actions/workflows/android-build.yml/badge.svg)](https://github.com/LukeBrummett/Life-Ops/actions/workflows/android-build.yml)
@@ -198,7 +198,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - `test`: Testing and QA validation
 - `feature/*`: Individual feature development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+See [contributing.md](contributing.md) for detailed guidelines.
 
 ---
 

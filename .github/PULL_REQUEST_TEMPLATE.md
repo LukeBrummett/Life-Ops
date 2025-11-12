@@ -79,7 +79,7 @@ Fixes #
 
 ### Documentation
 - [ ] I have updated relevant documentation
-- [ ] I have updated the CHANGELOG.md (for notable changes)
+- [ ] I have updated the changelog.md (for notable changes)
 - [ ] I have added KDoc comments for new public APIs
 
 ### Testing
