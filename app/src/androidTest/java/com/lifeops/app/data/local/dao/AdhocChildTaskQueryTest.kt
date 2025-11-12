@@ -43,7 +43,7 @@ class AdhocChildTaskQueryTest {
     }
 
     @Test
-    fun `ADHOC child task with null nextDue should NOT appear in today view even when parent is due`() = runTest {
+    fun adhocChildTaskWithNullNextDueShouldNotAppearInTodayView() = runTest {
         // Given
         val today = LocalDate.of(2025, 11, 5)
         
@@ -81,7 +81,7 @@ class AdhocChildTaskQueryTest {
     }
 
     @Test
-    fun `ADHOC child task with nextDue set should appear in today view when triggered`() = runTest {
+    fun adhocChildTaskWithNextDueSetShouldAppearInTodayView() = runTest {
         // Given
         val today = LocalDate.of(2025, 11, 5)
         
@@ -118,7 +118,7 @@ class AdhocChildTaskQueryTest {
     }
 
     @Test
-    fun `ADHOC child task completed today but not triggered should NOT appear in today view`() = runTest {
+    fun adhocChildTaskCompletedButNotTriggeredShouldNotAppear() = runTest {
         // Given
         val today = LocalDate.of(2025, 11, 5)
         
@@ -157,7 +157,7 @@ class AdhocChildTaskQueryTest {
     }
 
     @Test
-    fun `ADHOC child task completed today and was triggered should appear in today view`() = runTest {
+    fun adhocChildTaskCompletedAndTriggeredShouldAppear() = runTest {
         // Given
         val today = LocalDate.of(2025, 11, 5)
         
