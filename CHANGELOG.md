@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2025-11-11
+
+### 🐛 Bug Fixes
+
+**Today View**
+- Fixed ADHOC child tasks incorrectly appearing in Today view when not triggered
+- ADHOC tasks now only appear when explicitly triggered (nextDue is set)
+- Added comprehensive test coverage for ADHOC task query behavior
+
+**Test Infrastructure**
+- Fixed androidTest compilation errors (method names with spaces)
+- Added missing androidTest dependencies (junit, test-core, runner, rules)
+
+### ✨ Features
+
+**Task Creation**
+- Added "Next Due Date" field to task creation/editing screen
+- Users can now set custom due dates when creating or editing tasks
+- Provides better control over task scheduling
+
+### 🔧 Maintenance
+
+**Build System**
+- Upgraded Gradle wrapper to 8.13
+- Updated Gradle wrapper scripts with latest improvements
+- All 57 tests passing (23 unit tests + 34 instrumented tests)
+
+---
+
 ## [1.0.1] - 2025-10-26
 
 ### 🐛 Bug Fixes
