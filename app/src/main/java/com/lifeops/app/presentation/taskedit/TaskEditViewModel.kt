@@ -233,6 +233,7 @@ class TaskEditViewModel @Inject constructor(
                 excludedDaysOfWeek = task.excludedDaysOfWeek ?: emptyList(),
                 overdueBehavior = task.overdueBehavior,
                 deleteAfterCompletion = task.deleteAfterCompletion,
+                nextDue = task.nextDue ?: LocalDate.now(),
                 parentTaskId = task.parentTaskIds?.firstOrNull(),
                 parentTaskName = taskDetails.parentTask?.name,
                 childTasks = childTasks,
@@ -265,6 +266,7 @@ class TaskEditViewModel @Inject constructor(
             is TaskEditEvent.RemoveExcludedDateRange -> removeExcludedDateRange(event.dateRange)
             is TaskEditEvent.UpdateOverdueBehavior -> updateOverdueBehavior(event.behavior)
             is TaskEditEvent.UpdateDeleteAfterCompletion -> updateDeleteAfterCompletion(event.delete)
+            is TaskEditEvent.UpdateNextDue -> updateNextDue(event.date)
             
             // Relationships
             is TaskEditEvent.UpdateParentTask -> updateParentTask(event.taskId)
@@ -381,6 +383,10 @@ class TaskEditViewModel @Inject constructor(
     
     private fun updateDeleteAfterCompletion(delete: Boolean) {
         _uiState.update { it.copy(deleteAfterCompletion = delete, hasUnsavedChanges = true) }
+    }
+    
+    private fun updateNextDue(date: LocalDate) {
+        _uiState.update { it.copy(nextDue = date, hasUnsavedChanges = true) }
     }
     
     // Relationship Updates
@@ -623,7 +629,7 @@ class TaskEditViewModel @Inject constructor(
                     excludedDaysOfWeek = state.excludedDaysOfWeek,
                     overdueBehavior = state.overdueBehavior,
                     deleteAfterCompletion = state.deleteAfterCompletion,
-                    nextDue = null, // Let use case handle
+                    nextDue = if (state.intervalUnit == com.lifeops.app.data.local.entity.IntervalUnit.ADHOC) null else state.nextDue,
                     parentTaskId = state.parentTaskId,
                     childTaskIds = state.childTasks.map { it.taskId },
                     requiresManualCompletion = state.requiresManualCompletion,
