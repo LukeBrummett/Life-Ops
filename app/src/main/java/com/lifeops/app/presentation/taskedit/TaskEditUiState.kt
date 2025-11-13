@@ -44,6 +44,7 @@ data class TaskEditUiState(
     // Relationships
     val parentTaskId: String? = null,
     val parentTaskName: String? = null,
+    val inheritParentSchedule: Boolean = false,
     val childTasks: List<ChildTaskItem> = emptyList(),
     val requiresManualCompletion: Boolean = false,
     val triggeredByTaskIds: List<TaskReference> = emptyList(),
