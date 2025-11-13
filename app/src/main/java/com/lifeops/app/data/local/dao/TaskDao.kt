@@ -67,15 +67,34 @@ interface TaskDao {
     /**
      * Get tasks due today or overdue
      * Used for generating Today checklist
+     * 
+     * A task is considered due if:
+     * 1. Its own nextDue <= date (normal scheduling), OR
+     * 2. It was completed today and has a nextDue (to show completed tasks), OR
+     * 3. It has inheritParentSchedule=true and at least one parent is due
      */
     @Query("""
-        SELECT * FROM tasks 
-        WHERE active = 1 
+        SELECT DISTINCT t.* FROM tasks t
+        WHERE t.active = 1 
         AND (
-            nextDue <= :date 
-            OR (lastCompleted = :date AND nextDue IS NOT NULL)
+            -- Task's own schedule
+            t.nextDue <= :date 
+            OR (t.lastCompleted = :date AND t.nextDue IS NOT NULL)
+            -- OR task inherits from parent and parent is due
+            OR (
+                t.inheritParentSchedule = 1 
+                AND t.parentTaskIds IS NOT NULL
+                AND EXISTS (
+                    SELECT 1 FROM tasks p
+                    WHERE p.active = 1
+                    AND p.id IN (
+                        SELECT value FROM json_each(t.parentTaskIds)
+                    )
+                    AND p.nextDue <= :date
+                )
+            )
         ) 
-        ORDER BY nextDue, category, name
+        ORDER BY t.nextDue, t.category, t.name
     """)
     suspend fun getTasksDueByDate(date: LocalDate): List<Task>
     
@@ -84,15 +103,34 @@ interface TaskDao {
      * Includes tasks completed today even if nextDue has moved forward, but excludes ADHOC tasks
      * that have never been triggered (nextDue is null)
      * Used for Today screen with reactive updates
+     * 
+     * A task is considered due if:
+     * 1. Its own nextDue <= date (normal scheduling), OR
+     * 2. It was completed today and has a nextDue (to show completed tasks), OR
+     * 3. It has inheritParentSchedule=true and at least one parent is due
      */
     @Query("""
-        SELECT * FROM tasks 
-        WHERE active = 1 
+        SELECT DISTINCT t.* FROM tasks t
+        WHERE t.active = 1 
         AND (
-            nextDue <= :date 
-            OR (lastCompleted = :date AND nextDue IS NOT NULL)
+            -- Task's own schedule
+            t.nextDue <= :date 
+            OR (t.lastCompleted = :date AND t.nextDue IS NOT NULL)
+            -- OR task inherits from parent and parent is due
+            OR (
+                t.inheritParentSchedule = 1 
+                AND t.parentTaskIds IS NOT NULL
+                AND EXISTS (
+                    SELECT 1 FROM tasks p
+                    WHERE p.active = 1
+                    AND p.id IN (
+                        SELECT value FROM json_each(t.parentTaskIds)
+                    )
+                    AND p.nextDue <= :date
+                )
+            )
         ) 
-        ORDER BY nextDue, category, name
+        ORDER BY t.nextDue, t.category, t.name
     """)
     fun observeTasksDueByDate(date: LocalDate): Flow<List<Task>>
     
