@@ -128,12 +128,21 @@ data class Task(
      * - Child tasks are grouped under their parent in the UI
      * - Child tasks still need their own schedule (nextDue) to appear in today's list
      * - ADHOC child tasks (e.g., triggered tasks) only appear when explicitly triggered
-     * - Child tasks do NOT automatically inherit their parent's schedule
+     * - Child tasks do NOT automatically inherit their parent's schedule by default
      * 
      * This allows triggered tasks to have a parent for organization while remaining
      * trigger-only (ADHOC) - they appear under the parent when both are due today.
      */
     val parentTaskIds: List<String>? = null,
+    
+    /**
+     * Whether this task should inherit its schedule from its parent task(s)
+     * When true, the task appears whenever its parent is due (or when triggered)
+     * When false, the task follows its own schedule independently
+     * Only relevant for tasks with parents (parentTaskIds not empty)
+     * Default: false (tasks maintain independent schedules)
+     */
+    val inheritParentSchedule: Boolean = false,
     
     /**
      * Whether parent needs manual check-off after all children complete

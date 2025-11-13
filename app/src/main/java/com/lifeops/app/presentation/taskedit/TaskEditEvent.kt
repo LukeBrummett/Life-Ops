@@ -30,6 +30,7 @@ sealed class TaskEditEvent {
     
     // Parent-Child Relationship Events
     data class UpdateParentTask(val taskId: String?) : TaskEditEvent()
+    data class UpdateInheritParentSchedule(val inherit: Boolean) : TaskEditEvent()
     data class AddChildTask(val taskId: String) : TaskEditEvent()
     data class RemoveChildTask(val taskId: String) : TaskEditEvent()
     data class ReorderChildTasks(val fromIndex: Int, val toIndex: Int) : TaskEditEvent()

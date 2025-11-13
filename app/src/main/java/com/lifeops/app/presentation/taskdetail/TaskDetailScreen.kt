@@ -257,6 +257,7 @@ private fun TaskDetailContent(
             item {
                 ParentTaskSection(
                     parentTask = uiState.parentTask,
+                    inheritParentSchedule = task.inheritParentSchedule,
                     onClick = onNavigateToTask
                 )
             }
@@ -558,6 +559,7 @@ private fun CompletionDataSection(
 @Composable
 private fun ParentTaskSection(
     parentTask: TaskSummary,
+    inheritParentSchedule: Boolean,
     onClick: (String) -> Unit
 ) {
     DetailSection(title = "Parent Task") {
@@ -578,6 +580,27 @@ private fun ParentTaskSection(
                     text = "${parentTask.category} • ${parentTask.scheduleSummary}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        
+        // Show inheritance status
+        if (inheritParentSchedule) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Link,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+                Text(
+                    text = "Inherits schedule from parent",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
