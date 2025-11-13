@@ -61,6 +61,7 @@ class SaveTaskUseCase @Inject constructor(
                 overdueBehavior = request.overdueBehavior,
                 deleteAfterCompletion = request.deleteAfterCompletion,
                 parentTaskIds = request.parentTaskId?.let { listOf(it) },
+                inheritParentSchedule = request.inheritParentSchedule,
                 requiresManualCompletion = request.requiresManualCompletion,
                 triggeredByTaskIds = request.triggeredByTaskIds.takeIf { it.isNotEmpty() },
                 triggersTaskIds = request.triggersTaskIds.takeIf { it.isNotEmpty() },
@@ -317,6 +318,7 @@ data class SaveTaskRequest(
     
     // Relationships
     val parentTaskId: String?,
+    val inheritParentSchedule: Boolean,
     val childTaskIds: List<String>,
     val requiresManualCompletion: Boolean,
     val triggeredByTaskIds: List<String>,
