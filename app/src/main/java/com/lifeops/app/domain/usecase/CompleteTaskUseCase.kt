@@ -43,6 +43,26 @@ class CompleteTaskUseCase @Inject constructor(
                 completionStreak = (task.completionStreak - 1).coerceAtLeast(0)
             )
         } else {
+            // Check if this is a parent task with incomplete children that are due
+            val childrenResult = repository.getChildTasks(taskId)
+            val children = childrenResult.getOrNull() ?: emptyList()
+            
+            // Get children that are due today or overdue
+            val dueChildren = children.filter { child ->
+                child.nextDue != null && child.nextDue <= completionDate
+            }
+            
+            // Check if any due children are not completed
+            val hasIncompleteDueChildren = dueChildren.any { child ->
+                child.lastCompleted != completionDate
+            }
+            
+            // If parent has incomplete due children, prevent completion
+            if (hasIncompleteDueChildren) {
+                // Don't complete the parent, just return the original task
+                return
+            }
+            
             // Complete the task
             val newStreak = if (wasCompletedYesterday(task, completionDate)) {
                 task.completionStreak + 1
@@ -59,97 +79,9 @@ class CompleteTaskUseCase @Inject constructor(
         
         repository.updateTask(updatedTask)
         
-        // Handle parent task auto-completion/uncompletion if this is a child task
-        if (!task.parentTaskIds.isNullOrEmpty()) {
-            if (!isAlreadyCompleted) {
-                // Child was just completed - check if parent should auto-complete
-                checkAndCompleteParentTasks(task.parentTaskIds, completionDate)
-            } else {
-                // Child was just uncompleted - check if parent should auto-uncomplete
-                checkAndUncompleteParentTasks(task.parentTaskIds, completionDate)
-            }
-        }
-        
         // Handle triggered tasks if this task was just completed (not uncompleted)
         if (!isAlreadyCompleted && !task.triggersTaskIds.isNullOrEmpty()) {
             triggerTasks(task.triggersTaskIds, completionDate)
-        }
-    }
-    
-    /**
-     * Check if parent tasks should auto-uncomplete when a child is uncompleted
-     * Only auto-uncompletes if requiresManualCompletion is false
-     */
-    private suspend fun checkAndUncompleteParentTasks(parentTaskIds: List<String>, completionDate: LocalDate) {
-        parentTaskIds.forEach { parentId ->
-            val parentTaskResult = repository.getTaskById(parentId)
-            val parentTask = parentTaskResult.getOrNull() ?: return@forEach
-            
-            // Skip if parent requires manual completion
-            if (parentTask.requiresManualCompletion) {
-                return@forEach
-            }
-            
-            // If parent is currently completed today, uncomplete it
-            if (parentTask.lastCompleted == completionDate) {
-                val updatedParent = parentTask.copy(
-                    lastCompleted = null,
-                    nextDue = completionDate,
-                    completionStreak = (parentTask.completionStreak - 1).coerceAtLeast(0)
-                )
-                
-                repository.updateTask(updatedParent)
-                
-                // Recursively uncomplete parent's parents if needed
-                if (!parentTask.parentTaskIds.isNullOrEmpty()) {
-                    checkAndUncompleteParentTasks(parentTask.parentTaskIds, completionDate)
-                }
-            }
-        }
-    }
-    
-    /**
-     * Check if parent tasks should auto-complete when a child is completed
-     * Only auto-completes if requiresManualCompletion is false and all children are done
-     */
-    private suspend fun checkAndCompleteParentTasks(parentTaskIds: List<String>, completionDate: LocalDate) {
-        parentTaskIds.forEach { parentId ->
-            val parentTaskResult = repository.getTaskById(parentId)
-            val parentTask = parentTaskResult.getOrNull() ?: return@forEach
-            
-            // Skip if parent requires manual completion
-            if (parentTask.requiresManualCompletion) {
-                return@forEach
-            }
-            
-            // Get all children of this parent
-            val childrenResult = repository.getChildTasks(parentId)
-            val children = childrenResult.getOrNull() ?: return@forEach
-            
-            // Check if all children are completed today
-            val allChildrenComplete = children.all { it.lastCompleted == completionDate }
-            
-            // If all children complete and parent not yet complete, complete the parent
-            if (allChildrenComplete && parentTask.lastCompleted != completionDate) {
-                val newStreak = if (wasCompletedYesterday(parentTask, completionDate)) {
-                    parentTask.completionStreak + 1
-                } else {
-                    1
-                }
-                
-                val updatedParent = parentTask.copy(
-                    lastCompleted = completionDate,
-                    completionStreak = newStreak,
-                    nextDue = calculateNextDueDate(parentTask, completionDate)
-                )
-                
-                repository.updateTask(updatedParent)
-                
-                // Recursively check if this parent is also a child of another parent
-                if (!parentTask.parentTaskIds.isNullOrEmpty()) {
-                    checkAndCompleteParentTasks(parentTask.parentTaskIds, completionDate)
-                }
-            }
         }
     }
     
