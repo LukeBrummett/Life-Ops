@@ -204,6 +204,47 @@ class InheritParentScheduleTest {
     }
 
     @Test
+    fun scheduledChildWithInheritFalseAppearsEvenWhenParentNotDue() = runTest {
+        // Test case for: "A child that is scheduled doesn't appear unless parent appears"
+        // This should NOT happen - scheduled children should always appear based on their own schedule
+        
+        val today = LocalDate.of(2025, 11, 13)
+        val tomorrow = LocalDate.of(2025, 11, 14)
+        
+        // Parent task: NOT due today (scheduled for tomorrow)
+        val parentTask = Task(
+            id = "clean-kitchen",
+            name = "Clean Kitchen",
+            category = "Household",
+            intervalUnit = IntervalUnit.DAY,
+            intervalQty = 1,
+            nextDue = tomorrow // NOT due today
+        )
+        
+        // Child task: HAS own schedule for today, inheritParentSchedule=false
+        val childTask = Task(
+            id = "wipe-counters",
+            name = "Wipe Counters",
+            category = "Household",
+            intervalUnit = IntervalUnit.DAY,
+            intervalQty = 1,
+            nextDue = today, // Due today
+            parentTaskIds = listOf("clean-kitchen"),
+            inheritParentSchedule = false // Should appear based on own schedule
+        )
+        
+        taskDao.insert(parentTask)
+        taskDao.insert(childTask)
+        
+        // When - Get tasks due today
+        val tasksDueToday = taskDao.observeTasksDueByDate(today).first()
+        
+        // Then - Child SHOULD appear even though parent is not due
+        assertThat(tasksDueToday).hasSize(1)
+        assertThat(tasksDueToday[0].id).isEqualTo("wipe-counters")
+    }
+
+    @Test
     fun childTaskWithInheritTrueWorksWithMultipleParents() = runTest {
         // Given
         val today = LocalDate.of(2025, 11, 13)

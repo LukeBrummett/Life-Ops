@@ -331,7 +331,7 @@ private fun BasicInformationSection(
             
             if (showDatePicker) {
                 val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = nextDue.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    initialSelectedDateMillis = nextDue.atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
                 )
                 
                 DatePickerDialog(
@@ -341,7 +341,7 @@ private fun BasicInformationSection(
                             onClick = {
                                 datePickerState.selectedDateMillis?.let { millis ->
                                     val selectedDate = java.time.Instant.ofEpochMilli(millis)
-                                        .atZone(java.time.ZoneId.systemDefault())
+                                        .atZone(java.time.ZoneOffset.UTC)
                                         .toLocalDate()
                                     onEvent(TaskEditEvent.UpdateNextDue(selectedDate))
                                 }
