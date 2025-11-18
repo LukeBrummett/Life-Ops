@@ -1,5 +1,6 @@
 package com.lifeops.app.presentation.taskedit
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -215,6 +216,7 @@ private fun TaskEditContent(
         RelationshipsSection(
             parentTaskId = uiState.parentTaskId,
             parentTaskName = uiState.parentTaskName,
+            inheritParentSchedule = uiState.inheritParentSchedule,
             childTasks = uiState.childTasks,
             requiresManualCompletion = uiState.requiresManualCompletion,
             triggeredByTasks = uiState.triggeredByTaskIds,
@@ -329,7 +331,7 @@ private fun BasicInformationSection(
             
             if (showDatePicker) {
                 val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = nextDue.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    initialSelectedDateMillis = nextDue.atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
                 )
                 
                 DatePickerDialog(
@@ -339,7 +341,7 @@ private fun BasicInformationSection(
                             onClick = {
                                 datePickerState.selectedDateMillis?.let { millis ->
                                     val selectedDate = java.time.Instant.ofEpochMilli(millis)
-                                        .atZone(java.time.ZoneId.systemDefault())
+                                        .atZone(java.time.ZoneOffset.UTC)
                                         .toLocalDate()
                                     onEvent(TaskEditEvent.UpdateNextDue(selectedDate))
                                 }
@@ -751,6 +753,7 @@ private fun ScheduleConfigurationSection(
 private fun RelationshipsSection(
     parentTaskId: String?,
     parentTaskName: String?,
+    inheritParentSchedule: Boolean,
     childTasks: List<ChildTaskItem>,
     requiresManualCompletion: Boolean,
     triggeredByTasks: List<TaskReference>,
@@ -844,6 +847,36 @@ private fun RelationshipsSection(
                     }
                 }
             }
+            
+            // Inherit Parent Schedule Checkbox (only shown when parent is selected)
+            if (parentTaskId != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onEvent(TaskEditEvent.UpdateInheritParentSchedule(!inheritParentSchedule)) }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = inheritParentSchedule,
+                        onCheckedChange = { onEvent(TaskEditEvent.UpdateInheritParentSchedule(it)) }
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Inherit parent schedule",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "This task will appear whenever the parent task is due",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Child Tasks
             Text(

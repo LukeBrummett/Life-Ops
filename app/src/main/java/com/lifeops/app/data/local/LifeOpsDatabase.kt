@@ -30,7 +30,7 @@ import com.lifeops.app.data.local.entity.TaskSupply
         TaskSupply::class
         // Additional entities will be added: ChecklistItem, TaskLog, RestockTask
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

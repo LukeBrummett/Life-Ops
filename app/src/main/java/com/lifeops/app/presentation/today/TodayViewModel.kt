@@ -142,31 +142,39 @@ class TodayViewModel @Inject constructor(
     /**
      * Group tasks by category, organizing parent-child relationships
      * - Parents appear with their children nested
-     * - Children are shown under their parents
+     * - Children with parents due today are shown under their parents
+     * - Children whose parents are NOT due today appear standalone under their category
      * - Standalone tasks appear normally
      */
     private fun groupTasksWithHierarchy(tasks: List<com.lifeops.app.data.local.entity.Task>): Map<String, List<TaskItem>> {
         // Create a map of task ID to task for quick lookup
         val taskMap = tasks.associateBy { it.id }
         
-        // Track which tasks are children (so we don't show them as standalone)
-        val childTaskIds = mutableSetOf<String>()
+        // Track which tasks are children whose parents are ALSO due today
+        // Only these children should be nested; others should appear standalone
+        val childrenWithDueParents = mutableSetOf<String>()
         
-        // Find all child tasks
+        // Find children whose parents are in the due tasks list
         tasks.forEach { task ->
             if (!task.parentTaskIds.isNullOrEmpty()) {
-                childTaskIds.add(task.id)
+                // Check if any parent is in the tasks list (meaning parent is also due)
+                val hasParentDueToday = task.parentTaskIds.any { parentId -> 
+                    taskMap.containsKey(parentId) 
+                }
+                if (hasParentDueToday) {
+                    childrenWithDueParents.add(task.id)
+                }
             }
         }
         
         // Build task items with hierarchy
         val taskItems = tasks.mapNotNull { task ->
-            // Skip tasks that are children (they'll be included under their parent)
-            if (task.id in childTaskIds) {
+            // Skip tasks that are children with due parents (they'll be included under their parent)
+            if (task.id in childrenWithDueParents) {
                 return@mapNotNull null
             }
             
-            // Find children for this task
+            // Find children for this task (only include children that are also due today)
             val children = tasks.filter { potentialChild ->
                 !potentialChild.parentTaskIds.isNullOrEmpty() && 
                 task.id in potentialChild.parentTaskIds

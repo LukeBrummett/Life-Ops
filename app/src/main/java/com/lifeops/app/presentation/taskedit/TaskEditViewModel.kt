@@ -236,6 +236,7 @@ class TaskEditViewModel @Inject constructor(
                 nextDue = task.nextDue ?: LocalDate.now(),
                 parentTaskId = task.parentTaskIds?.firstOrNull(),
                 parentTaskName = taskDetails.parentTask?.name,
+                inheritParentSchedule = task.inheritParentSchedule,
                 childTasks = childTasks,
                 requiresManualCompletion = task.requiresManualCompletion,
                 triggeredByTaskIds = triggeredByTasks,
@@ -270,6 +271,7 @@ class TaskEditViewModel @Inject constructor(
             
             // Relationships
             is TaskEditEvent.UpdateParentTask -> updateParentTask(event.taskId)
+            is TaskEditEvent.UpdateInheritParentSchedule -> updateInheritParentSchedule(event.inherit)
             is TaskEditEvent.AddChildTask -> addChildTask(event.taskId)
             is TaskEditEvent.RemoveChildTask -> removeChildTask(event.taskId)
             is TaskEditEvent.ReorderChildTasks -> reorderChildTasks(event.fromIndex, event.toIndex)
@@ -403,6 +405,15 @@ class TaskEditViewModel @Inject constructor(
                     hasUnsavedChanges = true
                 )
             }
+        }
+    }
+    
+    private fun updateInheritParentSchedule(inherit: Boolean) {
+        _uiState.update {
+            it.copy(
+                inheritParentSchedule = inherit,
+                hasUnsavedChanges = true
+            )
         }
     }
     
@@ -631,6 +642,7 @@ class TaskEditViewModel @Inject constructor(
                     deleteAfterCompletion = state.deleteAfterCompletion,
                     nextDue = if (state.intervalUnit == com.lifeops.app.data.local.entity.IntervalUnit.ADHOC) null else state.nextDue,
                     parentTaskId = state.parentTaskId,
+                    inheritParentSchedule = state.inheritParentSchedule,
                     childTaskIds = state.childTasks.map { it.taskId },
                     requiresManualCompletion = state.requiresManualCompletion,
                     triggeredByTaskIds = state.triggeredByTaskIds.map { it.taskId },
