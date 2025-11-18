@@ -9,13 +9,15 @@ import java.time.LocalDate
 /**
  * Unit tests for orphaned child tasks in All Tasks view
  * 
- * Tests the fix for the bug where child tasks don't appear in the All Tasks list
- * when their parent task is deleted.
+ * Tests the display logic for child tasks when their parent task is deleted.
  * 
- * Issue: When a parent task is deleted, child tasks that reference that parent
- * remain in the database with parentTaskIds pointing to the deleted parent.
- * The groupTasksWithHierarchy() function should show these orphaned child tasks
- * as standalone tasks rather than hiding them completely.
+ * Note: In production, when a parent is deleted, the TaskRepository automatically
+ * removes the parent ID from child tasks' parentTaskIds lists. However, these tests
+ * verify that the display logic can handle edge cases where orphaned references might
+ * still exist (e.g., direct database manipulation, data import scenarios).
+ * 
+ * The groupTasksWithHierarchy() function should show child tasks with non-existent
+ * parent IDs as standalone tasks rather than hiding them completely.
  */
 class OrphanedChildTaskTest {
     
