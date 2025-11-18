@@ -114,7 +114,7 @@ class SettingsViewModel @Inject constructor(
                 resolveConflictsAndImport(event.tasks, event.resolutions)
             }
             SettingsUiEvent.DismissConflictDialog -> {
-                _uiState.update { it.copy(importConflicts = null) }
+                _uiState.update { it.copy(importConflicts = null, importAllTasks = null) }
             }
             SettingsUiEvent.CreateBackup -> createBackup()
             is SettingsUiEvent.ToggleDebugMode -> {
@@ -186,7 +186,8 @@ class SettingsViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            importConflicts = result.conflicts
+                            importConflicts = result.conflicts,
+                            importAllTasks = result.allTasks
                         )
                     }
                 }
@@ -207,7 +208,7 @@ class SettingsViewModel @Inject constructor(
         resolutions: Map<String, ConflictResolution>
     ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, importConflicts = null) }
+            _uiState.update { it.copy(isLoading = true, importConflicts = null, importAllTasks = null) }
             
             when (val result = importDataUseCase.executeImport(tasks, resolutions)) {
                 is ImportResult.Success -> {
