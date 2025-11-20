@@ -58,7 +58,8 @@ sealed class ImportResult {
     ) : ImportResult()
     
     data class NeedsResolution(
-        val conflicts: List<ImportConflict>
+        val conflicts: List<ImportConflict>,
+        val allTasks: List<Task>
     ) : ImportResult()
     
     data class Error(val message: String) : ImportResult()
