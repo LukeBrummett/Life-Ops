@@ -336,9 +336,23 @@ class TaskRepository @Inject constructor(
     
     /**
      * Delete a task permanently
+     * Also cleans up parent references from any child tasks
      */
     suspend fun deleteTask(taskId: String): Result<Unit> {
         return try {
+            // Find all child tasks that have this task as a parent
+            val childTasks = taskDao.getChildrenOfParent(taskId)
+            
+            // Remove the deleted task ID from each child's parentTaskIds
+            childTasks.forEach { child ->
+                val updatedParentIds = child.parentTaskIds?.filter { it != taskId }
+                val updatedChild = child.copy(
+                    parentTaskIds = if (updatedParentIds.isNullOrEmpty()) null else updatedParentIds
+                )
+                taskDao.update(updatedChild)
+            }
+            
+            // Delete the task
             taskDao.deleteById(taskId)
             Result.success(Unit)
         } catch (e: Exception) {

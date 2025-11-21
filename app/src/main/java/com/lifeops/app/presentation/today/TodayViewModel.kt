@@ -146,30 +146,33 @@ class TodayViewModel @Inject constructor(
      * - Standalone tasks appear normally
      */
     private fun groupTasksWithHierarchy(tasks: List<com.lifeops.app.data.local.entity.Task>): Map<String, List<TaskItem>> {
-        // Create a map of task ID to task for quick lookup
-        val taskMap = tasks.associateBy { it.id }
+        // Create a set of all task IDs for quick parent existence check
+        val taskIds = tasks.map { it.id }.toSet()
         
-        // Track which tasks are children (so we don't show them as standalone)
+        // Track which tasks are children whose parents exist (so we don't show them as standalone)
         val childTaskIds = mutableSetOf<String>()
         
-        // Find all child tasks
+        // Find child tasks that have at least one existing parent
         tasks.forEach { task ->
-            if (!task.parentTaskIds.isNullOrEmpty()) {
+            val parentIds = task.parentTaskIds
+            if (!parentIds.isNullOrEmpty() && 
+                parentIds.any { parentId -> parentId in taskIds }) {
                 childTaskIds.add(task.id)
             }
         }
         
         // Build task items with hierarchy
         val taskItems = tasks.mapNotNull { task ->
-            // Skip tasks that are children (they'll be included under their parent)
+            // Skip tasks that are children with existing parents (they'll be included under their parent)
             if (task.id in childTaskIds) {
                 return@mapNotNull null
             }
             
             // Find children for this task
             val children = tasks.filter { potentialChild ->
-                !potentialChild.parentTaskIds.isNullOrEmpty() && 
-                task.id in potentialChild.parentTaskIds
+                val childParentIds = potentialChild.parentTaskIds
+                !childParentIds.isNullOrEmpty() && 
+                task.id in childParentIds
             }.sortedBy { it.childOrder ?: 0 }
             
             TaskItem(
