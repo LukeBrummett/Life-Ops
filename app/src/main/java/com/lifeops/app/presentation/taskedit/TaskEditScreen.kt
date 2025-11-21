@@ -291,7 +291,9 @@ private fun BasicInformationSection(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown)
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
             )
             
             ExposedDropdownMenu(
