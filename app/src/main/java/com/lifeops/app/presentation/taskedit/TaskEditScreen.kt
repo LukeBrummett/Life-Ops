@@ -503,6 +503,14 @@ private fun ScheduleConfigurationSection(
                         specificDaysOfWeek.forEach { day ->
                             onEvent(TaskEditEvent.ToggleSpecificDay(day))
                         }
+                        // Set to DAY if currently ADHOC
+                        if (intervalUnit == IntervalUnit.ADHOC) {
+                            onEvent(TaskEditEvent.UpdateIntervalUnit(IntervalUnit.DAY))
+                        }
+                        // Ensure intervalQty is at least 1
+                        if (intervalQty < 1) {
+                            onEvent(TaskEditEvent.UpdateIntervalQty(1))
+                        }
                     },
                     label = { Text("Interval") },
                     modifier = Modifier.weight(1f)
