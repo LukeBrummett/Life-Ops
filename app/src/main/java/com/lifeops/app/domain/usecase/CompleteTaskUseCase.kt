@@ -43,26 +43,6 @@ class CompleteTaskUseCase @Inject constructor(
                 completionStreak = (task.completionStreak - 1).coerceAtLeast(0)
             )
         } else {
-            // Check if this is a parent task with incomplete children that are due
-            val childrenResult = repository.getChildTasks(taskId)
-            val children = childrenResult.getOrNull() ?: emptyList()
-            
-            // Get children that are due today or overdue
-            val dueChildren = children.filter { child ->
-                child.nextDue != null && child.nextDue <= completionDate
-            }
-            
-            // Check if any due children are not completed
-            val hasIncompleteDueChildren = dueChildren.any { child ->
-                child.lastCompleted != completionDate
-            }
-            
-            // If parent has incomplete due children, prevent completion
-            if (hasIncompleteDueChildren) {
-                // Don't complete the parent, just return the original task
-                return
-            }
-            
             // Complete the task
             val newStreak = if (wasCompletedYesterday(task, completionDate)) {
                 task.completionStreak + 1

@@ -37,20 +37,17 @@ fun TasksList(
         tasksByCategory.mapValues { (_, taskItems) ->
             taskItems.mapNotNull { taskItem ->
                 if (taskItem.isParent) {
-                    // For parent tasks, filter children
-                    val incompleteChildren = taskItem.children.filter { !isTaskCompleted(it, today) }
                     val parentCompleted = isTaskCompleted(taskItem.task, today)
                     
-                    // Show parent if parent incomplete OR has incomplete children
+                    // Parent stays visible if parent itself is incomplete OR if it has incomplete due children
+                    // Children can disappear freely - only show incomplete children
+                    val incompleteChildren = taskItem.children.filter { !isTaskCompleted(it, today) }
+                    
                     if (!parentCompleted || incompleteChildren.isNotEmpty()) {
-                        if (incompleteChildren.isNotEmpty()) {
-                            // Show parent with only incomplete children
-                            taskItem.copy(children = incompleteChildren)
-                        } else {
-                            // Show parent with all children (for manual completion)
-                            taskItem
-                        }
+                        // Show parent with only incomplete children (if any)
+                        taskItem.copy(children = incompleteChildren)
                     } else {
+                        // Parent complete and no incomplete children - hide
                         null
                     }
                 } else {
