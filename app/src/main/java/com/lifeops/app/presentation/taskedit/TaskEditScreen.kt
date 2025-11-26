@@ -281,7 +281,7 @@ private fun BasicInformationSection(
         // Category Dropdown
         ExposedDropdownMenuBox(
             expanded = showCategoryDropdown,
-            onExpandedChange = { showCategoryDropdown = it }
+            onExpandedChange = { /* Ignore - controlled by arrow button only */ }
         ) {
             OutlinedTextField(
                 value = category,
@@ -293,9 +293,7 @@ private fun BasicInformationSection(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown)
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
+                modifier = Modifier.fillMaxWidth()
             )
             
             ExposedDropdownMenu(
