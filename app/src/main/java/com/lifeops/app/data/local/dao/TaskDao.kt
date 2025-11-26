@@ -94,7 +94,7 @@ interface TaskDao {
                 )
             )
         ) 
-        ORDER BY t.nextDue, t.category, t.name
+        ORDER BY t.category, t.id
     """)
     suspend fun getTasksDueByDate(date: LocalDate): List<Task>
     
@@ -130,7 +130,7 @@ interface TaskDao {
                 )
             )
         ) 
-        ORDER BY t.nextDue, t.category, t.name
+        ORDER BY t.category, t.id
     """)
     fun observeTasksDueByDate(date: LocalDate): Flow<List<Task>>
     
