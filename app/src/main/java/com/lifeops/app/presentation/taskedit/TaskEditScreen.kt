@@ -278,27 +278,27 @@ private fun BasicInformationSection(
             modifier = Modifier.fillMaxWidth()
         )
         
-        // Category Dropdown
-        ExposedDropdownMenuBox(
-            expanded = showCategoryDropdown,
-            onExpandedChange = { /* Ignore - controlled by arrow button only */ }
-        ) {
+        // Category Field with Dropdown
+        Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = category,
                 onValueChange = { onEvent(TaskEditEvent.UpdateCategory(it)) },
                 label = { Text("Category *") },
-                readOnly = false,
                 trailingIcon = {
                     IconButton(onClick = { showCategoryDropdown = !showCategoryDropdown }) {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown)
+                        Icon(
+                            imageVector = if (showCategoryDropdown) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Show categories"
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             )
             
-            ExposedDropdownMenu(
+            DropdownMenu(
                 expanded = showCategoryDropdown,
-                onDismissRequest = { showCategoryDropdown = false }
+                onDismissRequest = { showCategoryDropdown = false },
+                modifier = Modifier.fillMaxWidth()
             ) {
                 availableCategories.forEach { cat ->
                     DropdownMenuItem(
