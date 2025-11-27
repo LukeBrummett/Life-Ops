@@ -99,16 +99,17 @@ fun SettingsScreen(
     ) { paddingValues ->
         // Show conflict resolution dialog if needed
         uiState.importConflicts?.let { conflicts ->
-            ImportConflictDialog(
-                conflicts = conflicts,
-                onResolve = { resolutions ->
-                    val tasks = conflicts.map { it.importedTask }
-                    viewModel.onEvent(SettingsUiEvent.ResolveConflictsAndImport(tasks, resolutions))
-                },
-                onDismiss = {
-                    viewModel.onEvent(SettingsUiEvent.DismissConflictDialog)
-                }
-            )
+            uiState.importAllTasks?.let { allTasks ->
+                ImportConflictDialog(
+                    conflicts = conflicts,
+                    onResolve = { resolutions ->
+                        viewModel.onEvent(SettingsUiEvent.ResolveConflictsAndImport(allTasks, resolutions))
+                    },
+                    onDismiss = {
+                        viewModel.onEvent(SettingsUiEvent.DismissConflictDialog)
+                    }
+                )
+            }
         }
         
         Column(

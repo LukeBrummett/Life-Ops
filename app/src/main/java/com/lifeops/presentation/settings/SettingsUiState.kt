@@ -1,5 +1,6 @@
 package com.lifeops.presentation.settings
 
+import com.lifeops.app.data.local.entity.Task
 import com.lifeops.presentation.settings.import_data.ImportConflict
 
 data class SettingsUiState(
@@ -16,5 +17,6 @@ data class SettingsUiState(
     val successMessage: String? = null,
     val showExportFilePicker: Boolean = false,
     val showImportFilePicker: Boolean = false,
-    val importConflicts: List<ImportConflict>? = null
+    val importConflicts: List<ImportConflict>? = null,
+    val importAllTasks: List<Task>? = null
 )

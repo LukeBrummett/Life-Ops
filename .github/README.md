@@ -64,7 +64,7 @@ Life-Ops is engineered for longevity, testability, and adaptability.
 - **Kotlin Coroutines & Flow:**  
   Asynchronous updates keep the UI responsive, so changes are instantly reflected.
 
-See [docs/Architecture.md](docs/Architecture.md) and [docs/Project Overview.md](docs/Project%20Overview.md) for deep detail.
+See [docs/Architecture.md](../docs/Architecture.md) and [docs/Project Overview.md](../docs/Project%20Overview.md) for deep detail.
 
 ---
 
@@ -96,7 +96,7 @@ Edit recurring intervals, exclude days, configure triggers (“Clean Up” after
 **3. Inventory Management:**  
 Bundle recount tasks, prompt for inventory after completion, run shopping and restocking workflows that update supply quantities seamlessly.
 
-More in [docs/Project Overview.md](docs/Project%20Overview.md).
+More in [docs/Project Overview.md](../docs/Project%20Overview.md).
 
 ---
 
@@ -121,7 +121,7 @@ cd Life-Ops
 ./gradlew installDebug           # Installs to connected device
 ./gradlew test                   # Runs tests
 ```
-For detailed developer workflow, see [GIT_WORKFLOW.md](GIT_WORKFLOW.md).
+For detailed developer workflow, see [git-workflow.md](../git-workflow.md).
 
 ---
 
@@ -160,7 +160,7 @@ Life-Ops/
 We welcome pull requests!  
 - Follow branch strategy (`feature/*` → `develop`, hotfixes from `main`)
 - Write clear commit messages, ensure all tests pass
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for coding conventions, testing requirements, and PR templates.
+- See [contributing.md](../contributing.md) for coding conventions, testing requirements, and PR templates.
 
 ---
 
@@ -171,13 +171,13 @@ We welcome pull requests!
 - Advanced analytics/statistics
 - Notifications
 - Tablet/landscape optimization
-- More in [CHANGELOG.md](CHANGELOG.md)
+- More in [changelog.md](../changelog.md)
 
 ---
 
 ## 📝 License
 
-MIT License—see [LICENSE](LICENSE).
+MIT License—see [LICENSE](../LICENSE).
 
 ---
 
@@ -185,6 +185,6 @@ MIT License—see [LICENSE](LICENSE).
 
 - **Report Issues:** [GitHub Issues](https://github.com/LukeBrummett/Life-Ops/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/LukeBrummett/Life-Ops/discussions)
-- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Contributing:** [contributing.md](../contributing.md)
 
 Made with ❤️ for cognitive offload.

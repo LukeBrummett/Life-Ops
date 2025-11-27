@@ -30,32 +30,21 @@ fun ParentTaskItem(
     val allChildrenComplete = childTasks.all { it.lastCompleted == today }
     val parentCompleted = parentTask.lastCompleted == today
     
-    // According to spec, parent can auto-complete when all children done
-    // or require manual completion if requiresManualCompletion is true
-    val isParentComplete = if (parentTask.requiresManualCompletion) {
-        parentCompleted
-    } else {
-        allChildrenComplete
-    }
-    
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        // Parent task
+        // Parent task - always allow manual completion
         TaskItem(
             task = parentTask,
-            isCompleted = isParentComplete,
+            isCompleted = parentCompleted,
             onCheckedChange = { _ ->
-                // Only allow manual completion if required
-                if (parentTask.requiresManualCompletion) {
-                    onTaskChecked(parentTask.id)
-                }
+                onTaskChecked(parentTask.id)
             },
             onTaskClick = {
                 onTaskClick(parentTask.id)
             },
-            enabled = parentTask.requiresManualCompletion
+            enabled = true // Parent can always be checked/unchecked manually
         )
         
         // Child tasks (indented)

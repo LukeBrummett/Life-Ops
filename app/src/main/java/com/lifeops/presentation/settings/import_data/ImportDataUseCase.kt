@@ -178,8 +178,8 @@ class ImportDataUseCase @Inject constructor(
             // No conflicts - import with original IDs preserved
             executeImport(tasks, emptyMap())
         } else {
-            // Return conflicts for user resolution
-            ImportResult.NeedsResolution(conflicts)
+            // Return conflicts for user resolution, along with ALL tasks
+            ImportResult.NeedsResolution(conflicts, tasks)
         }
     }
 }

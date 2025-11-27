@@ -23,8 +23,8 @@ android {
         applicationId = "com.lifeops.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.0.2"
+        versionCode = 3
+        versionName = "1.0.3"
     }
 
     signingConfigs {
@@ -109,6 +109,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("com.google.truth:truth:1.1.5")
     testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation("org.mockito:mockito-core:5.7.0")
     
     // Room Testing (in-memory database)
     testImplementation("androidx.room:room-testing:2.6.1")
