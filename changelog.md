@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2025-11-26
+
+### ✨ Features
+
+**Parent-Child Schedule Control**
+- Added `inheritParentSchedule` toggle to control whether child tasks inherit their parent's schedule
+- Child tasks can now have independent schedules or follow parent schedule based on user preference
+- Improves flexibility in managing task hierarchies
+
+### 🐛 Bug Fixes
+
+**Parent Task Completion Behavior**
+- Fixed parent tasks automatically completing when all children are marked complete
+- Parents now require manual completion regardless of `requiresManualCompletion` flag
+- Parent tasks remain visible until both parent AND all due children are marked complete
+- Child tasks can disappear freely once completed while parent stays visible
+
+**Child Task Visibility**
+- Fixed scheduled children not appearing standalone when parent is not due
+- Children with independent schedules now correctly appear on their own due dates
+- Improved task grouping logic to show children under parents only when both are due
+
+**Task Editing - ADHOC Mode**
+- Fixed intervalUnit remaining ADHOC when switching to Interval mode in task edit
+- Tasks now correctly save with interval schedule instead of ADHOC when mode is changed
+- Resolved issue where only `specificDaysOfWeek` was cleared but `intervalUnit` was not updated
+
+**Orphaned Child Tasks**
+- Fixed child tasks becoming permanently hidden when their parent is deleted
+- Implemented automatic cleanup of parent references when deleting tasks
+- Added defensive display logic to handle edge cases with orphaned children
+
+**Task Import**
+- Fixed non-conflicting tasks being silently dropped during import when conflicts exist
+- Import now correctly imports all non-conflicting tasks along with resolved conflicts
+- Conflict resolution dialog no longer loses tasks that don't have ID conflicts
+
+**Category Dropdown Crash**
+- Fixed app crash with `IllegalStateException: FocusRequester is not initialized` in Task Edit screen
+- Replaced `ExposedDropdownMenuBox` with regular `DropdownMenu` for category field
+- Category dropdown now only opens via arrow button click, not on text field focus
+
+**Task Ordering**
+- Fixed tasks reordering/shuffling when marked complete in Today view
+- Changed sort order from nextDue/name to category/id for stable positioning
+- Tasks now maintain consistent position within categories
+
+### 📚 Documentation
+
+**Architecture & Design**
+- Overhauled documentation to reflect current codebase state
+- Updated architecture documents with accurate implementation details
+- Improved design documentation for screens and features
+
+---
+
 ## [1.0.2] - 2025-11-11
 
 ### 🐛 Bug Fixes
